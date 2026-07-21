@@ -24,6 +24,7 @@ $RECYCLE.BIN/
 *~
 
 # Local AI coding tools and Superpowers work files
+.agents
 .claude/
 .claude.json
 .superpowers/

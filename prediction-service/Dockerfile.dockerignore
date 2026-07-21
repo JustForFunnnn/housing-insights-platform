@@ -1,0 +1,9 @@
+**
+!prediction-service/
+!prediction-service/Dockerfile
+!prediction-service/pyproject.toml
+!prediction-service/uv.lock
+!prediction-service/src/
+!prediction-service/src/**
+!data/
+!data/House Price Dataset.csv
