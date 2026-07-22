@@ -4,20 +4,37 @@ from fastapi import APIRouter, Depends, Request
 
 from prediction_service.prediction import PredictionService
 from prediction_service.schemas import (
+    ErrorResponse,
     HealthResponse,
     ModelInfoResponse,
     PredictionRequest,
     PredictionResponse,
 )
 
-router = APIRouter()
+router = APIRouter(
+    responses={
+        500: {
+            "model": ErrorResponse,
+            "description": "The request could not be completed.",
+        }
+    }
+)
 
 
 def get_prediction_service(request: Request) -> PredictionService:
     return request.app.state.prediction_service
 
 
-@router.post("/predict", response_model=PredictionResponse)
+@router.post(
+    "/predict",
+    response_model=PredictionResponse,
+    responses={
+        422: {
+            "model": ErrorResponse,
+            "description": "Request validation failed.",
+        }
+    },
+)
 def predict_prices(
     payload: PredictionRequest,
     service: PredictionService = Depends(get_prediction_service),

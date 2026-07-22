@@ -117,3 +117,52 @@ Create a unified Next.js portal that hosts two independent applications with dif
 
 1. Source code in GitHub.
 2. Ability to show this live during interview.
+
+# Additional Requirements
+
+1. Implement proper application logging and end-to-end request correlation across all backend services.
+2. Provide consistent exception handling and standardized, safe API error responses.
+3. Add health checks and fail-fast startup behaviour.
+4. In `insights-portal`, display clear and actionable errors when backend dependencies are unavailable.
+5. Include automated tests covering validation, core business logic, and failure scenarios.
+
+## Cross-Service Contract
+
+All backend services must follow this contract.
+
+### Request Correlation
+
+1. Accept an `X-Request-ID` header on every request. Generate an identifier when the
+   header is missing.
+2. Return the same identifier in the `X-Request-ID` response header.
+3. Propagate the identifier unchanged when calling another backend service.
+4. Include the request ID, HTTP method, request path, and response status in request
+   logs.
+5. Do not log credentials, complete request bodies, housing records, or prediction
+   results.
+
+### Error Responses
+
+All API errors must use the following response shape:
+
+```json
+{
+  "error_code": "validation_error",
+  "message": "Request validation failed."
+}
+```
+
+1. `error_code` must be a stable, machine-readable value that clients can use to
+   determine how to handle the error.
+2. `message` must be safe to display to users.
+3. Services must use an appropriate HTTP status code and return the request ID in the
+   `X-Request-ID` response header.
+4. Internal exception messages, stack traces, implementation details, and sensitive
+   values must be logged server-side but must not be returned to clients.
+
+### Health Checks
+
+1. Every backend service must expose `GET /health`.
+2. A healthy service must return HTTP `200` with `{"status":"ok"}`.
+3. A service must fail at startup when required configuration or local resources are
+   unavailable or invalid.

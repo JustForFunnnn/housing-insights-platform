@@ -9,8 +9,8 @@ from fastapi.testclient import TestClient
 
 from prediction_service.api import create_app
 from prediction_service.artifact import ArtifactError, save_artifact
+from prediction_service.constants import FEATURE_NAMES, REQUEST_ID_HEADER
 from prediction_service.models import (
-    FEATURE_NAMES,
     CrossValidationInfo,
     HousingFeatures,
     MetricSummary,
@@ -30,14 +30,14 @@ VALID_INSTANCE = {
 
 
 class StubPredictionService:
-    def __init__(self, *, fail: bool = False) -> None:
-        self.fail = fail
+    def __init__(self, *, error: Exception | None = None) -> None:
+        self.error = error
         self.seen: list[list[HousingFeatures]] = []
 
     def predict(self, instances: Sequence[HousingFeatures]) -> list[int]:
         self.seen.append(list(instances))
-        if self.fail:
-            raise RuntimeError("secret model failure")
+        if self.error is not None:
+            raise self.error
         return [round(instance.square_footage) for instance in instances]
 
     def model_info(self) -> ModelInfo:
@@ -76,7 +76,35 @@ def test_api_contract_and_swagger() -> None:
         "properties"
     ]["predictions"]["items"]
     assert prediction_items == {"type": "integer", "format": "int64"}
+    predict_responses = openapi.json()["paths"]["/predict"]["post"]["responses"]
+    assert predict_responses["422"]["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/ErrorResponse"
+    }
+    assert predict_responses["500"]["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/ErrorResponse"
+    }
     assert docs.status_code == 200
+
+
+def test_supplied_request_id_is_returned_and_logged(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO, logger="prediction_service.observability")
+    with TestClient(create_app(prediction_service=StubPredictionService())) as client:
+        response = client.get(
+            "/health",
+            headers={REQUEST_ID_HEADER: "upstream-request-123"},
+        )
+        generated = client.get("/health")
+
+    record = next(
+        record for record in caplog.records if "request_completed" in record.message
+    )
+    assert response.headers[REQUEST_ID_HEADER] == "upstream-request-123"
+    assert "request_id=upstream-request-123" in record.message
+    assert "method=GET path=/health status=200" in record.message
+    assert len(generated.headers[REQUEST_ID_HEADER]) == 32
+    assert generated.headers[REQUEST_ID_HEADER] != "upstream-request-123"
 
 
 def test_single_and_batch_predictions_always_use_list_envelope() -> None:
@@ -100,12 +128,20 @@ def test_single_and_batch_predictions_always_use_list_envelope() -> None:
     assert service.seen[0][0] == HousingFeatures(**VALID_INSTANCE)
 
 
-def test_invalid_request_returns_serializable_422() -> None:
+def test_validation_error_uses_standard_response_and_request_id() -> None:
     with TestClient(create_app(prediction_service=StubPredictionService())) as client:
-        response = client.post("/predict", json={})
+        response = client.post(
+            "/predict",
+            json={},
+            headers={REQUEST_ID_HEADER: "validation-request"},
+        )
 
     assert response.status_code == 422
-    assert isinstance(response.json()["detail"], list)
+    assert response.headers[REQUEST_ID_HEADER] == "validation-request"
+    assert response.json() == {
+        "error_code": "validation_error",
+        "message": "Request validation failed.",
+    }
 
 
 def test_non_finite_request_returns_serializable_422() -> None:
@@ -122,25 +158,62 @@ def test_non_finite_request_returns_serializable_422() -> None:
         )
 
     assert response.status_code == 422
-    assert isinstance(response.json()["detail"], list)
+    assert response.json()["error_code"] == "validation_error"
 
 
-def test_unexpected_failure_logs_error_and_traceback(
+def test_http_errors_use_standard_safe_responses() -> None:
+    with TestClient(create_app(prediction_service=StubPredictionService())) as client:
+        missing = client.get(
+            "/missing",
+            headers={REQUEST_ID_HEADER: "missing-route-request"},
+        )
+        wrong_method = client.get(
+            "/predict",
+            headers={REQUEST_ID_HEADER: "wrong-method-request"},
+        )
+
+    assert missing.status_code == 404
+    assert missing.json() == {
+        "error_code": "http_error",
+        "message": "The request could not be completed.",
+    }
+    assert missing.headers[REQUEST_ID_HEADER] == "missing-route-request"
+    assert wrong_method.status_code == 405
+    assert wrong_method.headers["allow"] == "POST"
+    assert wrong_method.json() == {
+        "error_code": "http_error",
+        "message": "The request could not be completed.",
+    }
+
+
+def test_failure_is_logged_and_returns_safe_standard_response(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     caplog.set_level(logging.ERROR, logger="prediction_service.api")
-    app = create_app(prediction_service=StubPredictionService(fail=True))
+    error = RuntimeError("secret model failure")
+    app = create_app(prediction_service=StubPredictionService(error=error))
+    request_id = "internal-error-request"
     with TestClient(app, raise_server_exceptions=False) as client:
-        response = client.post("/predict", json={"instances": [VALID_INSTANCE]})
+        response = client.post(
+            "/predict",
+            json={"instances": [VALID_INSTANCE]},
+            headers={REQUEST_ID_HEADER: request_id},
+        )
 
     record = next(
         record for record in caplog.records if "request_failed" in record.message
     )
-    assert "error=secret model failure" in record.message
+    assert f"error={error}" in record.message
     assert record.exc_info is not None
-    assert record.exc_info[0] is RuntimeError
+    assert record.exc_info[0] is type(error)
+    assert f"request_id={request_id}" in record.message
+    assert "status=500" in record.message
     assert response.status_code == 500
-    assert response.json() == {"detail": "An unexpected server error occurred."}
+    assert response.headers[REQUEST_ID_HEADER] == request_id
+    assert response.json() == {
+        "error_code": "internal_error",
+        "message": "An unexpected server error occurred.",
+    }
     assert "secret" not in response.text
 
 

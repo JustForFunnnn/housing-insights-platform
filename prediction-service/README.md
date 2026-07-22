@@ -6,6 +6,7 @@ FastAPI service for training and serving a Scikit-learn linear regression model.
 
 The modules follow the service's actual boundaries:
 
+- `constants.py` contains shared service constants and configuration names.
 - `models.py` contains the feature contract and framework-free result types.
 - `artifact.py` owns model persistence and compatibility checks.
 - `prediction.py` defines the prediction port and its Scikit-learn implementation.
@@ -13,11 +14,11 @@ The modules follow the service's actual boundaries:
   share only the housing feature constraints.
 - `training.py` handles CSV ingestion, cross-validation, and fitting.
 - `routes.py` translates between HTTP schemas and the prediction port.
+- `observability.py` owns logging and request correlation.
 - `api.py` wires the implementation to FastAPI and owns application-level errors.
 
-External requests are strict, CSV rows allow numeric string coercion, and response
-shapes can evolve without changing either input contract. The prediction service
-receives framework-independent `HousingFeatures` objects rather than Pydantic models.
+API requests use strict type validation, while CSV training rows allow numeric
+strings to be converted to numbers.
 
 The artifact is loaded once per process. A missing or incompatible artifact stops the
 application at startup instead of allowing a healthy-looking but unusable service.
@@ -38,10 +39,13 @@ Swagger UI is available at <http://localhost:8000/docs>.
 To load an artifact from another location, set `MODEL_ARTIFACT_PATH` before
 starting Uvicorn. Its default is `artifacts/model_pipeline.joblib`.
 
-Application logging defaults to `INFO`. Each request log includes the endpoint,
-response status, complete request parameters, and duration in milliseconds.
-
 ## API
+
+Each request may include an `X-Request-ID` header for request correlation. When the
+header is missing, the service generates an identifier. The identifier is included in
+application logs and returned in the response header.
+
+### Predict
 
 `POST /predict` always accepts a list of 1 to 100 property records. A single
 prediction is represented by a one-item list; bare objects are not accepted:
@@ -72,9 +76,30 @@ prediction is represented by a one-item list; bare objects are not accepted:
 The numeric result depends on the trained artifact. Raw model outputs are rounded to
 integer prices; OpenAPI exposes each prediction as an `int64` value.
 
+### Model Information
+
 `GET /model-info` returns the training timestamp, feature coefficients, intercept,
-and five-fold R², RMSE, and MAE mean/standard-deviation summaries. `GET /health`
-returns `{"status":"ok"}`.
+and five-fold R², RMSE, and MAE mean/standard-deviation summaries.
+
+### Health Check
+
+`GET /health` returns `{"status":"ok"}`. A missing or incompatible model artifact
+prevents the application from starting.
+
+### Error Responses
+
+API errors use a consistent and safe response shape. The correlation identifier is
+returned in the `X-Request-ID` response header:
+
+```json
+{
+  "error_code": "validation_error",
+  "message": "Request validation failed."
+}
+```
+
+Internal exception messages and tracebacks are logged server-side but are never
+returned to clients.
 
 ## Docker
 

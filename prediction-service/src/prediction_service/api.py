@@ -2,37 +2,53 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Mapping
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from prediction_service.artifact import (
-    DEFAULT_ARTIFACT_PATH,
     ArtifactError,
     load_artifact,
 )
+from prediction_service.constants import (
+    DEFAULT_ARTIFACT_PATH,
+    MODEL_ARTIFACT_ENV,
+    REQUEST_ID_HEADER,
+)
+from prediction_service.observability import (
+    configure_logging,
+    correlate_request,
+    request_id_from_request,
+)
 from prediction_service.prediction import PredictionService, SklearnPredictionService
 from prediction_service.routes import router
+from prediction_service.schemas import ErrorResponse
 
 LOGGER = logging.getLogger(__name__)
-MODEL_ARTIFACT_ENV = "MODEL_ARTIFACT_PATH"
-LOG_LEVEL_ENV = "LOG_LEVEL"
 
 
-def configure_logging() -> None:
-    configured = os.getenv(LOG_LEVEL_ENV, "INFO").upper()
-    level = getattr(logging, configured, logging.INFO)
-    if not isinstance(level, int):
-        level = logging.INFO
-
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+def _error_response(
+    request: Request,
+    *,
+    status_code: int,
+    error_code: str,
+    message: str,
+    headers: Mapping[str, str] | None = None,
+) -> JSONResponse:
+    request_id = request_id_from_request(request)
+    response_headers = dict(headers or {})
+    response_headers[REQUEST_ID_HEADER] = request_id
+    body = ErrorResponse(error_code=error_code, message=message)
+    return JSONResponse(
+        status_code=status_code,
+        content=body.model_dump(),
+        headers=response_headers,
     )
-    logging.getLogger("prediction_service").setLevel(level)
 
 
 def create_app(
@@ -73,38 +89,47 @@ def create_app(
         lifespan=lifespan,
     )
     application.include_router(router)
+    application.middleware("http")(correlate_request)
 
     @application.exception_handler(RequestValidationError)
     async def validation_error(
         request: Request,
-        exc: RequestValidationError,
+        _exc: RequestValidationError,
     ) -> JSONResponse:
-        del request
-        return JSONResponse(
+        return _error_response(
+            request,
             status_code=422,
-            content={
-                "detail": [
-                    {
-                        "type": error["type"],
-                        "loc": error["loc"],
-                        "msg": error["msg"],
-                    }
-                    for error in exc.errors()
-                ],
-            },
+            error_code="validation_error",
+            message="Request validation failed.",
+        )
+
+    @application.exception_handler(StarletteHTTPException)
+    async def http_error(
+        request: Request,
+        exc: StarletteHTTPException,
+    ) -> JSONResponse:
+        return _error_response(
+            request,
+            status_code=exc.status_code,
+            error_code="http_error",
+            message="The request could not be completed.",
+            headers=exc.headers,
         )
 
     @application.exception_handler(Exception)
     async def unexpected_error(request: Request, exc: Exception) -> JSONResponse:
         LOGGER.exception(
-            "request_failed method=%s path=%s error=%s",
+            "request_failed request_id=%s method=%s path=%s status=500 error=%s",
+            request_id_from_request(request),
             request.method,
             request.url.path,
             exc,
         )
-        return JSONResponse(
+        return _error_response(
+            request,
             status_code=500,
-            content={"detail": "An unexpected server error occurred."},
+            error_code="internal_error",
+            message="An unexpected server error occurred.",
         )
 
     return application

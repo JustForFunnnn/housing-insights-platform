@@ -4,16 +4,7 @@ import math
 from dataclasses import dataclass
 from datetime import datetime
 
-FEATURE_NAMES = (
-    "square_footage",
-    "bedrooms",
-    "bathrooms",
-    "year_built",
-    "lot_size",
-    "distance_to_city_center",
-    "school_rating",
-)
-TARGET_NAME = "price"
+from prediction_service.constants import FEATURE_NAMES
 
 
 def validate_year_built(value: int) -> int:

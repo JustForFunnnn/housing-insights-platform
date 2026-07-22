@@ -14,15 +14,20 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, cross_validate
 
 from prediction_service.artifact import (
-    DEFAULT_ARTIFACT_PATH,
     ArtifactError,
     CrossValidationData,
     ModelArtifact,
     save_artifact,
 )
-from prediction_service.models import (
+from prediction_service.constants import (
+    CV_FOLDS,
+    CV_RANDOM_STATE,
+    DEFAULT_ARTIFACT_PATH,
     FEATURE_NAMES,
-    TARGET_NAME,
+    MINIMUM_ROWS,
+    REQUIRED_COLUMNS,
+)
+from prediction_service.models import (
     CrossValidationInfo,
     MetricSummary,
     RegressionMetrics,
@@ -30,10 +35,6 @@ from prediction_service.models import (
 from prediction_service.schemas import TrainingRow
 
 LOGGER = logging.getLogger(__name__)
-REQUIRED_COLUMNS = (*FEATURE_NAMES, TARGET_NAME)
-MINIMUM_ROWS = 10
-CV_FOLDS = 5
-CV_RANDOM_STATE = 42
 
 
 class TrainingError(ValueError):

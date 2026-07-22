@@ -5,8 +5,8 @@ from collections.abc import Sequence
 from typing import Protocol
 
 from prediction_service.artifact import MetricSummaryData, ModelArtifact
+from prediction_service.constants import FEATURE_NAMES
 from prediction_service.models import (
-    FEATURE_NAMES,
     CrossValidationInfo,
     HousingFeatures,
     MetricSummary,

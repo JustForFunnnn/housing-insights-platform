@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from prediction_service.artifact import load_artifact
-from prediction_service.models import FEATURE_NAMES
+from prediction_service.constants import FEATURE_NAMES
 from prediction_service.prediction import SklearnPredictionService
 from prediction_service.training import TrainingError, main, train
 

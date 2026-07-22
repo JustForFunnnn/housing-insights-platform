@@ -8,7 +8,7 @@ from prediction_service.artifact import (
     parse_artifact,
     save_artifact,
 )
-from prediction_service.models import FEATURE_NAMES
+from prediction_service.constants import FEATURE_NAMES
 
 
 def test_valid_artifact_round_trips(tmp_path: Path, artifact_factory) -> None:

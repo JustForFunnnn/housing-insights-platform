@@ -4,7 +4,8 @@ from datetime import datetime
 import pytest
 from pydantic import ValidationError
 
-from prediction_service.models import FEATURE_NAMES, HousingFeatures
+from prediction_service.constants import FEATURE_NAMES
+from prediction_service.models import HousingFeatures
 from prediction_service.schemas import (
     ErrorMetricSummaryResponse,
     MetricSummaryResponse,

@@ -9,7 +9,7 @@ import pytest
 from sklearn.linear_model import LinearRegression
 
 from prediction_service.artifact import ModelArtifact
-from prediction_service.models import FEATURE_NAMES
+from prediction_service.constants import FEATURE_NAMES
 
 DEFAULT_COLUMNS = ["id", *FEATURE_NAMES, "price"]
 

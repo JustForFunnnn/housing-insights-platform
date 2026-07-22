@@ -72,6 +72,11 @@ class PredictionResponse(ResponseModel):
     count: int = Field(ge=0)
 
 
+class ErrorResponse(ResponseModel):
+    error_code: str
+    message: str
+
+
 class MetricSummaryResponse(ResponseModel):
     mean: float
     std: float = Field(ge=0)

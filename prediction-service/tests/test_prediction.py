@@ -2,7 +2,8 @@ import math
 
 import pytest
 
-from prediction_service.models import FEATURE_NAMES, HousingFeatures
+from prediction_service.constants import FEATURE_NAMES
+from prediction_service.models import HousingFeatures
 from prediction_service.prediction import PredictionError, SklearnPredictionService
 
 

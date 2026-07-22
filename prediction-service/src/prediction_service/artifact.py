@@ -10,9 +10,7 @@ import joblib
 from sklearn.linear_model import LinearRegression
 from sklearn.utils.validation import check_is_fitted
 
-from prediction_service.models import FEATURE_NAMES
-
-DEFAULT_ARTIFACT_PATH = Path("artifacts/model_pipeline.joblib")
+from prediction_service.constants import DEFAULT_ARTIFACT_PATH, FEATURE_NAMES
 
 
 class MetricSummaryData(TypedDict):
