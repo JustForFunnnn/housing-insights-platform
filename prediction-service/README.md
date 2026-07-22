@@ -13,9 +13,9 @@ The modules follow the service's actual boundaries:
 - `schemas.py` contains independent HTTP request, response, and CSV contracts that
   share only the housing feature constraints.
 - `training.py` handles CSV ingestion, cross-validation, and fitting.
-- `routes.py` translates between HTTP schemas and the prediction port.
+- `api.py` translates between HTTP schemas and the prediction port.
 - `observability.py` owns logging and request correlation.
-- `api.py` wires the implementation to FastAPI and owns application-level errors.
+- `app.py` wires the implementation to FastAPI and owns application-level errors.
 
 API requests use strict type validation, while CSV training rows allow numeric
 strings to be converted to numbers.
@@ -31,7 +31,7 @@ Run commands from `prediction-service/`:
 uv sync --extra dev
 uv run housing-train "../data/House Price Dataset.csv"
 uv run pytest
-uv run uvicorn prediction_service.api:app --reload
+uv run uvicorn prediction_service.app:app --reload
 ```
 
 Swagger UI is available at <http://localhost:8000/docs>.

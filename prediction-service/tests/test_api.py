@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from prediction_service.api import create_app
+from prediction_service.app import create_app
 from prediction_service.artifact import ArtifactError, save_artifact
 from prediction_service.constants import FEATURE_NAMES, REQUEST_ID_HEADER
 from prediction_service.models import (
@@ -189,7 +189,7 @@ def test_http_errors_use_standard_safe_responses() -> None:
 def test_failure_is_logged_and_returns_safe_standard_response(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    caplog.set_level(logging.ERROR, logger="prediction_service.api")
+    caplog.set_level(logging.ERROR, logger="prediction_service.app")
     error = RuntimeError("secret model failure")
     app = create_app(prediction_service=StubPredictionService(error=error))
     request_id = "internal-error-request"
@@ -253,7 +253,7 @@ def test_missing_artifact_logs_context_and_preserves_cause(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     path = tmp_path / "missing.joblib"
-    caplog.set_level(logging.ERROR, logger="prediction_service.api")
+    caplog.set_level(logging.ERROR, logger="prediction_service.app")
 
     with pytest.raises(RuntimeError, match="could not start without model") as caught:
         with TestClient(create_app(artifact_path=str(path))):

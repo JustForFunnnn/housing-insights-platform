@@ -25,4 +25,4 @@ RUN .venv/bin/python -m prediction_service.training \
 
 EXPOSE 8000
 
-CMD ["/app/.venv/bin/uvicorn", "prediction_service.api:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info"]
+CMD ["/app/.venv/bin/uvicorn", "prediction_service.app:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info"]
