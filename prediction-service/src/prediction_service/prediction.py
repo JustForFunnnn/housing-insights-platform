@@ -20,7 +20,7 @@ class PredictionError(RuntimeError):
 
 
 class PredictionService(Protocol):
-    def predict(self, instances: Sequence[HousingFeatures]) -> list[float]: ...
+    def predict(self, instances: Sequence[HousingFeatures]) -> list[int]: ...
 
     def model_info(self) -> ModelInfo: ...
 
@@ -32,7 +32,7 @@ class SklearnPredictionService:
         self._artifact = artifact
         self._model = artifact["model"]
 
-    def predict(self, instances: Sequence[HousingFeatures]) -> list[float]:
+    def predict(self, instances: Sequence[HousingFeatures]) -> list[int]:
         if not instances:
             raise PredictionError("prediction batch must not be empty")
 
@@ -47,7 +47,7 @@ class SklearnPredictionService:
             raise PredictionError("model returned the wrong number of predictions")
         if not all(math.isfinite(value) for value in predictions):
             raise PredictionError("model returned a non-finite prediction")
-        return predictions
+        return [round(value) for value in predictions]
 
     def model_info(self) -> ModelInfo:
         cross_validation = self._artifact["cross_validation"]

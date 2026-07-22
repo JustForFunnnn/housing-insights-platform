@@ -1,10 +1,16 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from prediction_service.models import HousingFeatures, validate_year_built
+
+Int64Price = Annotated[int, Field(json_schema_extra={"format": "int64"})]
+NonNegativeInt64Price = Annotated[
+    int,
+    Field(ge=0, json_schema_extra={"format": "int64"}),
+]
 
 
 class HousingFields(BaseModel):
@@ -40,7 +46,7 @@ class PredictionInstance(HousingFields):
 class TrainingRow(HousingFields):
     model_config = ConfigDict(extra="ignore")
 
-    price: float = Field(ge=0, allow_inf_nan=False)
+    price: NonNegativeInt64Price
 
     def to_domain(self) -> HousingFeatures:
         values = self.model_dump(exclude={"price"})
@@ -58,7 +64,7 @@ class ResponseModel(BaseModel):
 
 
 class PredictionResponse(ResponseModel):
-    predictions: list[float]
+    predictions: list[Int64Price]
     count: int = Field(ge=0)
 
 

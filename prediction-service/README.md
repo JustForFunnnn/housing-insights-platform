@@ -64,12 +64,13 @@ prediction is represented by a one-item list; bare objects are not accepted:
 
 ```json
 {
-  "predictions": [285478.9],
+  "predictions": [285479],
   "count": 1
 }
 ```
 
-The numeric result depends on the trained artifact; the example above is rounded.
+The numeric result depends on the trained artifact. Raw model outputs are rounded to
+integer prices; OpenAPI exposes each prediction as an `int64` value.
 
 `GET /model-info` returns the training timestamp, feature coefficients, intercept,
 and five-fold R², RMSE, and MAE mean/standard-deviation summaries. `GET /health`

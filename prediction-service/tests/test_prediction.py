@@ -37,7 +37,23 @@ def test_batch_prediction_uses_one_call_and_preserves_order(
     )
 
     assert len(observed_rows) == 1
-    assert predictions == [20004.0, 9002.0, 15003.0]
+    assert predictions == [20004, 9002, 15003]
+
+
+def test_predictions_are_rounded_to_integers(artifact_factory, monkeypatch) -> None:
+    artifact = artifact_factory()
+    monkeypatch.setattr(
+        artifact["model"],
+        "predict",
+        lambda rows: [1000.4, 2000.6],
+    )
+
+    predictions = SklearnPredictionService(artifact).predict(
+        [features(1000, 2), features(2000, 3)]
+    )
+
+    assert predictions == [1000, 2001]
+    assert all(isinstance(value, int) for value in predictions)
 
 
 @pytest.mark.parametrize(

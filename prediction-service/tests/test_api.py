@@ -34,11 +34,11 @@ class StubPredictionService:
         self.fail = fail
         self.seen: list[list[HousingFeatures]] = []
 
-    def predict(self, instances: Sequence[HousingFeatures]) -> list[float]:
+    def predict(self, instances: Sequence[HousingFeatures]) -> list[int]:
         self.seen.append(list(instances))
         if self.fail:
             raise RuntimeError("secret model failure")
-        return [instance.square_footage for instance in instances]
+        return [round(instance.square_footage) for instance in instances]
 
     def model_info(self) -> ModelInfo:
         summary = MetricSummary(mean=1.0, std=0.1)
@@ -72,6 +72,10 @@ def test_api_contract_and_swagger() -> None:
     assert info.json()["training_timestamp"] == "2026-07-21T12:00:00+00:00"
     assert info.json()["cross_validation"]["folds"] == 5
     assert set(openapi.json()["paths"]) == {"/health", "/model-info", "/predict"}
+    prediction_items = openapi.json()["components"]["schemas"]["PredictionResponse"][
+        "properties"
+    ]["predictions"]["items"]
+    assert prediction_items == {"type": "integer", "format": "int64"}
     assert docs.status_code == 200
 
 
@@ -90,8 +94,8 @@ def test_single_and_batch_predictions_always_use_list_envelope() -> None:
         )
         bare = client.post("/predict", json={"instances": VALID_INSTANCE})
 
-    assert single.json() == {"predictions": [1850.0], "count": 1}
-    assert batch.json() == {"predictions": [2100.0, 900.0], "count": 2}
+    assert single.json() == {"predictions": [1850], "count": 1}
+    assert batch.json() == {"predictions": [2100, 900], "count": 2}
     assert bare.status_code == 422
     assert service.seen[0][0] == HousingFeatures(**VALID_INSTANCE)
 

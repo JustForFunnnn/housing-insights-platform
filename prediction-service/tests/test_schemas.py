@@ -72,12 +72,17 @@ def test_training_schema_has_independent_coercion_and_extra_policy() -> None:
     assert row.to_domain().square_footage == 1850
     assert row.price == 265000
 
+    with pytest.raises(ValidationError):
+        TrainingRow.model_validate({**VALID_INSTANCE, "price": 265000.5})
+
 
 def test_response_constraints_are_explicit() -> None:
     with pytest.raises(ValidationError):
         PredictionResponse(predictions=[], count=-1)
     with pytest.raises(ValidationError):
         PredictionResponse(predictions=[float("inf")], count=1)
+    with pytest.raises(ValidationError):
+        PredictionResponse(predictions=[285478.9], count=1)
     with pytest.raises(ValidationError):
         MetricSummaryResponse(mean=1, std=-1)
     with pytest.raises(ValidationError):

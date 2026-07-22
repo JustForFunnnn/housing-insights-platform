@@ -46,7 +46,7 @@ def load_training_data(dataset_path: Path) -> tuple[np.ndarray, np.ndarray]:
         raise TrainingError(f"could not open dataset: {dataset_path}") from exc
 
     feature_rows: list[list[float]] = []
-    prices: list[float] = []
+    prices: list[int] = []
 
     with stream:
         reader = csv.DictReader(stream)
