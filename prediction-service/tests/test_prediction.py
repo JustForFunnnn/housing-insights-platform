@@ -40,6 +40,11 @@ def test_batch_prediction_uses_one_call_and_preserves_order(
     assert predictions == [20004, 9002, 15003]
 
 
+def test_empty_prediction_batch_is_rejected(artifact_factory) -> None:
+    with pytest.raises(PredictionError, match="must not be empty"):
+        SklearnPredictionService(artifact_factory()).predict([])
+
+
 def test_predictions_are_rounded_to_integers(artifact_factory, monkeypatch) -> None:
     artifact = artifact_factory()
     monkeypatch.setattr(

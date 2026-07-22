@@ -13,6 +13,7 @@ FEATURE_NAMES = (
     "distance_to_city_center",
     "school_rating",
 )
+TARGET_NAME = "price"
 
 
 def validate_year_built(value: int) -> int:

@@ -112,3 +112,14 @@ def test_cli_trains_to_selected_output(write_dataset, tmp_path: Path) -> None:
 
     assert exit_code == 0
     assert output.is_file()
+
+
+def test_cli_returns_one_when_training_fails(tmp_path: Path) -> None:
+    output = tmp_path / "model.joblib"
+
+    exit_code = main(
+        [str(tmp_path / "missing.csv"), "--output", str(output)]
+    )
+
+    assert exit_code == 1
+    assert not output.exists()

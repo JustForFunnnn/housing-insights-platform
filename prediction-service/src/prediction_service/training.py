@@ -22,6 +22,7 @@ from prediction_service.artifact import (
 )
 from prediction_service.models import (
     FEATURE_NAMES,
+    TARGET_NAME,
     CrossValidationInfo,
     MetricSummary,
     RegressionMetrics,
@@ -29,7 +30,7 @@ from prediction_service.models import (
 from prediction_service.schemas import TrainingRow
 
 LOGGER = logging.getLogger(__name__)
-REQUIRED_COLUMNS = (*FEATURE_NAMES, "price")
+REQUIRED_COLUMNS = (*FEATURE_NAMES, TARGET_NAME)
 MINIMUM_ROWS = 10
 CV_FOLDS = 5
 CV_RANDOM_STATE = 42
@@ -69,7 +70,7 @@ def load_training_data(dataset_path: Path) -> tuple[np.ndarray, np.ndarray]:
                 raise TrainingError(
                     f"CSV row {reader.line_num} column '{column}': {error['msg']}"
                 ) from exc
-            feature_rows.append(row.to_domain().as_row())
+            feature_rows.append(row.to_features().as_row())
             prices.append(row.price)
 
     if len(feature_rows) < MINIMUM_ROWS:

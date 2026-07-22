@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import json
 import logging
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
-from time import perf_counter
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -24,7 +22,7 @@ MODEL_ARTIFACT_ENV = "MODEL_ARTIFACT_PATH"
 LOG_LEVEL_ENV = "LOG_LEVEL"
 
 
-def configure_logging() -> int:
+def configure_logging() -> None:
     configured = os.getenv(LOG_LEVEL_ENV, "INFO").upper()
     level = getattr(logging, configured, logging.INFO)
     if not isinstance(level, int):
@@ -35,26 +33,11 @@ def configure_logging() -> int:
         format="%(asctime)s %(levelname)s %(name)s %(message)s",
     )
     logging.getLogger("prediction_service").setLevel(level)
-    return level
-
-
-async def request_parameters(request: Request) -> dict[str, object]:
-    parameters: dict[str, object] = {
-        "path": dict(request.path_params),
-        "query": list(request.query_params.multi_items()),
-    }
-    body = await request.body()
-    if body:
-        try:
-            parameters["body"] = json.loads(body)
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            parameters["body"] = body.decode("utf-8", errors="replace")
-    return parameters
 
 
 def create_app(
     *,
-    artifact_path: Path | None = None,
+    artifact_path: str | None = None,
     prediction_service: PredictionService | None = None,
 ) -> FastAPI:
     @asynccontextmanager
@@ -62,24 +45,23 @@ def create_app(
         configure_logging()
         service = prediction_service
         if service is None:
-            configured_path = os.getenv(MODEL_ARTIFACT_ENV)
-            selected_path = artifact_path or (
-                Path(configured_path) if configured_path else DEFAULT_ARTIFACT_PATH
-            )
+            selected_artifact_path = Path(artifact_path or DEFAULT_ARTIFACT_PATH)
             try:
-                service = SklearnPredictionService(load_artifact(selected_path))
+                service = SklearnPredictionService(
+                    load_artifact(selected_artifact_path)
+                )
             except ArtifactError as exc:
                 # Uvicorn records the propagated traceback once during startup.
                 LOGGER.error(
                     "model_load_failed artifact=%s error=%s",
-                    selected_path,
+                    selected_artifact_path,
                     exc,
                 )
                 raise RuntimeError(
-                    f"could not start without model: {selected_path}"
+                    f"could not start without model: {selected_artifact_path}"
                 ) from exc
 
-            LOGGER.info("model_loaded artifact=%s", selected_path)
+            LOGGER.info("model_loaded artifact=%s", selected_artifact_path)
 
         application.state.prediction_service = service
         yield
@@ -91,25 +73,6 @@ def create_app(
         lifespan=lifespan,
     )
     application.include_router(router)
-
-    @application.middleware("http")
-    async def log_request(request: Request, call_next):
-        started = perf_counter()
-        status = 500
-        parameters = await request_parameters(request)
-        try:
-            response = await call_next(request)
-            status = response.status_code
-            return response
-        finally:
-            duration_ms = (perf_counter() - started) * 1000
-            LOGGER.info(
-                "request_complete endpoint=%s status=%d parameters=%s duration_ms=%.2f",
-                request.url.path,
-                status,
-                json.dumps(parameters, ensure_ascii=False, default=str),
-                duration_ms,
-            )
 
     @application.exception_handler(RequestValidationError)
     async def validation_error(
@@ -147,4 +110,5 @@ def create_app(
     return application
 
 
-app = create_app()
+artifact_path_from_env = os.getenv(MODEL_ARTIFACT_ENV)
+app = create_app(artifact_path=artifact_path_from_env)

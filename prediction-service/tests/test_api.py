@@ -100,18 +100,9 @@ def test_single_and_batch_predictions_always_use_list_envelope() -> None:
     assert service.seen[0][0] == HousingFeatures(**VALID_INSTANCE)
 
 
-@pytest.mark.parametrize(
-    "payload",
-    [
-        {},
-        {"instances": []},
-        {"instances": [{**VALID_INSTANCE, "square_footage": "1850"}]},
-        {"instances": [{**VALID_INSTANCE, "school_rating": 11}]},
-    ],
-)
-def test_invalid_requests_return_422(payload: dict[str, object]) -> None:
+def test_invalid_request_returns_serializable_422() -> None:
     with TestClient(create_app(prediction_service=StubPredictionService())) as client:
-        response = client.post("/predict", json=payload)
+        response = client.post("/predict", json={})
 
     assert response.status_code == 422
     assert isinstance(response.json()["detail"], list)
@@ -134,23 +125,6 @@ def test_non_finite_request_returns_serializable_422() -> None:
     assert isinstance(response.json()["detail"], list)
 
 
-def test_request_log_contains_endpoint_status_parameters_and_duration(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    caplog.set_level(logging.INFO, logger="prediction_service.api")
-    with TestClient(create_app(prediction_service=StubPredictionService())) as client:
-        response = client.post("/predict", json={"instances": [VALID_INSTANCE]})
-
-    record = next(
-        record for record in caplog.records if "request_complete" in record.message
-    )
-    assert response.status_code == 200
-    assert "endpoint=/predict" in record.message
-    assert "status=200" in record.message
-    assert '"square_footage": 1850' in record.message
-    assert "duration_ms=" in record.message
-
-
 def test_unexpected_failure_logs_error_and_traceback(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -170,19 +144,20 @@ def test_unexpected_failure_logs_error_and_traceback(
     assert "secret" not in response.text
 
 
-def test_app_loads_configured_artifact(
+def test_app_loads_explicit_artifact_path(
     tmp_path: Path,
     artifact_factory,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     path = tmp_path / "configured.joblib"
-    save_artifact(artifact_factory(), path)
-    monkeypatch.setenv("MODEL_ARTIFACT_PATH", str(path))
+    artifact = artifact_factory()
+    artifact["trained_at"] = "2001-02-03T04:05:06+00:00"
+    save_artifact(artifact, path)
 
-    with TestClient(create_app()) as client:
+    with TestClient(create_app(artifact_path=str(path))) as client:
         response = client.get("/model-info")
 
     assert response.status_code == 200
+    assert response.json()["training_timestamp"] == artifact["trained_at"]
 
 
 def test_app_loads_default_artifact(
@@ -195,12 +170,12 @@ def test_app_loads_default_artifact(
     save_artifact(artifact_factory(), path)
 
     with TestClient(create_app()) as client:
-        response = client.get("/health")
+        response = client.get("/model-info")
 
     assert response.status_code == 200
 
 
-def test_startup_logs_context_and_propagates_traceback_once(
+def test_missing_artifact_logs_context_and_preserves_cause(
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -208,7 +183,7 @@ def test_startup_logs_context_and_propagates_traceback_once(
     caplog.set_level(logging.ERROR, logger="prediction_service.api")
 
     with pytest.raises(RuntimeError, match="could not start without model") as caught:
-        with TestClient(create_app(artifact_path=path)):
+        with TestClient(create_app(artifact_path=str(path))):
             pass
 
     record = next(

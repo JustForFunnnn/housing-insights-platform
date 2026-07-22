@@ -3,9 +3,8 @@ from __future__ import annotations
 import math
 import os
 import tempfile
-from datetime import datetime, timedelta
 from pathlib import Path
-from typing import TypedDict, cast
+from typing import TypedDict
 
 import joblib
 from sklearn.linear_model import LinearRegression
@@ -46,12 +45,6 @@ class ArtifactError(RuntimeError):
     """Raised when a model artifact cannot be read, validated, or written."""
 
 
-def _mapping(value: object, label: str) -> dict[str, object]:
-    if not isinstance(value, dict):
-        raise ArtifactError(f"{label} must be a mapping")
-    return cast(dict[str, object], value)
-
-
 def _finite_number(value: object, label: str) -> float:
     if isinstance(value, bool):
         raise ArtifactError(f"{label} must be a finite number")
@@ -64,6 +57,82 @@ def _finite_number(value: object, label: str) -> float:
     return number
 
 
+def _parse_model(model: object) -> LinearRegression:
+    if not isinstance(model, LinearRegression):
+        raise ArtifactError("artifact model must be LinearRegression")
+    try:
+        check_is_fitted(model, ["coef_", "intercept_"])
+        coefficients = [
+            _finite_number(coefficient, "model coefficient")
+            for coefficient in model.coef_
+        ]
+        _finite_number(model.intercept_, "model intercept")
+    except ArtifactError:
+        raise
+    except Exception as exc:
+        raise ArtifactError("artifact model is not fitted") from exc
+    if len(coefficients) != len(FEATURE_NAMES):
+        raise ArtifactError("artifact coefficient count is incompatible")
+    return model
+
+
+def _parse_metric_summary(
+    summary: object,
+    label: str,
+    *,
+    non_negative_mean: bool = False,
+) -> MetricSummaryData:
+    if not isinstance(summary, dict):
+        raise ArtifactError(f"{label} must be a mapping")
+    mean = _finite_number(summary.get("mean"), f"{label}.mean")
+    std = _finite_number(summary.get("std"), f"{label}.std")
+    if std < 0:
+        raise ArtifactError(f"{label}.std must be non-negative")
+    if non_negative_mean and mean < 0:
+        raise ArtifactError(f"{label}.mean must be non-negative")
+    return {"mean": mean, "std": std}
+
+
+def _parse_cross_validation(validation: object) -> CrossValidationData:
+    if not isinstance(validation, dict):
+        raise ArtifactError("cross_validation must be a mapping")
+
+    folds = validation.get("folds")
+    if isinstance(folds, bool) or not isinstance(folds, int) or folds < 2:
+        raise ArtifactError("cross_validation folds must be an integer of at least 2")
+
+    shuffle = validation.get("shuffle")
+    if not isinstance(shuffle, bool):
+        raise ArtifactError("cross_validation shuffle must be a boolean")
+
+    random_state = validation.get("random_state")
+    if isinstance(random_state, bool) or not isinstance(random_state, int):
+        raise ArtifactError("cross_validation random_state must be an integer")
+
+    metrics = validation.get("metrics")
+    if not isinstance(metrics, dict):
+        raise ArtifactError("metrics must be a mapping")
+
+    return {
+        "folds": folds,
+        "shuffle": shuffle,
+        "random_state": random_state,
+        "metrics": {
+            "r2": _parse_metric_summary(metrics.get("r2"), "r2"),
+            "rmse": _parse_metric_summary(
+                metrics.get("rmse"),
+                "rmse",
+                non_negative_mean=True,
+            ),
+            "mae": _parse_metric_summary(
+                metrics.get("mae"),
+                "mae",
+                non_negative_mean=True,
+            ),
+        },
+    }
+
+
 def load_artifact(path: Path) -> ModelArtifact:
     if not path.is_file():
         raise ArtifactError(f"model artifact does not exist: {path}")
@@ -71,11 +140,13 @@ def load_artifact(path: Path) -> ModelArtifact:
         artifact = joblib.load(path)
     except Exception as exc:
         raise ArtifactError(f"model artifact could not be loaded: {path}") from exc
-    return validate_artifact(artifact)
+    return parse_artifact(artifact)
 
 
-def validate_artifact(value: object) -> ModelArtifact:
-    artifact = _mapping(value, "artifact")
+def parse_artifact(artifact: object) -> ModelArtifact:
+    if not isinstance(artifact, dict):
+        raise ArtifactError("artifact must be a mapping")
+
     required = {
         "model",
         "trained_at",
@@ -91,60 +162,25 @@ def validate_artifact(value: object) -> ModelArtifact:
 
     if artifact["algorithm"] != "LinearRegression":
         raise ArtifactError("artifact algorithm must be LinearRegression")
+
     if artifact["features"] != list(FEATURE_NAMES):
         raise ArtifactError("artifact uses an incompatible feature order")
 
-    timestamp = artifact["trained_at"]
-    if not isinstance(timestamp, str):
-        raise ArtifactError("artifact trained_at must be an ISO 8601 UTC string")
-    try:
-        parsed_timestamp = datetime.fromisoformat(timestamp)
-    except ValueError as exc:
-        raise ArtifactError(
-            "artifact trained_at must be an ISO 8601 UTC string"
-        ) from exc
-    if parsed_timestamp.tzinfo is None or parsed_timestamp.utcoffset() != timedelta(0):
-        raise ArtifactError("artifact trained_at must use UTC")
+    trained_at = artifact["trained_at"]
+    if not isinstance(trained_at, str):
+        raise ArtifactError("artifact trained_at must be a string")
 
-    model = artifact["model"]
-    if not isinstance(model, LinearRegression):
-        raise ArtifactError("artifact model must be LinearRegression")
-    try:
-        check_is_fitted(model, ["coef_", "intercept_"])
-        coefficients = [
-            _finite_number(value, "model coefficient") for value in model.coef_
-        ]
-        _finite_number(model.intercept_, "model intercept")
-    except ArtifactError:
-        raise
-    except Exception as exc:
-        raise ArtifactError("artifact model is not fitted") from exc
-    if len(coefficients) != len(FEATURE_NAMES):
-        raise ArtifactError("artifact coefficient count is incompatible")
-
-    cross_validation = _mapping(artifact["cross_validation"], "cross_validation")
-    if cross_validation.get("folds") != 5:
-        raise ArtifactError("cross_validation folds must equal 5")
-    if cross_validation.get("shuffle") is not True:
-        raise ArtifactError("cross_validation shuffle must be true")
-    if cross_validation.get("random_state") != 42:
-        raise ArtifactError("cross_validation random_state must equal 42")
-
-    metrics = _mapping(cross_validation.get("metrics"), "metrics")
-    for metric_name in ("r2", "rmse", "mae"):
-        summary = _mapping(metrics.get(metric_name), metric_name)
-        mean = _finite_number(summary.get("mean"), f"{metric_name}.mean")
-        std = _finite_number(summary.get("std"), f"{metric_name}.std")
-        if std < 0:
-            raise ArtifactError(f"{metric_name}.std must be non-negative")
-        if metric_name in {"rmse", "mae"} and mean < 0:
-            raise ArtifactError(f"{metric_name}.mean must be non-negative")
-
-    return cast(ModelArtifact, artifact)
+    return {
+        "model": _parse_model(artifact["model"]),
+        "trained_at": trained_at,
+        "algorithm": "LinearRegression",
+        "features": list(FEATURE_NAMES),
+        "cross_validation": _parse_cross_validation(artifact["cross_validation"]),
+    }
 
 
 def save_artifact(artifact: ModelArtifact, path: Path) -> None:
-    validated = validate_artifact(artifact)
+    parsed_artifact = parse_artifact(artifact)
     temporary_path: Path | None = None
 
     try:
@@ -156,7 +192,7 @@ def save_artifact(artifact: ModelArtifact, path: Path) -> None:
             delete=False,
         ) as temporary:
             temporary_path = Path(temporary.name)
-        joblib.dump(validated, temporary_path)
+        joblib.dump(parsed_artifact, temporary_path)
         os.replace(temporary_path, path)
         temporary_path = None
     except Exception as exc:

@@ -5,8 +5,8 @@ import pytest
 from prediction_service.artifact import (
     ArtifactError,
     load_artifact,
+    parse_artifact,
     save_artifact,
-    validate_artifact,
 )
 from prediction_service.models import FEATURE_NAMES
 
@@ -25,11 +25,17 @@ def test_valid_artifact_round_trips(tmp_path: Path, artifact_factory) -> None:
     "mutation",
     [
         lambda artifact: artifact.update(features=list(reversed(FEATURE_NAMES))),
-        lambda artifact: artifact.update(trained_at="2026-07-21T12:00:00"),
+        lambda artifact: artifact.update(trained_at=123),
         lambda artifact: artifact.pop("cross_validation"),
         lambda artifact: artifact["cross_validation"]["metrics"]["rmse"].update(
             mean=float("nan")
         ),
+    ],
+    ids=[
+        "incompatible-feature-order",
+        "invalid-trained-at-type",
+        "missing-cross-validation",
+        "non-finite-rmse",
     ],
 )
 def test_incompatible_artifact_is_rejected(artifact_factory, mutation) -> None:
@@ -37,7 +43,7 @@ def test_incompatible_artifact_is_rejected(artifact_factory, mutation) -> None:
     mutation(artifact)
 
     with pytest.raises(ArtifactError):
-        validate_artifact(artifact)
+        parse_artifact(artifact)
 
 
 def test_missing_and_corrupt_artifacts_are_rejected(tmp_path: Path) -> None:

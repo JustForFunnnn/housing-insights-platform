@@ -35,7 +35,7 @@ class HousingFields(BaseModel):
 
     _year_is_not_in_future = field_validator("year_built")(validate_year_built)
 
-    def to_domain(self) -> HousingFeatures:
+    def to_features(self) -> HousingFeatures:
         return HousingFeatures(**self.model_dump())
 
 
@@ -48,7 +48,7 @@ class TrainingRow(HousingFields):
 
     price: NonNegativeInt64Price
 
-    def to_domain(self) -> HousingFeatures:
+    def to_features(self) -> HousingFeatures:
         values = self.model_dump(exclude={"price"})
         return HousingFeatures(**values)
 
@@ -60,7 +60,11 @@ class PredictionRequest(BaseModel):
 
 
 class ResponseModel(BaseModel):
-    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
+    model_config = ConfigDict(
+        extra="forbid",
+        allow_inf_nan=False,
+        from_attributes=True,
+    )
 
 
 class PredictionResponse(ResponseModel):

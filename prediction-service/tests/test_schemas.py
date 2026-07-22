@@ -26,7 +26,7 @@ VALID_INSTANCE = {
 
 def test_request_maps_to_semantic_domain_features() -> None:
     request = PredictionRequest.model_validate({"instances": [VALID_INSTANCE]})
-    features = request.instances[0].to_domain()
+    features = request.instances[0].to_features()
 
     assert FEATURE_NAMES == tuple(field.name for field in fields(HousingFeatures))
     assert features == HousingFeatures(
@@ -53,6 +53,16 @@ def test_request_maps_to_semantic_domain_features() -> None:
         {"instances": [{**VALID_INSTANCE, "school_rating": 11}]},
         {"instances": [{**VALID_INSTANCE, "year_built": datetime.now().year + 1}]},
     ],
+    ids=[
+        "missing-instances",
+        "empty-instances",
+        "too-many-instances",
+        "non-list-instances",
+        "string-feature",
+        "boolean-feature",
+        "school-rating-out-of-range",
+        "future-year-built",
+    ],
 )
 def test_invalid_requests_are_rejected(payload: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
@@ -69,21 +79,33 @@ def test_training_schema_has_independent_coercion_and_extra_policy() -> None:
         }
     )
 
-    assert row.to_domain().square_footage == 1850
+    assert row.to_features().square_footage == 1850
     assert row.price == 265000
 
     with pytest.raises(ValidationError):
         TrainingRow.model_validate({**VALID_INSTANCE, "price": 265000.5})
 
 
-def test_response_constraints_are_explicit() -> None:
+def test_prediction_response_rejects_negative_count() -> None:
     with pytest.raises(ValidationError):
-        PredictionResponse(predictions=[], count=-1)
-    with pytest.raises(ValidationError):
-        PredictionResponse(predictions=[float("inf")], count=1)
+        PredictionResponse(predictions=[285479], count=-1)
+
+
+def test_prediction_response_rejects_non_integer_prediction() -> None:
     with pytest.raises(ValidationError):
         PredictionResponse(predictions=[285478.9], count=1)
+
+
+def test_metric_response_rejects_non_finite_values() -> None:
+    with pytest.raises(ValidationError):
+        MetricSummaryResponse(mean=float("inf"), std=0)
+
+
+def test_metric_response_rejects_negative_standard_deviation() -> None:
     with pytest.raises(ValidationError):
         MetricSummaryResponse(mean=1, std=-1)
+
+
+def test_error_metric_response_rejects_negative_mean() -> None:
     with pytest.raises(ValidationError):
         ErrorMetricSummaryResponse(mean=-1, std=0)
