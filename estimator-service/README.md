@@ -1,0 +1,90 @@
+# Estimator Service
+
+FastAPI backend that requests housing-price predictions and persists estimate history
+in SQLite.
+
+## Design
+
+The service follows the same application structure as `prediction-service`:
+
+- `app.py` assembles the application, lifecycle, and safe exception handlers.
+- `api.py` owns the public HTTP endpoints.
+- `schemas.py` defines the strict public and downstream contracts.
+- `prediction_client.py` integrates with the prediction service.
+- `estimator.py` coordinates predictions and atomic persistence.
+- `data_access.py` owns SQLite initialization, transactions, and queries.
+- `observability.py` owns request correlation and safe request logging.
+
+Estimate history is global. Batch inserts are atomic, reads may use independent SQLite
+connections, and writes are serialized within the single service process.
+
+## Local development
+
+Run commands from `estimator-service/`:
+
+```bash
+uv sync --extra dev
+uv run pytest
+uv run uvicorn estimator_service.app:app --reload --port 8100
+```
+
+The prediction service defaults to <http://localhost:8000>. Swagger UI is available
+at <http://localhost:8100/docs>.
+
+Configuration:
+
+- `PREDICTION_SERVICE_URL` defaults to `http://localhost:8000`.
+- `PREDICTION_SERVICE_TIMEOUT_SECONDS` defaults to `5`.
+- `ESTIMATOR_DATABASE_PATH` defaults to `data/estimator.db`.
+
+## API
+
+Every request accepts an optional `X-Request-ID`. The same identifier is returned in
+the response and propagated to the prediction service.
+
+### Create estimates
+
+`POST /estimates` accepts 1 to 20 properties:
+
+```json
+{
+  "properties": [
+    {
+      "square_footage": 1850,
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "year_built": 1998,
+      "lot_size": 7500,
+      "distance_to_city_center": 5.6,
+      "school_rating": 8.2
+    }
+  ]
+}
+```
+
+The `201` response contains the persisted records in request order, including each
+record's identifier, input property, estimated price, and creation timestamp.
+
+### Query history
+
+- `GET /estimates?limit=20&offset=0` returns newest records first and includes the
+  total record count.
+- `GET /estimates/{estimate_id}` returns one persisted estimate.
+
+An offset at or beyond the total returns `200` with an empty list.
+
+### Health
+
+`GET /health` verifies that SQLite is reachable and queryable. It does not call the
+prediction service, so a prediction-service outage does not make this endpoint fail.
+
+## Docker
+
+From the repository root:
+
+```bash
+docker compose up --build estimator-service
+```
+
+The estimator is available at <http://localhost:8100>. Its SQLite file is stored in a
+named Docker volume.
