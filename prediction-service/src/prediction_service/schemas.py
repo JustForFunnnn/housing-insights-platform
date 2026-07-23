@@ -4,6 +4,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from prediction_service.constants import ErrorCode
 from prediction_service.models import HousingFeatures, validate_year_built
 
 Int64Price = Annotated[int, Field(json_schema_extra={"format": "int64"})]
@@ -73,7 +74,7 @@ class PredictionResponse(ResponseModel):
 
 
 class ErrorResponse(ResponseModel):
-    error_code: str
+    error_code: ErrorCode
     message: str
 
 

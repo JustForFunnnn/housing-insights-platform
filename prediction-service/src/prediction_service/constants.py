@@ -1,5 +1,13 @@
 import os
+from enum import StrEnum
 from pathlib import Path
+
+
+class ErrorCode(StrEnum):
+    VALIDATION_ERROR = "validation_error"
+    HTTP_ERROR = "http_error"
+    INTERNAL_ERROR = "internal_error"
+
 
 FEATURE_NAMES = (
     "square_footage",
