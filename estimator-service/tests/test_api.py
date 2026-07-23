@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import sqlite3
 from datetime import datetime
 from pathlib import Path
 from uuid import UUID
@@ -10,6 +9,8 @@ from uuid import UUID
 import httpx2
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import URL
 
 from estimator_service.constants import MAX_PAGE_LIMIT
 from estimator_service.errors import (
@@ -17,6 +18,9 @@ from estimator_service.errors import (
     PredictionServiceUnavailableError,
 )
 from tests.conftest import VALID_PROPERTY, StubPredictionClient
+
+SUPPLIED_REQUEST_ID = "123e4567-e89b-42d3-a456-426614174000"
+INVALID_REQUEST_ID = "estimate-request-123"
 
 
 def test_api_contract_and_swagger(app_factory) -> None:
@@ -36,7 +40,12 @@ def test_api_contract_and_swagger(app_factory) -> None:
     price_schema = openapi.json()["components"]["schemas"][
         "EstimateRecordResponse"
     ]["properties"]["estimated_price"]
-    assert price_schema == {"type": "integer", "format": "int64", "title": "Estimated Price"}
+    assert price_schema == {
+        "type": "integer",
+        "minimum": 0.0,
+        "format": "int64",
+        "title": "Estimated Price",
+    }
     assert docs.status_code == 200
 
 
@@ -49,7 +58,7 @@ def test_create_single_and_batch_estimates_and_propagate_request_id(
         single = client.post(
             "/estimates",
             json={"properties": [VALID_PROPERTY]},
-            headers={"X-Request-ID": "estimate-request-123"},
+            headers={"X-Request-ID": SUPPLIED_REQUEST_ID},
         )
         batch = client.post(
             "/estimates",
@@ -60,9 +69,14 @@ def test_create_single_and_batch_estimates_and_propagate_request_id(
                 ]
             },
         )
+        replaced = client.post(
+            "/estimates",
+            json={"properties": [VALID_PROPERTY]},
+            headers={"X-Request-ID": INVALID_REQUEST_ID},
+        )
 
     assert single.status_code == 201
-    assert single.headers["X-Request-ID"] == "estimate-request-123"
+    assert single.headers["X-Request-ID"] == SUPPLIED_REQUEST_ID
     assert single.json()["count"] == 1
     record = single.json()["estimates"][0]
     assert UUID(record["id"])
@@ -74,8 +88,13 @@ def test_create_single_and_batch_estimates_and_propagate_request_id(
         90000,
         210000,
     ]
-    assert prediction.calls[0][1] == "estimate-request-123"
+    assert prediction.calls[0][1] == SUPPLIED_REQUEST_ID
     assert len(batch.headers["X-Request-ID"]) == 32
+    assert replaced.status_code == 201
+    replaced_request_id = replaced.headers["X-Request-ID"]
+    assert len(replaced_request_id) == 32
+    assert replaced_request_id != INVALID_REQUEST_ID
+    assert prediction.calls[2][1] == replaced_request_id
 
 
 def test_history_detail_pagination_and_out_of_range_offset(app_factory) -> None:
@@ -153,7 +172,7 @@ def test_validation_and_http_errors_use_safe_contract(app_factory) -> None:
         invalid = client.post(
             "/estimates",
             json={"properties": []},
-            headers={"X-Request-ID": "invalid-request"},
+            headers={"X-Request-ID": SUPPLIED_REQUEST_ID},
         )
         invalid_uuid = client.get("/estimates/not-a-uuid")
         missing_route = client.get("/missing")
@@ -163,7 +182,7 @@ def test_validation_and_http_errors_use_safe_contract(app_factory) -> None:
         )
 
     assert invalid.status_code == 422
-    assert invalid.headers["X-Request-ID"] == "invalid-request"
+    assert invalid.headers["X-Request-ID"] == SUPPLIED_REQUEST_ID
     assert invalid.json() == {
         "error_code": "validation_error",
         "message": "Request validation failed.",
@@ -235,29 +254,35 @@ def test_health_returns_503_when_database_becomes_unavailable(
     app_factory,
     tmp_path: Path,
 ) -> None:
-    app, store, _prediction = app_factory()
+    database_directory = tmp_path / "health-database"
+    database_path = database_directory / "estimator.db"
+    app, _store, _prediction = app_factory(database_path=database_path)
     with TestClient(app) as client:
         assert client.get("/health").status_code == 200
-        store.database_path = tmp_path / "missing-parent" / "unavailable.db"
+        for path in database_directory.iterdir():
+            path.unlink()
+        database_directory.rmdir()
+        database_directory.write_text("blocked", encoding="utf-8")
         response = client.get("/health")
 
     assert response.status_code == 503
     assert response.json()["error_code"] == "database_unavailable"
 
 
-def test_startup_fails_when_database_path_is_unusable(
+def test_startup_does_not_create_an_uninitialized_database(
     app_factory,
     tmp_path: Path,
 ) -> None:
-    blocker = tmp_path / "not-a-directory"
-    blocker.write_text("blocked", encoding="utf-8")
+    database_path = tmp_path / "uninitialized.db"
     app, _store, _prediction = app_factory(
-        database_path=blocker / "estimator.db"
+        database_path=database_path,
+        initialize_schema=False,
     )
 
-    with pytest.raises(Exception, match="database directory"):
+    with pytest.raises(Exception, match="not been initialized"):
         with TestClient(app):
             pass
+    assert not database_path.exists()
 
 
 def test_second_insert_failure_rolls_back_first_insert(
@@ -266,10 +291,17 @@ def test_second_insert_failure_rolls_back_first_insert(
 ) -> None:
     database_path = tmp_path / "rollback.db"
     app, _store, _prediction = app_factory(database_path=database_path)
+    engine = create_engine(
+        URL.create(
+            "sqlite+pysqlite",
+            database=str(database_path.resolve()),
+        )
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
-        with sqlite3.connect(database_path) as connection:
+        with engine.begin() as connection:
             connection.execute(
-                """
+                text(
+                    """
                 CREATE TRIGGER fail_second_test_insert
                 BEFORE INSERT ON estimates
                 WHEN NEW.square_footage = 9999
@@ -277,6 +309,7 @@ def test_second_insert_failure_rolls_back_first_insert(
                     SELECT RAISE(ABORT, 'forced second insert failure');
                 END
                 """
+                )
             )
         response = client.post(
             "/estimates",
@@ -288,8 +321,11 @@ def test_second_insert_failure_rolls_back_first_insert(
             },
         )
 
-    with sqlite3.connect(database_path) as connection:
-        count = connection.execute("SELECT COUNT(*) FROM estimates").fetchone()[0]
+    with engine.connect() as connection:
+        count = connection.execute(
+            text("SELECT COUNT(*) FROM estimates")
+        ).scalar_one()
+    engine.dispose()
 
     assert response.status_code == 500
     assert response.json()["error_code"] == "internal_error"
@@ -342,12 +378,16 @@ def test_request_log_contains_correlation_but_not_housing_data(
         response = client.post(
             "/estimates",
             json={"properties": [VALID_PROPERTY]},
-            headers={"X-Request-ID": "logged-request"},
+            headers={"X-Request-ID": SUPPLIED_REQUEST_ID},
         )
 
-    records = [record.message for record in caplog.records]
-    request_log = next(message for message in records if "request_completed" in message)
-    assert "request_id=logged-request" in request_log
-    assert "method=POST path=/estimates status=201" in request_log
-    assert "1850" not in request_log
-    assert str(response.json()["estimates"][0]["estimated_price"]) not in request_log
+    request_record = next(
+        record for record in caplog.records if "request_completed" in record.message
+    )
+    assert request_record.correlation_id == SUPPLIED_REQUEST_ID
+    assert "method=POST path=/estimates status=201" in request_record.message
+    assert "1850" not in request_record.message
+    assert (
+        str(response.json()["estimates"][0]["estimated_price"])
+        not in request_record.message
+    )

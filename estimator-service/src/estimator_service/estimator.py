@@ -22,19 +22,14 @@ class EstimatorService:
     async def create_estimates(
         self,
         properties: Sequence[PropertyFeatures],
-        request_id: str,
     ) -> tuple[EstimateRecord, ...]:
-        predictions = await self._prediction_client.predict(
-            properties,
-            request_id=request_id,
-        )
-        created_at = datetime.now(timezone.utc)
+        predictions = await self._prediction_client.predict(properties)
         records = tuple(
             EstimateRecord(
                 id=uuid4(),
                 property=property_features,
                 estimated_price=prediction,
-                created_at=created_at,
+                created_at=datetime.now(timezone.utc),
             )
             for property_features, prediction in zip(
                 properties,
@@ -46,7 +41,14 @@ class EstimatorService:
         return records
 
     async def list_estimates(self, limit: int, offset: int) -> EstimatePage:
-        return await self._store.list(limit=limit, offset=offset)
+        estimates = await self._store.list(limit=limit, offset=offset)
+        total = await self._store.count()
+        return EstimatePage(
+            estimates=estimates,
+            total=total,
+            limit=limit,
+            offset=offset,
+        )
 
     async def get_estimate(self, estimate_id: UUID) -> EstimateRecord:
         record = await self._store.get(estimate_id)

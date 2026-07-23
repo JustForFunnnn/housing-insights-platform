@@ -106,7 +106,7 @@ def test_invalid_data_preserves_existing_artifact(
     assert output.read_bytes() == b"existing-artifact"
 
 
-def test_cli_trains_to_selected_output(write_dataset, tmp_path: Path) -> None:
+def test_cli_trains_to_explicit_output(write_dataset, tmp_path: Path) -> None:
     output = tmp_path / "cli" / "model.joblib"
 
     exit_code = main([str(write_dataset()), "--output", str(output)])

@@ -9,7 +9,6 @@ from estimator_service.constants import (
     MAX_PAGE_LIMIT,
 )
 from estimator_service.data_access import SQLiteEstimateStore
-from estimator_service.observability import request_id_from_request
 from estimator_service.schemas import (
     ErrorResponse,
     EstimateBatchResponse,
@@ -50,12 +49,10 @@ def get_estimate_store(request: Request) -> SQLiteEstimateStore:
 )
 async def create_estimates(
     payload: EstimateRequest,
-    request: Request,
     service: EstimatorService = Depends(get_estimator_service),
 ) -> EstimateBatchResponse:
     records = await service.create_estimates(
         [item.to_features() for item in payload.properties],
-        request_id=request_id_from_request(request),
     )
     return EstimateBatchResponse.from_records(records)
 

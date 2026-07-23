@@ -28,6 +28,8 @@ VALID_INSTANCE = {
     "distance_to_city_center": 5.6,
     "school_rating": 8.2,
 }
+SUPPLIED_REQUEST_ID = "123e4567-e89b-42d3-a456-426614174000"
+INVALID_REQUEST_ID = "upstream-request-123"
 
 
 class StubPredictionService:
@@ -76,7 +78,11 @@ def test_api_contract_and_swagger() -> None:
     prediction_items = openapi.json()["components"]["schemas"]["PredictionResponse"][
         "properties"
     ]["predictions"]["items"]
-    assert prediction_items == {"type": "integer", "format": "int64"}
+    assert prediction_items == {
+        "type": "integer",
+        "minimum": 0.0,
+        "format": "int64",
+    }
     predict_responses = openapi.json()["paths"]["/predict"]["post"]["responses"]
     assert predict_responses["422"]["content"]["application/json"]["schema"] == {
         "$ref": "#/components/schemas/ErrorResponse"
@@ -87,25 +93,31 @@ def test_api_contract_and_swagger() -> None:
     assert docs.status_code == 200
 
 
-def test_supplied_request_id_is_returned_and_logged(
+def test_request_ids_are_preserved_generated_replaced_and_logged(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     caplog.set_level(logging.INFO, logger="prediction_service.observability")
     with TestClient(create_app(prediction_service=StubPredictionService())) as client:
         response = client.get(
             "/health",
-            headers={REQUEST_ID_HEADER: "upstream-request-123"},
+            headers={REQUEST_ID_HEADER: SUPPLIED_REQUEST_ID},
         )
         generated = client.get("/health")
+        replaced = client.get(
+            "/health",
+            headers={REQUEST_ID_HEADER: INVALID_REQUEST_ID},
+        )
 
     record = next(
         record for record in caplog.records if "request_completed" in record.message
     )
-    assert response.headers[REQUEST_ID_HEADER] == "upstream-request-123"
-    assert "request_id=upstream-request-123" in record.message
+    assert response.headers[REQUEST_ID_HEADER] == SUPPLIED_REQUEST_ID
+    assert record.correlation_id == SUPPLIED_REQUEST_ID
     assert "method=GET path=/health status=200" in record.message
     assert len(generated.headers[REQUEST_ID_HEADER]) == 32
-    assert generated.headers[REQUEST_ID_HEADER] != "upstream-request-123"
+    assert generated.headers[REQUEST_ID_HEADER] != SUPPLIED_REQUEST_ID
+    assert len(replaced.headers[REQUEST_ID_HEADER]) == 32
+    assert replaced.headers[REQUEST_ID_HEADER] != INVALID_REQUEST_ID
 
 
 def test_single_and_batch_predictions_always_use_list_envelope() -> None:
@@ -134,11 +146,11 @@ def test_validation_error_uses_standard_response_and_request_id() -> None:
         response = client.post(
             "/predict",
             json={},
-            headers={REQUEST_ID_HEADER: "validation-request"},
+            headers={REQUEST_ID_HEADER: SUPPLIED_REQUEST_ID},
         )
 
     assert response.status_code == 422
-    assert response.headers[REQUEST_ID_HEADER] == "validation-request"
+    assert response.headers[REQUEST_ID_HEADER] == SUPPLIED_REQUEST_ID
     assert response.json() == {
         "error_code": "validation_error",
         "message": "Request validation failed.",
@@ -166,11 +178,11 @@ def test_http_errors_use_standard_safe_responses() -> None:
     with TestClient(create_app(prediction_service=StubPredictionService())) as client:
         missing = client.get(
             "/missing",
-            headers={REQUEST_ID_HEADER: "missing-route-request"},
+            headers={REQUEST_ID_HEADER: SUPPLIED_REQUEST_ID},
         )
         wrong_method = client.get(
             "/predict",
-            headers={REQUEST_ID_HEADER: "wrong-method-request"},
+            headers={REQUEST_ID_HEADER: SUPPLIED_REQUEST_ID},
         )
 
     assert missing.status_code == 404
@@ -178,7 +190,7 @@ def test_http_errors_use_standard_safe_responses() -> None:
         "error_code": "http_error",
         "message": "The request could not be completed.",
     }
-    assert missing.headers[REQUEST_ID_HEADER] == "missing-route-request"
+    assert missing.headers[REQUEST_ID_HEADER] == SUPPLIED_REQUEST_ID
     assert wrong_method.status_code == 405
     assert wrong_method.headers["allow"] == "POST"
     assert wrong_method.json() == {
@@ -193,7 +205,7 @@ def test_failure_is_logged_and_returns_safe_standard_response(
     caplog.set_level(logging.ERROR, logger="prediction_service.app")
     error = RuntimeError("secret model failure")
     app = create_app(prediction_service=StubPredictionService(error=error))
-    request_id = "internal-error-request"
+    request_id = SUPPLIED_REQUEST_ID
     with TestClient(app, raise_server_exceptions=False) as client:
         response = client.post(
             "/predict",
@@ -207,7 +219,7 @@ def test_failure_is_logged_and_returns_safe_standard_response(
     assert f"error={error}" in record.message
     assert record.exc_info is not None
     assert record.exc_info[0] is type(error)
-    assert f"request_id={request_id}" in record.message
+    assert record.correlation_id == request_id
     assert "status=500" in record.message
     assert response.status_code == 500
     assert response.headers[REQUEST_ID_HEADER] == request_id

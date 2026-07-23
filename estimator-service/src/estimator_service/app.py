@@ -4,6 +4,7 @@ import logging
 from collections.abc import Mapping
 from contextlib import asynccontextmanager
 
+from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -12,9 +13,6 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from estimator_service.api import router
 from estimator_service.constants import (
     ErrorCode,
-    ESTIMATOR_DATABASE_PATH,
-    PREDICTION_SERVICE_TIMEOUT_SECONDS,
-    PREDICTION_SERVICE_URL,
     REQUEST_ID_HEADER,
 )
 from estimator_service.data_access import SQLiteEstimateStore
@@ -27,14 +25,15 @@ from estimator_service.errors import (
 )
 from estimator_service.observability import (
     configure_logging,
-    correlate_request,
-    request_id_from_request,
+    current_request_id,
+    log_request,
 )
 from estimator_service.prediction_client import (
     HttpPredictionClient,
     PredictionClient,
 )
 from estimator_service.schemas import ErrorResponse
+from estimator_service.settings import Settings
 
 LOGGER = logging.getLogger(__name__)
 
@@ -42,33 +41,41 @@ LOGGER = logging.getLogger(__name__)
 def create_app(
     prediction_client: PredictionClient | None = None,
     store: SQLiteEstimateStore | None = None,
+    app_settings: Settings | None = None,
 ) -> FastAPI:
+    if app_settings is None:
+        app_settings = Settings()
+
+    should_close_store = False
+    if store is None:
+        store = SQLiteEstimateStore(app_settings.estimator_database_path)
+        should_close_store = True
+
+    should_close_prediction_client = False
+    if prediction_client is None:
+        prediction_client = HttpPredictionClient(
+            base_url=str(app_settings.prediction_service_url),
+            timeout=app_settings.prediction_service_timeout_seconds,
+        )
+        should_close_prediction_client = True
+
     @asynccontextmanager
     async def lifespan(application: FastAPI):
         configure_logging()
-        selected_store = store or SQLiteEstimateStore(ESTIMATOR_DATABASE_PATH)
-        await selected_store.initialize()
-
-        owned_prediction_client: HttpPredictionClient | None = None
-        selected_prediction_client = prediction_client
-        if selected_prediction_client is None:
-            owned_prediction_client = HttpPredictionClient(
-                base_url=PREDICTION_SERVICE_URL,
-                timeout=PREDICTION_SERVICE_TIMEOUT_SECONDS,
-            )
-            selected_prediction_client = owned_prediction_client
-
-        application.state.estimate_store = selected_store
-        application.state.estimator_service = EstimatorService(
-            selected_prediction_client,
-            selected_store,
-        )
-        LOGGER.info("database_ready path=%s", selected_store.database_path)
         try:
+            await store.verify_schema()
+            application.state.estimate_store = store
+            application.state.estimator_service = EstimatorService(
+                prediction_client,
+                store,
+            )
+            LOGGER.info("database_ready path=%s", store.database_path)
             yield
         finally:
-            if owned_prediction_client is not None:
-                await owned_prediction_client.aclose()
+            if should_close_prediction_client:
+                await prediction_client.aclose()
+            if should_close_store:
+                await store.aclose()
 
     application = FastAPI(
         title="Housing Insights Estimator Service",
@@ -77,22 +84,23 @@ def create_app(
         lifespan=lifespan,
     )
     application.include_router(router)
-    application.middleware("http")(correlate_request)
+    application.middleware("http")(log_request)
+    application.add_middleware(
+        CorrelationIdMiddleware,
+        header_name=REQUEST_ID_HEADER,
+    )
     _register_error_handlers(application)
 
     return application
 
 
 def _error_response(
-    request: Request,
     status_code: int,
     error_code: ErrorCode,
     message: str,
     headers: Mapping[str, str] | None = None,
 ) -> JSONResponse:
-    request_id = request_id_from_request(request)
     response_headers = dict(headers or {})
-    response_headers[REQUEST_ID_HEADER] = request_id
     body = ErrorResponse(error_code=error_code, message=message)
     return JSONResponse(
         status_code=status_code,
@@ -104,11 +112,10 @@ def _error_response(
 def _register_error_handlers(application: FastAPI) -> None:
     @application.exception_handler(RequestValidationError)
     async def validation_error(
-        request: Request,
+        _request: Request,
         _exc: RequestValidationError,
     ) -> JSONResponse:
         return _error_response(
-            request,
             status_code=422,
             error_code=ErrorCode.VALIDATION_ERROR,
             message="Request validation failed.",
@@ -116,11 +123,10 @@ def _register_error_handlers(application: FastAPI) -> None:
 
     @application.exception_handler(EstimateNotFoundError)
     async def estimate_not_found(
-        request: Request,
+        _request: Request,
         _exc: EstimateNotFoundError,
     ) -> JSONResponse:
         return _error_response(
-            request,
             status_code=404,
             error_code=ErrorCode.ESTIMATE_NOT_FOUND,
             message="The estimate was not found.",
@@ -128,16 +134,14 @@ def _register_error_handlers(application: FastAPI) -> None:
 
     @application.exception_handler(PredictionServiceUnavailableError)
     async def prediction_unavailable(
-        request: Request,
+        _request: Request,
         exc: PredictionServiceUnavailableError,
     ) -> JSONResponse:
         LOGGER.error(
-            "prediction_unavailable request_id=%s error=%s",
-            request_id_from_request(request),
+            "prediction_unavailable error=%s",
             exc,
         )
         return _error_response(
-            request,
             status_code=503,
             error_code=ErrorCode.PREDICTION_SERVICE_UNAVAILABLE,
             message="Price estimation is temporarily unavailable.",
@@ -145,16 +149,14 @@ def _register_error_handlers(application: FastAPI) -> None:
 
     @application.exception_handler(PredictionServiceInvalidResponseError)
     async def prediction_invalid_response(
-        request: Request,
+        _request: Request,
         exc: PredictionServiceInvalidResponseError,
     ) -> JSONResponse:
         LOGGER.error(
-            "prediction_invalid_response request_id=%s error=%s",
-            request_id_from_request(request),
+            "prediction_invalid_response error=%s",
             exc,
         )
         return _error_response(
-            request,
             status_code=502,
             error_code=ErrorCode.PREDICTION_SERVICE_INVALID_RESPONSE,
             message="The prediction service returned an invalid response.",
@@ -162,16 +164,14 @@ def _register_error_handlers(application: FastAPI) -> None:
 
     @application.exception_handler(StorageUnavailableError)
     async def database_unavailable(
-        request: Request,
+        _request: Request,
         exc: StorageUnavailableError,
     ) -> JSONResponse:
         LOGGER.error(
-            "database_unavailable request_id=%s error=%s",
-            request_id_from_request(request),
+            "database_unavailable error=%s",
             exc,
         )
         return _error_response(
-            request,
             status_code=503,
             error_code=ErrorCode.DATABASE_UNAVAILABLE,
             message="The estimator database is temporarily unavailable.",
@@ -179,11 +179,10 @@ def _register_error_handlers(application: FastAPI) -> None:
 
     @application.exception_handler(StarletteHTTPException)
     async def http_error(
-        request: Request,
+        _request: Request,
         exc: StarletteHTTPException,
     ) -> JSONResponse:
         return _error_response(
-            request,
             status_code=exc.status_code,
             error_code=ErrorCode.HTTP_ERROR,
             message="The request could not be completed.",
@@ -193,18 +192,18 @@ def _register_error_handlers(application: FastAPI) -> None:
     @application.exception_handler(Exception)
     async def unexpected_error(request: Request, exc: Exception) -> JSONResponse:
         LOGGER.exception(
-            "request_failed request_id=%s method=%s path=%s status=500 error=%s",
-            request_id_from_request(request),
+            "request_failed method=%s path=%s status=500 error=%s",
             request.method,
             request.url.path,
             exc,
         )
-        return _error_response(
-            request,
+        response = _error_response(
             status_code=500,
             error_code=ErrorCode.INTERNAL_ERROR,
             message="An unexpected server error occurred.",
         )
+        response.headers[REQUEST_ID_HEADER] = current_request_id()
+        return response
 
 
 app = create_app()

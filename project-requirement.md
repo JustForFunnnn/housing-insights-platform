@@ -132,10 +132,11 @@ All backend services must follow this contract.
 
 ### Request Correlation
 
-1. Accept an `X-Request-ID` header on every request. Generate an identifier when the
-   header is missing.
-2. Return the same identifier in the `X-Request-ID` response header.
-3. Propagate the identifier unchanged when calling another backend service.
+1. Accept an optional UUID4 `X-Request-ID` header on every request. Generate a UUID4
+   identifier when the header is missing or invalid.
+2. Return the active identifier in the `X-Request-ID` response header. Preserve a
+   valid supplied identifier unchanged.
+3. Propagate the active identifier unchanged when calling another backend service.
 4. Include the request ID, HTTP method, request path, and response status in request
    logs.
 5. Do not log credentials, complete request bodies, housing records, or prediction

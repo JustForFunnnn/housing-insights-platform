@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from typing import Protocol
 
 from prediction_service.artifact import MetricSummaryData, ModelArtifact
-from prediction_service.constants import FEATURE_NAMES
+from prediction_service.constants import FEATURE_NAMES, MAX_SIGNED_INT64
 from prediction_service.errors import PredictionError
 from prediction_service.models import (
     CrossValidationInfo,
@@ -44,7 +44,16 @@ class SklearnPredictionService:
             raise PredictionError("model returned the wrong number of predictions")
         if not all(math.isfinite(value) for value in predictions):
             raise PredictionError("model returned a non-finite prediction")
-        return [round(value) for value in predictions]
+
+        rounded_predictions = [round(value) for value in predictions]
+        if not all(
+            0 <= value <= MAX_SIGNED_INT64
+            for value in rounded_predictions
+        ):
+            raise PredictionError(
+                "model returned a prediction outside the supported price range"
+            )
+        return rounded_predictions
 
     def model_info(self) -> ModelInfo:
         cross_validation = self._artifact["cross_validation"]

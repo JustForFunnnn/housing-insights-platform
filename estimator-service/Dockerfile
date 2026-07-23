@@ -22,4 +22,4 @@ RUN --mount=type=cache,target=/root/.cache/uv,sharing=locked \
 
 EXPOSE 8100
 
-CMD ["/app/.venv/bin/uvicorn", "estimator_service.app:app", "--host", "0.0.0.0", "--port", "8100", "--log-level", "info"]
+CMD ["/bin/sh", "-c", "/app/.venv/bin/housing-estimator-init-db && exec /app/.venv/bin/uvicorn estimator_service.app:app --host 0.0.0.0 --port 8100 --log-level info"]

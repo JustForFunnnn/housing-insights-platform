@@ -69,6 +69,8 @@ def test_predictions_are_rounded_to_integers(artifact_factory, monkeypatch) -> N
         ([math.inf], "non-finite"),
         (["not-a-number"], "prediction failed"),
         ([1.0, 2.0], "wrong number"),
+        ([-1.0], "outside the supported price range"),
+        ([float(2**63)], "outside the supported price range"),
     ],
 )
 def test_invalid_prediction_output_is_rejected(

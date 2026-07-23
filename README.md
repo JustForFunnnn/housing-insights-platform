@@ -33,6 +33,7 @@ local Python development, run commands from `estimator-service/`:
 
 ```bash
 uv sync --extra dev
+uv run housing-estimator-init-db
 uv run pytest
 uv run uvicorn estimator_service.app:app --reload --port 8100
 ```

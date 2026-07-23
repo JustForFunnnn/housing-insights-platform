@@ -12,7 +12,11 @@ The service follows the same application structure as `prediction-service`:
 - `schemas.py` defines the strict public and downstream contracts.
 - `prediction_client.py` integrates with the prediction service.
 - `estimator.py` coordinates predictions and atomic persistence.
-- `data_access.py` owns SQLite initialization, transactions, and queries.
+- `data_access.py` owns SQLAlchemy ORM transactions and queries.
+- `database/orm.py` maps the externally managed table for ORM access.
+- `database/ddl/estimate.sql` is the maintained table and index DDL.
+- `database/initialize.py` explicitly applies `estimate.sql`.
+- `settings.py` validates environment-backed configuration.
 - `observability.py` owns request correlation and safe request logging.
 
 Estimate history is global. Batch inserts are atomic, reads may use independent SQLite
@@ -24,6 +28,7 @@ Run commands from `estimator-service/`:
 
 ```bash
 uv sync --extra dev
+uv run housing-estimator-init-db
 uv run pytest
 uv run uvicorn estimator_service.app:app --reload --port 8100
 ```
@@ -37,10 +42,20 @@ Configuration:
 - `PREDICTION_SERVICE_TIMEOUT_SECONDS` defaults to `5`.
 - `ESTIMATOR_DATABASE_PATH` defaults to `data/estimator.db`.
 
+The application does not create or migrate tables during startup. A maintainer
+must run `uv run housing-estimator-init-db` before the first start. The command
+creates missing database objects but does not alter an existing table; until a
+migration mechanism is introduced, later schema changes must be applied
+manually. Use `--database PATH` to initialize a path other than
+`ESTIMATOR_DATABASE_PATH`. The Docker image runs the initialization command
+before Uvicorn so a new volume is initialized automatically.
+
 ## API
 
-Every request accepts an optional `X-Request-ID`. The same identifier is returned in
-the response and propagated to the prediction service.
+Every request accepts an optional UUID4 `X-Request-ID`. A missing or invalid
+identifier is replaced with a generated UUID4 value. The active identifier is
+returned in the response and propagated unchanged to the prediction service
+through request context; a valid supplied identifier is preserved unchanged.
 
 ### Create estimates
 

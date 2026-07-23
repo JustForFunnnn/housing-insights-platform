@@ -4,7 +4,11 @@ from datetime import datetime
 import pytest
 from pydantic import ValidationError
 
-from prediction_service.constants import FEATURE_NAMES, MAX_PREDICTION_INSTANCES
+from prediction_service.constants import (
+    FEATURE_NAMES,
+    MAX_PREDICTION_INSTANCES,
+    MAX_SIGNED_INT64,
+)
 from prediction_service.models import HousingFeatures
 from prediction_service.schemas import (
     ErrorMetricSummaryResponse,
@@ -97,6 +101,14 @@ def test_prediction_response_rejects_negative_count() -> None:
 def test_prediction_response_rejects_non_integer_prediction() -> None:
     with pytest.raises(ValidationError):
         PredictionResponse(predictions=[285478.9], count=1)
+
+
+@pytest.mark.parametrize("prediction", [-1, MAX_SIGNED_INT64 + 1])
+def test_prediction_response_rejects_out_of_range_prediction(
+    prediction: int,
+) -> None:
+    with pytest.raises(ValidationError):
+        PredictionResponse(predictions=[prediction], count=1)
 
 
 def test_metric_response_rejects_non_finite_values() -> None:

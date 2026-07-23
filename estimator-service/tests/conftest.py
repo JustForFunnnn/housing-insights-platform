@@ -7,7 +7,9 @@ import pytest
 
 from estimator_service.app import create_app
 from estimator_service.data_access import SQLiteEstimateStore
+from estimator_service.database.initialize import initialize_database
 from estimator_service.models import PropertyFeatures
+from estimator_service.observability import current_request_id
 
 VALID_PROPERTY = {
     "square_footage": 1850,
@@ -28,10 +30,9 @@ class StubPredictionClient:
     async def predict(
         self,
         properties: Sequence[PropertyFeatures],
-        request_id: str,
     ) -> list[int]:
         captured = list(properties)
-        self.calls.append((captured, request_id))
+        self.calls.append((captured, current_request_id()))
         if self.error is not None:
             raise self.error
         return [round(item.square_footage * 100) for item in captured]
@@ -48,17 +49,23 @@ def app_factory(tmp_path: Path):
         prediction_client: StubPredictionClient | None = None,
         store: SQLiteEstimateStore | None = None,
         database_path: Path | None = None,
+        initialize_schema: bool = True,
     ):
-        selected_path = database_path or tmp_path / "estimator.db"
-        selected_store = store or SQLiteEstimateStore(selected_path)
-        selected_prediction_client = prediction_client or StubPredictionClient()
+        if database_path is None:
+            database_path = tmp_path / "estimator.db"
+        if store is None:
+            store = SQLiteEstimateStore(database_path)
+        if initialize_schema:
+            initialize_database(store.database_path)
+        if prediction_client is None:
+            prediction_client = StubPredictionClient()
         return (
             create_app(
-                prediction_client=selected_prediction_client,
-                store=selected_store,
+                prediction_client=prediction_client,
+                store=store,
             ),
-            selected_store,
-            selected_prediction_client,
+            store,
+            prediction_client,
         )
 
     return build

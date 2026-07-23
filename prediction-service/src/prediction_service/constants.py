@@ -1,6 +1,4 @@
-import os
 from enum import StrEnum
-from pathlib import Path
 
 
 class ErrorCode(StrEnum):
@@ -21,10 +19,8 @@ FEATURE_NAMES = (
 TARGET_NAME = "price"
 REQUIRED_COLUMNS = (*FEATURE_NAMES, TARGET_NAME)
 MAX_PREDICTION_INSTANCES = 20
+MAX_SIGNED_INT64 = 2**63 - 1
 
-MODEL_ARTIFACT_PATH = Path(
-    os.getenv("MODEL_ARTIFACT_PATH", "artifacts/model_pipeline.joblib")
-)
 REQUEST_ID_HEADER = "X-Request-ID"
 
 MINIMUM_ROWS = 10

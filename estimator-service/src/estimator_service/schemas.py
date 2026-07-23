@@ -4,12 +4,13 @@ from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, field_validator
 
 from estimator_service.constants import (
     ErrorCode,
     MAX_ESTIMATE_PROPERTIES,
     MAX_PAGE_LIMIT,
+    MAX_SIGNED_INT64,
 )
 from estimator_service.models import (
     EstimatePage,
@@ -18,16 +19,28 @@ from estimator_service.models import (
     validate_year_built,
 )
 
-Int64Price = Annotated[int, Field(json_schema_extra={"format": "int64"})]
+
+def _validate_signed_int64(value: int) -> int:
+    if value > MAX_SIGNED_INT64:
+        raise ValueError("value must fit in a signed 64-bit integer")
+    return value
+
+
+NonNegativeInt64Price = Annotated[
+    int,
+    Field(ge=0, json_schema_extra={"format": "int64"}),
+    AfterValidator(_validate_signed_int64),
+]
+
 
 class PropertyInput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     square_footage: float = Field(gt=0, allow_inf_nan=False, examples=[1850])
-    bedrooms: int = Field(ge=0, examples=[3])
-    bathrooms: float = Field(ge=0, allow_inf_nan=False, examples=[2])
-    year_built: int = Field(ge=1800, examples=[1998])
-    lot_size: float = Field(ge=0, allow_inf_nan=False, examples=[7500])
+    bedrooms: int = Field(ge=0, allow_inf_nan=False, examples=[3])
+    bathrooms: float = Field(ge=0, allow_inf_nan=False, examples=[2.5])
+    year_built: int = Field(ge=1800, allow_inf_nan=False, examples=[1998])
+    lot_size: float = Field(gt=0, allow_inf_nan=False, examples=[7500])
     distance_to_city_center: float = Field(
         ge=0,
         allow_inf_nan=False,
@@ -58,7 +71,7 @@ class EstimateRequest(BaseModel):
 class PredictionResponse(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    predictions: list[Int64Price]
+    predictions: list[NonNegativeInt64Price]
     count: int = Field(ge=0)
 
 
@@ -83,7 +96,7 @@ class PropertyResponse(ResponseModel):
 class EstimateRecordResponse(ResponseModel):
     id: UUID
     property: PropertyResponse
-    estimated_price: Int64Price
+    estimated_price: NonNegativeInt64Price
     created_at: datetime
 
     @classmethod

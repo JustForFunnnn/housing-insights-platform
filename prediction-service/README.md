@@ -6,7 +6,8 @@ FastAPI service for training and serving a Scikit-learn linear regression model.
 
 The modules follow the service's actual boundaries:
 
-- `constants.py` contains shared service constants and environment-backed configuration.
+- `constants.py` contains shared service constants.
+- `settings.py` validates environment-backed configuration.
 - `errors.py` contains service-specific exception types.
 - `models.py` contains the feature contract and framework-free result types.
 - `artifact.py` owns model persistence and compatibility checks.
@@ -42,9 +43,10 @@ starting Uvicorn. Its default is `artifacts/model_pipeline.joblib`.
 
 ## API
 
-Each request may include an `X-Request-ID` header for request correlation. When the
-header is missing, the service generates an identifier. The identifier is included in
-application logs and returned in the response header.
+Each request may include a UUID4 `X-Request-ID` header for request correlation.
+When the header is missing or invalid, the service generates a UUID4 identifier.
+The active identifier is included in application logs and returned in the
+response header; a valid supplied identifier is preserved unchanged.
 
 ### Predict
 

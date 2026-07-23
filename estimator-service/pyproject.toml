@@ -9,9 +9,12 @@ description = "Property value estimator"
 requires-python = ">=3.12"
 dependencies = [
     "aiosqlite>=0.21,<1",
+    "asgi-correlation-id>=4.3,<5",
     "fastapi>=0.115,<1",
     "httpx2>=2.7,<3",
     "pydantic>=2.10,<3",
+    "pydantic-settings>=2.10,<3",
+    "sqlalchemy[asyncio]>=2.0,<3",
     "uvicorn[standard]>=0.30,<1",
 ]
 
@@ -20,8 +23,14 @@ dev = [
     "pytest>=8.3,<9",
 ]
 
+[project.scripts]
+housing-estimator-init-db = "estimator_service.database.initialize:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"estimator_service.database.ddl" = ["*.sql"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

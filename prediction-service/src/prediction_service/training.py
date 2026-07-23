@@ -23,7 +23,6 @@ from prediction_service.constants import (
     CV_RANDOM_STATE,
     FEATURE_NAMES,
     MINIMUM_ROWS,
-    MODEL_ARTIFACT_PATH,
     REQUIRED_COLUMNS,
 )
 from prediction_service.errors import ArtifactError, TrainingError
@@ -33,6 +32,7 @@ from prediction_service.models import (
     RegressionMetrics,
 )
 from prediction_service.schemas import TrainingRow
+from prediction_service.settings import Settings
 
 LOGGER = logging.getLogger(__name__)
 
@@ -146,8 +146,10 @@ def _cross_validation_data(info: CrossValidationInfo) -> CrossValidationData:
 
 def train(
     dataset_path: Path,
-    artifact_path: Path = MODEL_ARTIFACT_PATH,
+    artifact_path: Path | None = None,
 ) -> ModelArtifact:
+    if artifact_path is None:
+        artifact_path = Settings().model_artifact_path
     features, prices = load_training_data(dataset_path)
     cross_validation = evaluate_model(features, prices)
     try:
@@ -177,14 +179,19 @@ def train(
     return artifact
 
 
-def _parser() -> argparse.ArgumentParser:
+def _parser(app_settings: Settings | None = None) -> argparse.ArgumentParser:
+    if app_settings is None:
+        app_settings = Settings()
     parser = argparse.ArgumentParser(description="Train the housing price model")
     parser.add_argument("dataset", type=Path, help="path to the training CSV")
     parser.add_argument(
         "--output",
         type=Path,
-        default=MODEL_ARTIFACT_PATH,
-        help=f"artifact output path (default: {MODEL_ARTIFACT_PATH})",
+        default=app_settings.model_artifact_path,
+        help=(
+            "artifact output path "
+            f"(default: {app_settings.model_artifact_path})"
+        ),
     )
     return parser
 

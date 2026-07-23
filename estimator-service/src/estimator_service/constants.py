@@ -1,6 +1,4 @@
-import os
 from enum import StrEnum
-from pathlib import Path
 
 
 class ErrorCode(StrEnum):
@@ -15,19 +13,9 @@ class ErrorCode(StrEnum):
 
 REQUEST_ID_HEADER = "X-Request-ID"
 MAX_ESTIMATE_PROPERTIES = 20
+MAX_SIGNED_INT64 = 2**63 - 1
 DEFAULT_PAGE_LIMIT = 20
 MAX_PAGE_LIMIT = 100
 DEFAULT_PAGE_OFFSET = 0
-
-PREDICTION_SERVICE_URL = os.getenv(
-    "PREDICTION_SERVICE_URL",
-    "http://localhost:8000",
-)
-PREDICTION_SERVICE_TIMEOUT_SECONDS = float(
-    os.getenv("PREDICTION_SERVICE_TIMEOUT_SECONDS", "5")
-)
-ESTIMATOR_DATABASE_PATH = Path(
-    os.getenv("ESTIMATOR_DATABASE_PATH", "data/estimator.db")
-)
 
 SQLITE_BUSY_TIMEOUT_MILLISECONDS = 5_000
