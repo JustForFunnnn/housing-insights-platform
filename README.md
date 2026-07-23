@@ -25,3 +25,26 @@ docker compose up --build prediction-service
 
 The API is then available at <http://localhost:8000>, with Swagger UI at
 <http://localhost:8000/docs>.
+
+## Estimator service
+
+The estimator calls the prediction service and stores estimate history in SQLite. For
+local Python development, run commands from `estimator-service/`:
+
+```bash
+uv sync --extra dev
+uv run pytest
+uv run uvicorn estimator_service.app:app --reload --port 8100
+```
+
+See [estimator-service/README.md](estimator-service/README.md) for its API and
+configuration.
+
+Build and start both backend services from the repository root:
+
+```bash
+docker compose up --build estimator-service
+```
+
+The estimator API is available at <http://localhost:8100>, with Swagger UI at
+<http://localhost:8100/docs>.

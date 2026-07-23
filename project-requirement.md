@@ -158,7 +158,7 @@ All API errors must use the following response shape:
 3. Services must use an appropriate HTTP status code and return the request ID in the
    `X-Request-ID` response header.
 4. Internal exception messages, stack traces, implementation details, and sensitive
-   values must be logged server-side but must not be returned to clients.
+   values must not be returned to clients.
 
 ### Health Checks
 

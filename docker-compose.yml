@@ -18,3 +18,34 @@ services:
       timeout: 3s
       retries: 5
       start_period: 10s
+
+  estimator-service:
+    build:
+      context: estimator-service
+      dockerfile: Dockerfile
+    image: housing-insights/estimator-service:local
+    ports:
+      - "8100:8100"
+    environment:
+      PREDICTION_SERVICE_URL: http://prediction-service:8000
+      PREDICTION_SERVICE_TIMEOUT_SECONDS: "5"
+      ESTIMATOR_DATABASE_PATH: /app/data/estimator.db
+    depends_on:
+      - prediction-service
+    volumes:
+      - estimator-data:/app/data
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://localhost:8100/health', timeout=2)
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  estimator-data:
