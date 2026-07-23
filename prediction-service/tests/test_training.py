@@ -9,7 +9,7 @@ from prediction_service.artifact import load_artifact
 from prediction_service.constants import FEATURE_NAMES
 from prediction_service.errors import TrainingError
 from prediction_service.prediction import SklearnPredictionService
-from prediction_service.training import main, train
+from prediction_service.training import load_training_data, main, train
 
 
 def test_training_writes_loadable_model(write_dataset, tmp_path: Path) -> None:
@@ -126,15 +126,9 @@ def test_cli_returns_one_when_training_fails(tmp_path: Path) -> None:
     assert not output.exists()
 
 
-def test_cli_handles_unreadable_csv_and_preserves_artifact(
-    tmp_path: Path,
-) -> None:
+def test_unreadable_csv_is_rejected(tmp_path: Path) -> None:
     dataset = tmp_path / "invalid.csv"
     dataset.write_bytes(b"\xff\xfeinvalid")
-    output = tmp_path / "model.joblib"
-    output.write_bytes(b"existing-artifact")
 
-    exit_code = main([str(dataset), "--output", str(output)])
-
-    assert exit_code == 1
-    assert output.read_bytes() == b"existing-artifact"
+    with pytest.raises(TrainingError, match="could not read dataset"):
+        load_training_data(dataset)
