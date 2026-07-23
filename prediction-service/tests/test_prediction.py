@@ -3,8 +3,9 @@ import math
 import pytest
 
 from prediction_service.constants import FEATURE_NAMES
+from prediction_service.errors import PredictionError
 from prediction_service.models import HousingFeatures
-from prediction_service.prediction import PredictionError, SklearnPredictionService
+from prediction_service.prediction import SklearnPredictionService
 
 
 def features(square_footage: float, bedrooms: int) -> HousingFeatures:

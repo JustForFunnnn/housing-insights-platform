@@ -3,12 +3,12 @@ from pathlib import Path
 import pytest
 
 from prediction_service.artifact import (
-    ArtifactError,
     load_artifact,
     parse_artifact,
     save_artifact,
 )
 from prediction_service.constants import FEATURE_NAMES
+from prediction_service.errors import ArtifactError
 
 
 def test_valid_artifact_round_trips(tmp_path: Path, artifact_factory) -> None:

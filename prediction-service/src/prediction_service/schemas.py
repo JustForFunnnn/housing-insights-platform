@@ -41,7 +41,7 @@ class HousingFields(BaseModel):
 
 
 class PredictionInstance(HousingFields):
-    model_config = ConfigDict(extra="ignore", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True)
 
 
 class TrainingRow(HousingFields):

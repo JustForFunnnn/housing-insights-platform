@@ -11,15 +11,13 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from prediction_service.api import router
-from prediction_service.artifact import (
-    ArtifactError,
-    load_artifact,
-)
+from prediction_service.artifact import load_artifact
 from prediction_service.constants import (
     ErrorCode,
     MODEL_ARTIFACT_PATH,
     REQUEST_ID_HEADER,
 )
+from prediction_service.errors import ArtifactError
 from prediction_service.observability import (
     configure_logging,
     correlate_request,

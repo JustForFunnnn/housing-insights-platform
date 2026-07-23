@@ -8,7 +8,6 @@ WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    LOG_LEVEL=INFO \
     MODEL_ARTIFACT_PATH=/app/artifacts/model_pipeline.joblib \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never

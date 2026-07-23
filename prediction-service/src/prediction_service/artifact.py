@@ -11,6 +11,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.utils.validation import check_is_fitted
 
 from prediction_service.constants import FEATURE_NAMES
+from prediction_service.errors import ArtifactError
 
 
 class MetricSummaryData(TypedDict):
@@ -37,10 +38,6 @@ class ModelArtifact(TypedDict):
     algorithm: str
     features: list[str]
     cross_validation: CrossValidationData
-
-
-class ArtifactError(RuntimeError):
-    """Raised when a model artifact cannot be read, validated, or written."""
 
 
 def _finite_number(value: object, label: str) -> float:

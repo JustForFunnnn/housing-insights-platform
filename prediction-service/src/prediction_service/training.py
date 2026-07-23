@@ -14,7 +14,6 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, cross_validate
 
 from prediction_service.artifact import (
-    ArtifactError,
     CrossValidationData,
     ModelArtifact,
     save_artifact,
@@ -27,6 +26,7 @@ from prediction_service.constants import (
     MODEL_ARTIFACT_PATH,
     REQUIRED_COLUMNS,
 )
+from prediction_service.errors import ArtifactError, TrainingError
 from prediction_service.models import (
     CrossValidationInfo,
     MetricSummary,
@@ -35,10 +35,6 @@ from prediction_service.models import (
 from prediction_service.schemas import TrainingRow
 
 LOGGER = logging.getLogger(__name__)
-
-
-class TrainingError(ValueError):
-    """Raised when the training data cannot produce a useful model."""
 
 
 def load_training_data(dataset_path: Path) -> tuple[np.ndarray, np.ndarray]:

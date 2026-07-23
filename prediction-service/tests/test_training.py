@@ -7,8 +7,9 @@ import pytest
 
 from prediction_service.artifact import load_artifact
 from prediction_service.constants import FEATURE_NAMES
+from prediction_service.errors import TrainingError
 from prediction_service.prediction import SklearnPredictionService
-from prediction_service.training import TrainingError, main, train
+from prediction_service.training import main, train
 
 
 def test_training_writes_loadable_model(write_dataset, tmp_path: Path) -> None:

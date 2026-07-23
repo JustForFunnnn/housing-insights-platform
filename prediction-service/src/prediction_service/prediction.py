@@ -6,6 +6,7 @@ from typing import Protocol
 
 from prediction_service.artifact import MetricSummaryData, ModelArtifact
 from prediction_service.constants import FEATURE_NAMES
+from prediction_service.errors import PredictionError
 from prediction_service.models import (
     CrossValidationInfo,
     HousingFeatures,
@@ -13,10 +14,6 @@ from prediction_service.models import (
     ModelInfo,
     RegressionMetrics,
 )
-
-
-class PredictionError(RuntimeError):
-    """Raised when the fitted model cannot produce a valid complete batch."""
 
 
 class PredictionService(Protocol):

@@ -8,8 +8,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from prediction_service.app import create_app
-from prediction_service.artifact import ArtifactError, save_artifact
+from prediction_service.artifact import save_artifact
 from prediction_service.constants import FEATURE_NAMES, REQUEST_ID_HEADER
+from prediction_service.errors import ArtifactError
 from prediction_service.models import (
     CrossValidationInfo,
     HousingFeatures,
