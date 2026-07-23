@@ -4,7 +4,7 @@ from datetime import datetime
 import pytest
 from pydantic import ValidationError
 
-from prediction_service.constants import FEATURE_NAMES
+from prediction_service.constants import FEATURE_NAMES, MAX_PREDICTION_INSTANCES
 from prediction_service.models import HousingFeatures
 from prediction_service.schemas import (
     ErrorMetricSummaryResponse,
@@ -47,7 +47,7 @@ def test_request_maps_to_semantic_domain_features() -> None:
     [
         {},
         {"instances": []},
-        {"instances": [VALID_INSTANCE] * 101},
+        {"instances": [VALID_INSTANCE] * (MAX_PREDICTION_INSTANCES + 1)},
         {"instances": VALID_INSTANCE},
         {"instances": [{**VALID_INSTANCE, "square_footage": "1850"}]},
         {"instances": [{**VALID_INSTANCE, "square_footage": True}]},

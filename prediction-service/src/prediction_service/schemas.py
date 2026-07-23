@@ -4,7 +4,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from prediction_service.constants import ErrorCode
+from prediction_service.constants import ErrorCode, MAX_PREDICTION_INSTANCES
 from prediction_service.models import HousingFeatures, validate_year_built
 
 Int64Price = Annotated[int, Field(json_schema_extra={"format": "int64"})]
@@ -57,7 +57,10 @@ class TrainingRow(HousingFields):
 class PredictionRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    instances: list[PredictionInstance] = Field(min_length=1, max_length=100)
+    instances: list[PredictionInstance] = Field(
+        min_length=1,
+        max_length=MAX_PREDICTION_INSTANCES,
+    )
 
 
 class ResponseModel(BaseModel):

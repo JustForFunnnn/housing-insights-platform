@@ -47,7 +47,7 @@ application logs and returned in the response header.
 
 ### Predict
 
-`POST /predict` always accepts a list of 1 to 100 property records. A single
+`POST /predict` always accepts a list of 1 to 20 property records. A single
 prediction is represented by a one-item list; bare objects are not accepted:
 
 ```json

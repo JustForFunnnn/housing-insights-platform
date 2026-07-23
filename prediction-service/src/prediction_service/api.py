@@ -26,12 +26,7 @@ def get_prediction_service(request: Request) -> PredictionService:
 @router.post(
     "/predict",
     response_model=PredictionResponse,
-    responses={
-        422: {
-            "model": ErrorResponse,
-            "description": "Request validation failed.",
-        }
-    },
+    responses={422: {"model": ErrorResponse}},
 )
 def predict_prices(
     payload: PredictionRequest,
