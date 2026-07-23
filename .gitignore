@@ -30,6 +30,7 @@ $RECYCLE.BIN/
 .superpowers/
 .codex/
 .cursor/
+project-requirement.md
 
 # Python / Flask
 __pycache__/
