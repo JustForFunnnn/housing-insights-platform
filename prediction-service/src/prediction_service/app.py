@@ -48,45 +48,7 @@ def _error_response(
     )
 
 
-def create_app(
-    artifact_path: str | None = None,
-    prediction_service: PredictionService | None = None,
-) -> FastAPI:
-    @asynccontextmanager
-    async def lifespan(application: FastAPI):
-        configure_logging()
-        service = prediction_service
-        if service is None:
-            selected_artifact_path = Path(artifact_path or MODEL_ARTIFACT_PATH)
-            try:
-                service = SklearnPredictionService(
-                    load_artifact(selected_artifact_path)
-                )
-            except ArtifactError as exc:
-                # Uvicorn records the propagated traceback once during startup.
-                LOGGER.error(
-                    "model_load_failed artifact=%s error=%s",
-                    selected_artifact_path,
-                    exc,
-                )
-                raise RuntimeError(
-                    f"could not start without model: {selected_artifact_path}"
-                ) from exc
-
-            LOGGER.info("model_loaded artifact=%s", selected_artifact_path)
-
-        application.state.prediction_service = service
-        yield
-
-    application = FastAPI(
-        title="Housing Insights Prediction Service",
-        description="Predict house prices with a trained linear regression model.",
-        version="0.1.0",
-        lifespan=lifespan,
-    )
-    application.include_router(router)
-    application.middleware("http")(correlate_request)
-
+def _register_error_handlers(application: FastAPI) -> None:
     @application.exception_handler(RequestValidationError)
     async def validation_error(
         request: Request,
@@ -127,6 +89,47 @@ def create_app(
             error_code="internal_error",
             message="An unexpected server error occurred.",
         )
+
+
+def create_app(
+    artifact_path: str | None = None,
+    prediction_service: PredictionService | None = None,
+) -> FastAPI:
+    @asynccontextmanager
+    async def lifespan(application: FastAPI):
+        configure_logging()
+        service = prediction_service
+        if service is None:
+            selected_artifact_path = Path(artifact_path or MODEL_ARTIFACT_PATH)
+            try:
+                service = SklearnPredictionService(
+                    load_artifact(selected_artifact_path)
+                )
+            except ArtifactError as exc:
+                # Uvicorn records the propagated traceback once during startup.
+                LOGGER.error(
+                    "model_load_failed artifact=%s error=%s",
+                    selected_artifact_path,
+                    exc,
+                )
+                raise RuntimeError(
+                    f"could not start without model: {selected_artifact_path}"
+                ) from exc
+
+            LOGGER.info("model_loaded artifact=%s", selected_artifact_path)
+
+        application.state.prediction_service = service
+        yield
+
+    application = FastAPI(
+        title="Housing Insights Prediction Service",
+        description="Predict house prices with a trained linear regression model.",
+        version="0.1.0",
+        lifespan=lifespan,
+    )
+    application.include_router(router)
+    application.middleware("http")(correlate_request)
+    _register_error_handlers(application)
 
     return application
 
