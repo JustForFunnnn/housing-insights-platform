@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import os
 from collections.abc import Mapping
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -17,8 +16,7 @@ from prediction_service.artifact import (
     load_artifact,
 )
 from prediction_service.constants import (
-    DEFAULT_ARTIFACT_PATH,
-    MODEL_ARTIFACT_ENV,
+    MODEL_ARTIFACT_PATH,
     REQUEST_ID_HEADER,
 )
 from prediction_service.observability import (
@@ -34,7 +32,6 @@ LOGGER = logging.getLogger(__name__)
 
 def _error_response(
     request: Request,
-    *,
     status_code: int,
     error_code: str,
     message: str,
@@ -52,7 +49,6 @@ def _error_response(
 
 
 def create_app(
-    *,
     artifact_path: str | None = None,
     prediction_service: PredictionService | None = None,
 ) -> FastAPI:
@@ -61,7 +57,7 @@ def create_app(
         configure_logging()
         service = prediction_service
         if service is None:
-            selected_artifact_path = Path(artifact_path or DEFAULT_ARTIFACT_PATH)
+            selected_artifact_path = Path(artifact_path or MODEL_ARTIFACT_PATH)
             try:
                 service = SklearnPredictionService(
                     load_artifact(selected_artifact_path)
@@ -135,5 +131,4 @@ def create_app(
     return application
 
 
-artifact_path_from_env = os.getenv(MODEL_ARTIFACT_ENV)
-app = create_app(artifact_path=artifact_path_from_env)
+app = create_app()

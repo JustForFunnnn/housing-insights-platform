@@ -56,7 +56,6 @@ def write_dataset(
     valid_rows: list[dict[str, object]],
 ) -> Callable[..., Path]:
     def write(
-        *,
         rows: list[dict[str, object]] | None = None,
         fieldnames: list[str] | None = None,
     ) -> Path:

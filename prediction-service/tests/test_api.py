@@ -30,7 +30,7 @@ VALID_INSTANCE = {
 
 
 class StubPredictionService:
-    def __init__(self, *, error: Exception | None = None) -> None:
+    def __init__(self, error: Exception | None = None) -> None:
         self.error = error
         self.seen: list[list[HousingFeatures]] = []
 

@@ -22,9 +22,9 @@ from prediction_service.artifact import (
 from prediction_service.constants import (
     CV_FOLDS,
     CV_RANDOM_STATE,
-    DEFAULT_ARTIFACT_PATH,
     FEATURE_NAMES,
     MINIMUM_ROWS,
+    MODEL_ARTIFACT_PATH,
     REQUIRED_COLUMNS,
 )
 from prediction_service.models import (
@@ -150,7 +150,7 @@ def _cross_validation_data(info: CrossValidationInfo) -> CrossValidationData:
 
 def train(
     dataset_path: Path,
-    artifact_path: Path = DEFAULT_ARTIFACT_PATH,
+    artifact_path: Path = MODEL_ARTIFACT_PATH,
 ) -> ModelArtifact:
     features, prices = load_training_data(dataset_path)
     cross_validation = evaluate_model(features, prices)
@@ -187,8 +187,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output",
         type=Path,
-        default=DEFAULT_ARTIFACT_PATH,
-        help=f"artifact output path (default: {DEFAULT_ARTIFACT_PATH})",
+        default=MODEL_ARTIFACT_PATH,
+        help=f"artifact output path (default: {MODEL_ARTIFACT_PATH})",
     )
     return parser
 

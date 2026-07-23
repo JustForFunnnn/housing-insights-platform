@@ -10,7 +10,7 @@ import joblib
 from sklearn.linear_model import LinearRegression
 from sklearn.utils.validation import check_is_fitted
 
-from prediction_service.constants import DEFAULT_ARTIFACT_PATH, FEATURE_NAMES
+from prediction_service.constants import FEATURE_NAMES
 
 
 class MetricSummaryData(TypedDict):
@@ -77,7 +77,6 @@ def _parse_model(model: object) -> LinearRegression:
 def _parse_metric_summary(
     summary: object,
     label: str,
-    *,
     non_negative_mean: bool = False,
 ) -> MetricSummaryData:
     if not isinstance(summary, dict):

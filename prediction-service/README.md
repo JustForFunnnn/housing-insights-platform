@@ -6,7 +6,7 @@ FastAPI service for training and serving a Scikit-learn linear regression model.
 
 The modules follow the service's actual boundaries:
 
-- `constants.py` contains shared service constants and configuration names.
+- `constants.py` contains shared service constants and environment-backed configuration.
 - `models.py` contains the feature contract and framework-free result types.
 - `artifact.py` owns model persistence and compatibility checks.
 - `prediction.py` defines the prediction port and its Scikit-learn implementation.
