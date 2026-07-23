@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from sklearn.linear_model import LinearRegression
 
 from prediction_service.artifact import (
     load_artifact,
@@ -43,6 +44,19 @@ def test_incompatible_artifact_is_rejected(artifact_factory, mutation) -> None:
     mutation(artifact)
 
     with pytest.raises(ArtifactError):
+        parse_artifact(artifact)
+
+
+def test_unwrapped_linear_regression_artifact_is_rejected(
+    artifact_factory,
+) -> None:
+    artifact = artifact_factory()
+    artifact["model"] = LinearRegression()
+
+    with pytest.raises(
+        ArtifactError,
+        match="must be TransformedTargetRegressor",
+    ):
         parse_artifact(artifact)
 
 

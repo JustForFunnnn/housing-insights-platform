@@ -58,17 +58,18 @@ class SklearnPredictionService:
     def model_info(self) -> ModelInfo:
         cross_validation = self._artifact["cross_validation"]
         metrics = cross_validation["metrics"]
+        regressor = self._model.regressor_
 
         return ModelInfo(
             training_timestamp=self._artifact["trained_at"],
             algorithm=self._artifact["algorithm"],
             features=FEATURE_NAMES,
-            intercept=float(self._model.intercept_),
+            intercept=float(regressor.intercept_),
             coefficients={
                 feature: float(value)
                 for feature, value in zip(
                     FEATURE_NAMES,
-                    self._model.coef_,
+                    regressor.coef_,
                     strict=True,
                 )
             },

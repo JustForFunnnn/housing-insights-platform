@@ -76,6 +76,10 @@ through request context; a valid supplied identifier is preserved unchanged.
 }
 ```
 
+See the prediction service's
+[housing feature input contract](../prediction-service/README.md#housing-feature-inputs)
+for accepted ranges and validation behavior.
+
 The `201` response contains the persisted records in request order, including each
 record's identifier, input property, estimated price, and creation timestamp.
 

@@ -10,7 +10,12 @@ from fastapi.testclient import TestClient
 
 from prediction_service.app import create_app
 from prediction_service.artifact import save_artifact
-from prediction_service.constants import FEATURE_NAMES, REQUEST_ID_HEADER
+from prediction_service.constants import (
+    ALGORITHM_NAME,
+    FEATURE_NAMES,
+    MAX_SQUARE_FOOTAGE,
+    REQUEST_ID_HEADER,
+)
 from prediction_service.errors import ArtifactError
 from prediction_service.models import (
     CrossValidationInfo,
@@ -48,7 +53,7 @@ class StubPredictionService:
         summary = MetricSummary(mean=1.0, std=0.1)
         return ModelInfo(
             training_timestamp="2026-07-21T12:00:00+00:00",
-            algorithm="LinearRegression",
+            algorithm=ALGORITHM_NAME,
             features=FEATURE_NAMES,
             intercept=1000,
             coefficients={name: 1.0 for name in FEATURE_NAMES},
@@ -74,6 +79,7 @@ def test_health_and_model_info_contract() -> None:
     assert health.json() == {"status": "ok"}
     assert info.status_code == 200
     assert info.json()["training_timestamp"] == "2026-07-21T12:00:00+00:00"
+    assert info.json()["algorithm"] == ALGORITHM_NAME
     assert info.json()["cross_validation"]["folds"] == 5
 
 
@@ -158,6 +164,22 @@ def test_validation_error_uses_standard_response_and_request_id() -> None:
         "error_code": "validation_error",
         "message": "Request validation failed.",
     }
+
+
+def test_feature_above_static_limit_returns_422() -> None:
+    payload = {
+        "instances": [
+            {
+                **VALID_INSTANCE,
+                "square_footage": MAX_SQUARE_FOOTAGE + 1,
+            }
+        ]
+    }
+    with TestClient(create_app(prediction_service=StubPredictionService())) as client:
+        response = client.post("/predict", json=payload)
+
+    assert response.status_code == 422
+    assert response.json()["error_code"] == "validation_error"
 
 
 def test_non_finite_request_returns_serializable_422() -> None:

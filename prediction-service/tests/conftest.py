@@ -5,11 +5,13 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
+import numpy as np
 import pytest
+from sklearn.compose import TransformedTargetRegressor
 from sklearn.linear_model import LinearRegression
 
 from prediction_service.artifact import ModelArtifact
-from prediction_service.constants import FEATURE_NAMES
+from prediction_service.constants import ALGORITHM_NAME, FEATURE_NAMES
 
 DEFAULT_COLUMNS = ["id", *FEATURE_NAMES, "price"]
 
@@ -81,9 +83,13 @@ def artifact_factory(
         features = [[float(row[name]) for name in FEATURE_NAMES] for row in valid_rows]
         prices = [float(row["price"]) for row in valid_rows]
         return {
-            "model": LinearRegression().fit(features, prices),
+            "model": TransformedTargetRegressor(
+                regressor=LinearRegression(),
+                func=np.log,
+                inverse_func=np.exp,
+            ).fit(features, prices),
             "trained_at": datetime.now(UTC).isoformat(),
-            "algorithm": "LinearRegression",
+            "algorithm": ALGORITHM_NAME,
             "features": list(FEATURE_NAMES),
             "cross_validation": {
                 "folds": 5,

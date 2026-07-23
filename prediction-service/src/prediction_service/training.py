@@ -10,6 +10,7 @@ from statistics import fmean, pstdev
 
 import numpy as np
 from pydantic import ValidationError
+from sklearn.compose import TransformedTargetRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, cross_validate
 
@@ -19,6 +20,7 @@ from prediction_service.artifact import (
     save_artifact,
 )
 from prediction_service.constants import (
+    ALGORITHM_NAME,
     CV_FOLDS,
     CV_RANDOM_STATE,
     FEATURE_NAMES,
@@ -35,6 +37,14 @@ from prediction_service.schemas import TrainingRow
 from prediction_service.settings import Settings
 
 LOGGER = logging.getLogger(__name__)
+
+
+def _build_model() -> TransformedTargetRegressor:
+    return TransformedTargetRegressor(
+        regressor=LinearRegression(),
+        func=np.log,
+        inverse_func=np.exp,
+    )
 
 
 def load_training_data(dataset_path: Path) -> tuple[np.ndarray, np.ndarray]:
@@ -87,7 +97,10 @@ def load_training_data(dataset_path: Path) -> tuple[np.ndarray, np.ndarray]:
 def evaluate_model(
     features: np.ndarray,
     prices: np.ndarray,
+    model: TransformedTargetRegressor | None = None,
 ) -> CrossValidationInfo:
+    if model is None:
+        model = _build_model()
     splitter = KFold(
         n_splits=CV_FOLDS,
         shuffle=True,
@@ -100,7 +113,7 @@ def evaluate_model(
     }
     try:
         scores = cross_validate(
-            LinearRegression(),
+            model,
             features,
             prices,
             cv=splitter,
@@ -157,16 +170,17 @@ def train(
     if artifact_path is None:
         artifact_path = Settings().model_artifact_path
     features, prices = load_training_data(dataset_path)
-    cross_validation = evaluate_model(features, prices)
+    model = _build_model()
+    cross_validation = evaluate_model(features, prices, model)
     try:
-        model = LinearRegression().fit(features, prices)
+        model.fit(features, prices)
     except Exception as exc:
         raise TrainingError(f"final model fit failed: {exc}") from exc
 
     artifact: ModelArtifact = {
         "model": model,
         "trained_at": datetime.now(UTC).isoformat(),
-        "algorithm": "LinearRegression",
+        "algorithm": ALGORITHM_NAME,
         "features": list(FEATURE_NAMES),
         "cross_validation": _cross_validation_data(cross_validation),
     }

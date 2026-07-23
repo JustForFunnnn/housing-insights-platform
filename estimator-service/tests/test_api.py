@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
-from estimator_service.constants import MAX_PAGE_LIMIT
+from estimator_service.constants import MAX_PAGE_LIMIT, MAX_SQUARE_FOOTAGE
 from estimator_service.errors import (
     PredictionServiceInvalidResponseError,
     PredictionServiceUnavailableError,
@@ -202,6 +202,24 @@ def test_validation_and_http_errors_use_safe_contract(app_factory) -> None:
     assert missing_route.json()["error_code"] == "http_error"
     assert invalid_limit.status_code == 422
     assert invalid_limit.json()["error_code"] == "validation_error"
+
+
+def test_feature_above_static_limit_returns_422(app_factory) -> None:
+    app, _store, prediction = app_factory()
+    payload = {
+        "properties": [
+            {
+                **VALID_PROPERTY,
+                "square_footage": MAX_SQUARE_FOOTAGE + 1,
+            }
+        ]
+    }
+    with TestClient(app) as client:
+        response = client.post("/estimates", json=payload)
+
+    assert response.status_code == 422
+    assert response.json()["error_code"] == "validation_error"
+    assert prediction.calls == []
 
 
 @pytest.mark.parametrize(

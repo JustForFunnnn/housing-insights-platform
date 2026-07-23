@@ -7,10 +7,12 @@ from pathlib import Path
 from typing import TypedDict
 
 import joblib
+import numpy as np
+from sklearn.compose import TransformedTargetRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.utils.validation import check_is_fitted
 
-from prediction_service.constants import FEATURE_NAMES
+from prediction_service.constants import ALGORITHM_NAME, FEATURE_NAMES
 from prediction_service.errors import ArtifactError
 
 
@@ -33,7 +35,7 @@ class CrossValidationData(TypedDict):
 
 
 class ModelArtifact(TypedDict):
-    model: LinearRegression
+    model: TransformedTargetRegressor
     trained_at: str
     algorithm: str
     features: list[str]
@@ -52,16 +54,22 @@ def _finite_number(value: object, label: str) -> float:
     return number
 
 
-def _parse_model(model: object) -> LinearRegression:
-    if not isinstance(model, LinearRegression):
-        raise ArtifactError("artifact model must be LinearRegression")
+def _parse_model(model: object) -> TransformedTargetRegressor:
+    if not isinstance(model, TransformedTargetRegressor):
+        raise ArtifactError("artifact model must be TransformedTargetRegressor")
+    if model.func is not np.log or model.inverse_func is not np.exp:
+        raise ArtifactError("artifact model must use log and exp target transforms")
     try:
-        check_is_fitted(model, ["coef_", "intercept_"])
+        check_is_fitted(model, ["regressor_", "transformer_"])
+        regressor = model.regressor_
+        if not isinstance(regressor, LinearRegression):
+            raise ArtifactError("artifact regressor must be LinearRegression")
+        check_is_fitted(regressor, ["coef_", "intercept_"])
         coefficients = [
             _finite_number(coefficient, "model coefficient")
-            for coefficient in model.coef_
+            for coefficient in regressor.coef_
         ]
-        _finite_number(model.intercept_, "model intercept")
+        _finite_number(regressor.intercept_, "model intercept")
     except ArtifactError:
         raise
     except Exception as exc:
@@ -154,8 +162,8 @@ def parse_artifact(artifact: object) -> ModelArtifact:
             f"artifact is missing required fields: {', '.join(missing)}"
         )
 
-    if artifact["algorithm"] != "LinearRegression":
-        raise ArtifactError("artifact algorithm must be LinearRegression")
+    if artifact["algorithm"] != ALGORITHM_NAME:
+        raise ArtifactError(f"artifact algorithm must be {ALGORITHM_NAME}")
 
     if artifact["features"] != list(FEATURE_NAMES):
         raise ArtifactError("artifact uses an incompatible feature order")
@@ -167,7 +175,7 @@ def parse_artifact(artifact: object) -> ModelArtifact:
     return {
         "model": _parse_model(artifact["model"]),
         "trained_at": trained_at,
-        "algorithm": "LinearRegression",
+        "algorithm": ALGORITHM_NAME,
         "features": list(FEATURE_NAMES),
         "cross_validation": _parse_cross_validation(artifact["cross_validation"]),
     }

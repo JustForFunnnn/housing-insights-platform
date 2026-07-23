@@ -1,6 +1,7 @@
 # Prediction Service
 
-FastAPI service for training and serving a Scikit-learn linear regression model.
+FastAPI service for training and serving a Scikit-learn log-target linear regression
+model.
 
 ## Design
 
@@ -78,6 +79,26 @@ prediction is represented by a one-item list; bare objects are not accepted:
 
 The numeric result depends on the trained artifact. Raw model outputs are rounded to
 integer prices; OpenAPI exposes each prediction as an `int64` value.
+
+### Housing Feature Inputs
+
+The prediction and estimator services use the same fixed request limits. These limits
+are part of the API contract and are not generated from a training dataset or model
+artifact:
+
+| Field | Accepted range |
+| --- | --- |
+| `square_footage` | greater than 0 and at most 100,000 |
+| `bedrooms` | 0 to 10,000 |
+| `bathrooms` | 0 to 10,000 |
+| `year_built` | 1800 through the current calendar year |
+| `lot_size` | greater than 0 and at most 100,000 |
+| `distance_to_city_center` | 0 to 400 |
+| `school_rating` | 0 to 10 |
+
+Requests outside these ranges return HTTP `422` with the standard validation error
+response. Finite-number, batch-size, and signed 64-bit integer checks also remain in
+effect.
 
 ### Model Information
 

@@ -8,9 +8,15 @@ from pydantic import AfterValidator, BaseModel, ConfigDict, Field, field_validat
 
 from estimator_service.constants import (
     ErrorCode,
+    MAX_BATHROOMS,
+    MAX_BEDROOMS,
+    MAX_DISTANCE_TO_CITY_CENTER,
     MAX_ESTIMATE_PROPERTIES,
+    MAX_LOT_SIZE,
     MAX_PAGE_LIMIT,
+    MAX_SCHOOL_RATING,
     MAX_SIGNED_INT64,
+    MAX_SQUARE_FOOTAGE,
 )
 from estimator_service.models import (
     EstimatePage,
@@ -36,19 +42,40 @@ NonNegativeInt64Price = Annotated[
 class PropertyInput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    square_footage: float = Field(gt=0, allow_inf_nan=False, examples=[1850])
-    bedrooms: int = Field(ge=0, allow_inf_nan=False, examples=[3])
-    bathrooms: float = Field(ge=0, allow_inf_nan=False, examples=[2.5])
+    square_footage: float = Field(
+        gt=0,
+        le=MAX_SQUARE_FOOTAGE,
+        allow_inf_nan=False,
+        examples=[1850],
+    )
+    bedrooms: int = Field(
+        ge=0,
+        le=MAX_BEDROOMS,
+        allow_inf_nan=False,
+        examples=[3],
+    )
+    bathrooms: float = Field(
+        ge=0,
+        le=MAX_BATHROOMS,
+        allow_inf_nan=False,
+        examples=[2.5],
+    )
     year_built: int = Field(ge=1800, allow_inf_nan=False, examples=[1998])
-    lot_size: float = Field(gt=0, allow_inf_nan=False, examples=[7500])
+    lot_size: float = Field(
+        gt=0,
+        le=MAX_LOT_SIZE,
+        allow_inf_nan=False,
+        examples=[7500],
+    )
     distance_to_city_center: float = Field(
         ge=0,
+        le=MAX_DISTANCE_TO_CITY_CENTER,
         allow_inf_nan=False,
         examples=[5.6],
     )
     school_rating: float = Field(
         ge=0,
-        le=10,
+        le=MAX_SCHOOL_RATING,
         allow_inf_nan=False,
         examples=[8.2],
     )

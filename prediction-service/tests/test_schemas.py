@@ -6,8 +6,13 @@ from pydantic import ValidationError
 
 from prediction_service.constants import (
     FEATURE_NAMES,
+    MAX_BATHROOMS,
+    MAX_BEDROOMS,
+    MAX_DISTANCE_TO_CITY_CENTER,
+    MAX_LOT_SIZE,
     MAX_PREDICTION_INSTANCES,
     MAX_SIGNED_INT64,
+    MAX_SQUARE_FOOTAGE,
 )
 from prediction_service.models import HousingFeatures
 from prediction_service.schemas import (
@@ -74,6 +79,28 @@ def test_request_maps_to_semantic_domain_features() -> None:
 def test_invalid_requests_are_rejected(payload: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
         PredictionRequest.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    ("field", "maximum"),
+    [
+        ("square_footage", MAX_SQUARE_FOOTAGE),
+        ("bedrooms", MAX_BEDROOMS),
+        ("bathrooms", MAX_BATHROOMS),
+        ("lot_size", MAX_LOT_SIZE),
+        ("distance_to_city_center", MAX_DISTANCE_TO_CITY_CENTER),
+    ],
+)
+def test_feature_static_upper_limits_are_enforced(
+    field: str,
+    maximum: float,
+) -> None:
+    valid = {**VALID_INSTANCE, field: maximum}
+    invalid = {**VALID_INSTANCE, field: maximum + 1}
+
+    PredictionRequest.model_validate({"instances": [valid]})
+    with pytest.raises(ValidationError):
+        PredictionRequest.model_validate({"instances": [invalid]})
 
 
 def test_training_schema_has_independent_coercion_and_extra_policy() -> None:

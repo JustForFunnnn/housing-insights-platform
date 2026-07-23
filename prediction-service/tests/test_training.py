@@ -4,9 +4,11 @@ import math
 from pathlib import Path
 
 import pytest
+from sklearn.compose import TransformedTargetRegressor
+from sklearn.linear_model import LinearRegression
 
 from prediction_service.artifact import load_artifact
-from prediction_service.constants import FEATURE_NAMES
+from prediction_service.constants import ALGORITHM_NAME, FEATURE_NAMES
 from prediction_service.errors import TrainingError
 from prediction_service.prediction import SklearnPredictionService
 from prediction_service.training import load_training_data, main, train
@@ -19,6 +21,9 @@ def test_training_writes_loadable_model(write_dataset, tmp_path: Path) -> None:
     info = SklearnPredictionService(load_artifact(output)).model_info()
 
     assert output.is_file()
+    assert isinstance(artifact["model"], TransformedTargetRegressor)
+    assert isinstance(artifact["model"].regressor_, LinearRegression)
+    assert artifact["algorithm"] == ALGORITHM_NAME
     assert artifact["features"] == list(FEATURE_NAMES)
     assert set(info.coefficients) == set(FEATURE_NAMES)
     assert info.cross_validation.folds == 5
@@ -73,6 +78,7 @@ def test_missing_column_is_rejected(write_dataset, tmp_path: Path) -> None:
         ("square_footage", -1),
         ("bedrooms", 2.5),
         ("school_rating", 11),
+        ("price", 0),
         ("price", -1),
     ],
 )
