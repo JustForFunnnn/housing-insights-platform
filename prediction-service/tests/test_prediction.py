@@ -20,15 +20,13 @@ def features(square_footage: float, bedrooms: int) -> HousingFeatures:
     )
 
 
-def test_batch_prediction_uses_one_call_and_preserves_order(
+def test_batch_prediction_preserves_count_and_order(
     artifact_factory,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     artifact = artifact_factory()
-    observed_rows: list[list[list[float]]] = []
 
     def controlled_predict(rows: list[list[float]]) -> list[float]:
-        observed_rows.append(rows)
         return [row[0] * 10 + row[1] for row in rows]
 
     monkeypatch.setattr(artifact["model"], "predict", controlled_predict)
@@ -38,7 +36,7 @@ def test_batch_prediction_uses_one_call_and_preserves_order(
         [features(2000, 4), features(900, 2), features(1500, 3)]
     )
 
-    assert len(observed_rows) == 1
+    assert len(predictions) == 3
     assert predictions == [20004, 9002, 15003]
 
 

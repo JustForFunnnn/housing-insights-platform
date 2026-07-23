@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.engine import URL
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
@@ -42,15 +42,18 @@ class SQLiteEstimateStore:
         )
 
     def _create_engine(self) -> AsyncEngine:
+        database_uri = f"file:{self.database_path.resolve().as_posix()}"
         database_url = URL.create(
             "sqlite+aiosqlite",
-            database=str(self.database_path.resolve()),
+            database=database_uri,
+            query={"mode": "rw", "uri": "true"},
         )
         return create_async_engine(
             database_url,
             connect_args={
                 "timeout": self.busy_timeout_milliseconds / 1000,
             },
+            hide_parameters=True,
             poolclass=NullPool,
         )
 
@@ -82,12 +85,13 @@ class SQLiteEstimateStore:
             async with self._write_session() as session:
                 session.add_all(rows)
 
-    async def list(
+    async def list_page(
         self,
         limit: int,
         offset: int,
-    ) -> tuple[EstimateRecord, ...]:
+    ) -> tuple[tuple[EstimateRecord, ...], int]:
         async with self._read_session() as session:
+            await session.execute(text("BEGIN"))
             result = await session.scalars(
                 select(EstimateRow)
                 .order_by(
@@ -100,14 +104,10 @@ class SQLiteEstimateStore:
             records = tuple(
                 self._record_from_row(row) for row in result.all()
             )
-        return records
-
-    async def count(self) -> int:
-        async with self._read_session() as session:
             total = await session.scalar(
                 select(func.count()).select_from(EstimateRow)
             )
-        return int(total or 0)
+        return records, int(total or 0)
 
     async def get(self, estimate_id: UUID) -> EstimateRecord | None:
         async with self._read_session() as session:

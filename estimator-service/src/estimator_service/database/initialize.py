@@ -7,20 +7,18 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
 from sqlalchemy.exc import SQLAlchemyError
 
+from estimator_service.database.orm import Base
 from estimator_service.errors import StorageUnavailableError
 from estimator_service.settings import Settings
 
-DDL_PATH = Path(__file__).parent / "ddl" / "estimate.sql"
-
 
 def initialize_database(database_path: Path) -> None:
-    """Create the SQLite schema by executing the maintained SQL file."""
+    """Create missing SQLite objects from the maintained ORM metadata."""
     try:
         database_path.parent.mkdir(parents=True, exist_ok=True)
-        ddl_sql = DDL_PATH.read_text(encoding="utf-8")
     except OSError as exc:
         raise StorageUnavailableError(
-            "could not read schema or create database directory"
+            "could not create database directory"
         ) from exc
 
     engine = create_engine(
@@ -31,9 +29,8 @@ def initialize_database(database_path: Path) -> None:
     )
     try:
         with engine.begin() as connection:
-            for statement in ddl_sql.split(";"):
-                if statement := statement.strip():
-                    connection.exec_driver_sql(statement)
+            connection.exec_driver_sql("PRAGMA journal_mode = WAL")
+            Base.metadata.create_all(connection)
     except SQLAlchemyError as exc:
         raise StorageUnavailableError("could not initialize database") from exc
     finally:

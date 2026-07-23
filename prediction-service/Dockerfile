@@ -22,6 +22,6 @@ RUN .venv/bin/python -m prediction_service.training \
     "data/House Price Dataset.csv" \
     --output "artifacts/model_pipeline.joblib"
 
-EXPOSE 8000
+EXPOSE 9000
 
-CMD ["/app/.venv/bin/uvicorn", "prediction_service.app:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info"]
+CMD ["/app/.venv/bin/uvicorn", "prediction_service.app:app", "--host", "0.0.0.0", "--port", "9000", "--log-level", "info"]

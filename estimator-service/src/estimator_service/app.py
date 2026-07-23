@@ -21,6 +21,7 @@ from estimator_service.errors import (
     EstimateNotFoundError,
     PredictionServiceInvalidResponseError,
     PredictionServiceUnavailableError,
+    StorageError,
     StorageUnavailableError,
 )
 from estimator_service.observability import (
@@ -175,6 +176,21 @@ def _register_error_handlers(application: FastAPI) -> None:
             status_code=503,
             error_code=ErrorCode.DATABASE_UNAVAILABLE,
             message="The estimator database is temporarily unavailable.",
+        )
+
+    @application.exception_handler(StorageError)
+    async def database_operation_failed(
+        _request: Request,
+        exc: StorageError,
+    ) -> JSONResponse:
+        LOGGER.error(
+            "database_operation_failed error=%s",
+            exc,
+        )
+        return _error_response(
+            status_code=500,
+            error_code=ErrorCode.INTERNAL_ERROR,
+            message="An unexpected server error occurred.",
         )
 
     @application.exception_handler(StarletteHTTPException)

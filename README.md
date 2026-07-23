@@ -23,8 +23,8 @@ Build and start the prediction service from the repository root:
 docker compose up --build prediction-service
 ```
 
-The API is then available at <http://localhost:8000>, with Swagger UI at
-<http://localhost:8000/docs>.
+The API is then available at <http://localhost:9000>, with Swagger UI at
+<http://localhost:9000/docs>.
 
 ## Estimator service
 
@@ -35,7 +35,7 @@ local Python development, run commands from `estimator-service/`:
 uv sync --extra dev
 uv run housing-estimator-init-db
 uv run pytest
-uv run uvicorn estimator_service.app:app --reload --port 8100
+uv run uvicorn estimator_service.app:app --reload --port 9001
 ```
 
 See [estimator-service/README.md](estimator-service/README.md) for its API and
@@ -47,5 +47,5 @@ Build and start both backend services from the repository root:
 docker compose up --build estimator-service
 ```
 
-The estimator API is available at <http://localhost:8100>, with Swagger UI at
-<http://localhost:8100/docs>.
+The estimator API is available at <http://localhost:9001>, with Swagger UI at
+<http://localhost:9001/docs>.

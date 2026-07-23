@@ -8,7 +8,7 @@ WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PREDICTION_SERVICE_URL=http://prediction-service:8000 \
+    PREDICTION_SERVICE_URL=http://prediction-service:9000 \
     PREDICTION_SERVICE_TIMEOUT_SECONDS=5 \
     ESTIMATOR_DATABASE_PATH=/app/data/estimator.db \
     UV_LINK_MODE=copy \
@@ -20,6 +20,6 @@ RUN --mount=type=cache,target=/root/.cache/uv,sharing=locked \
     uv sync --locked --no-dev --no-editable && \
     mkdir -p /app/data
 
-EXPOSE 8100
+EXPOSE 9001
 
-CMD ["/bin/sh", "-c", "/app/.venv/bin/housing-estimator-init-db && exec /app/.venv/bin/uvicorn estimator_service.app:app --host 0.0.0.0 --port 8100 --log-level info"]
+CMD ["/bin/sh", "-c", "/app/.venv/bin/housing-estimator-init-db && exec /app/.venv/bin/uvicorn estimator_service.app:app --host 0.0.0.0 --port 9001 --log-level info"]

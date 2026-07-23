@@ -46,29 +46,35 @@ def load_training_data(dataset_path: Path) -> tuple[np.ndarray, np.ndarray]:
     feature_rows: list[list[float]] = []
     prices: list[int] = []
 
-    with stream:
-        reader = csv.DictReader(stream)
-        missing = [
-            column
-            for column in REQUIRED_COLUMNS
-            if column not in (reader.fieldnames or [])
-        ]
-        if missing:
-            raise TrainingError(
-                f"dataset is missing required columns: {', '.join(missing)}"
-            )
-
-        for raw_row in reader:
-            try:
-                row = TrainingRow.model_validate(raw_row)
-            except ValidationError as exc:
-                error = exc.errors()[0]
-                column = error["loc"][0]
+    try:
+        with stream:
+            reader = csv.DictReader(stream, strict=True)
+            missing = [
+                column
+                for column in REQUIRED_COLUMNS
+                if column not in (reader.fieldnames or [])
+            ]
+            if missing:
                 raise TrainingError(
-                    f"CSV row {reader.line_num} column '{column}': {error['msg']}"
-                ) from exc
-            feature_rows.append(row.to_features().as_row())
-            prices.append(row.price)
+                    f"dataset is missing required columns: {', '.join(missing)}"
+                )
+
+            for raw_row in reader:
+                try:
+                    row = TrainingRow.model_validate(raw_row)
+                except ValidationError as exc:
+                    error = exc.errors()[0]
+                    column = error["loc"][0]
+                    raise TrainingError(
+                        f"CSV row {reader.line_num} column '{column}': "
+                        f"{error['msg']}"
+                    ) from exc
+                feature_rows.append(row.to_features().as_row())
+                prices.append(row.price)
+    except TrainingError:
+        raise
+    except (OSError, UnicodeError, csv.Error) as exc:
+        raise TrainingError(f"could not read dataset: {dataset_path}") from exc
 
     if len(feature_rows) < MINIMUM_ROWS:
         raise TrainingError(

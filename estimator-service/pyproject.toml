@@ -29,9 +29,6 @@ housing-estimator-init-db = "estimator_service.database.initialize:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
-[tool.setuptools.package-data]
-"estimator_service.database.ddl" = ["*.sql"]
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"

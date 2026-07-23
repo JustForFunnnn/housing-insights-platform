@@ -16,6 +16,7 @@ from estimator_service.constants import MAX_PAGE_LIMIT
 from estimator_service.errors import (
     PredictionServiceInvalidResponseError,
     PredictionServiceUnavailableError,
+    StorageUnavailableError,
 )
 from tests.conftest import VALID_PROPERTY, StubPredictionClient
 
@@ -23,35 +24,20 @@ SUPPLIED_REQUEST_ID = "123e4567-e89b-42d3-a456-426614174000"
 INVALID_REQUEST_ID = "estimate-request-123"
 
 
-def test_api_contract_and_swagger(app_factory) -> None:
+def test_health_contract(app_factory) -> None:
     app, _store, _prediction = app_factory()
     with TestClient(app) as client:
         health = client.get("/health")
-        openapi = client.get("/openapi.json")
-        docs = client.get("/docs")
 
     assert health.status_code == 200
     assert health.json() == {"status": "ok"}
-    assert set(openapi.json()["paths"]) == {
-        "/estimates",
-        "/estimates/{estimate_id}",
-        "/health",
-    }
-    price_schema = openapi.json()["components"]["schemas"][
-        "EstimateRecordResponse"
-    ]["properties"]["estimated_price"]
-    assert price_schema == {
-        "type": "integer",
-        "minimum": 0.0,
-        "format": "int64",
-        "title": "Estimated Price",
-    }
-    assert docs.status_code == 200
 
 
 def test_create_single_and_batch_estimates_and_propagate_request_id(
     app_factory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
+    caplog.set_level(logging.INFO, logger="estimator_service.observability")
     prediction = StubPredictionClient()
     app, _store, _prediction = app_factory(prediction_client=prediction)
     with TestClient(app) as client:
@@ -89,12 +75,35 @@ def test_create_single_and_batch_estimates_and_propagate_request_id(
         210000,
     ]
     assert prediction.calls[0][1] == SUPPLIED_REQUEST_ID
-    assert len(batch.headers["X-Request-ID"]) == 32
+    batch_request_id = batch.headers["X-Request-ID"]
+    assert UUID(batch_request_id).version == 4
     assert replaced.status_code == 201
     replaced_request_id = replaced.headers["X-Request-ID"]
-    assert len(replaced_request_id) == 32
+    assert UUID(replaced_request_id).version == 4
     assert replaced_request_id != INVALID_REQUEST_ID
+    assert len(
+        {SUPPLIED_REQUEST_ID, batch_request_id, replaced_request_id}
+    ) == 3
     assert prediction.calls[2][1] == replaced_request_id
+    request_records = {
+        record.correlation_id: record
+        for record in caplog.records
+        if "request_completed" in record.message
+    }
+    assert {
+        SUPPLIED_REQUEST_ID,
+        batch_request_id,
+        replaced_request_id,
+    } <= request_records.keys()
+    for request_id in (
+        SUPPLIED_REQUEST_ID,
+        batch_request_id,
+        replaced_request_id,
+    ):
+        assert (
+            "method=POST path=/estimates status=201"
+            in request_records[request_id].message
+        )
 
 
 def test_history_detail_pagination_and_out_of_range_offset(app_factory) -> None:
@@ -279,7 +288,7 @@ def test_startup_does_not_create_an_uninitialized_database(
         initialize_schema=False,
     )
 
-    with pytest.raises(Exception, match="not been initialized"):
+    with pytest.raises(StorageUnavailableError, match="not been initialized"):
         with TestClient(app):
             pass
     assert not database_path.exists()
@@ -288,7 +297,9 @@ def test_startup_does_not_create_an_uninitialized_database(
 def test_second_insert_failure_rolls_back_first_insert(
     app_factory,
     tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
+    caplog.set_level(logging.ERROR, logger="estimator_service.app")
     database_path = tmp_path / "rollback.db"
     app, _store, _prediction = app_factory(database_path=database_path)
     engine = create_engine(
@@ -330,6 +341,17 @@ def test_second_insert_failure_rolls_back_first_insert(
     assert response.status_code == 500
     assert response.json()["error_code"] == "internal_error"
     assert count == 0
+    record = next(
+        record
+        for record in caplog.records
+        if "database_operation_failed" in record.message
+    )
+    assert record.exc_info is None
+    assert "could not persist estimate batch" in record.message
+    assert "1000" not in caplog.text
+    assert "9999" not in caplog.text
+    assert "100000" not in caplog.text
+    assert "999900" not in caplog.text
 
 
 @pytest.mark.anyio

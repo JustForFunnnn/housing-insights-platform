@@ -13,14 +13,13 @@ The service follows the same application structure as `prediction-service`:
 - `prediction_client.py` integrates with the prediction service.
 - `estimator.py` coordinates predictions and atomic persistence.
 - `data_access.py` owns SQLAlchemy ORM transactions and queries.
-- `database/orm.py` maps the externally managed table for ORM access.
-- `database/ddl/estimate.sql` is the maintained table and index DDL.
-- `database/initialize.py` explicitly applies `estimate.sql`.
+- `database/orm.py` is the single source for table, constraint, and index metadata.
+- `database/initialize.py` explicitly creates missing metadata objects.
 - `settings.py` validates environment-backed configuration.
 - `observability.py` owns request correlation and safe request logging.
 
-Estimate history is global. Batch inserts are atomic, reads may use independent SQLite
-connections, and writes are serialized within the single service process.
+Estimate history is global. Batch inserts are atomic, each history page and its total
+use one read transaction, and writes are serialized within the single service process.
 
 ## Local development
 
@@ -30,15 +29,15 @@ Run commands from `estimator-service/`:
 uv sync --extra dev
 uv run housing-estimator-init-db
 uv run pytest
-uv run uvicorn estimator_service.app:app --reload --port 8100
+uv run uvicorn estimator_service.app:app --reload --port 9001
 ```
 
-The prediction service defaults to <http://localhost:8000>. Swagger UI is available
-at <http://localhost:8100/docs>.
+The prediction service defaults to <http://localhost:9000>. Swagger UI is available
+at <http://localhost:9001/docs>.
 
 Configuration:
 
-- `PREDICTION_SERVICE_URL` defaults to `http://localhost:8000`.
+- `PREDICTION_SERVICE_URL` defaults to `http://localhost:9000`.
 - `PREDICTION_SERVICE_TIMEOUT_SECONDS` defaults to `5`.
 - `ESTIMATOR_DATABASE_PATH` defaults to `data/estimator.db`.
 
@@ -101,5 +100,5 @@ From the repository root:
 docker compose up --build estimator-service
 ```
 
-The estimator is available at <http://localhost:8100>. Its SQLite file is stored in a
+The estimator is available at <http://localhost:9001>. Its SQLite file is stored in a
 named Docker volume.

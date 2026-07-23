@@ -33,10 +33,10 @@ Run commands from `prediction-service/`:
 uv sync --extra dev
 uv run housing-train "../data/House Price Dataset.csv"
 uv run pytest
-uv run uvicorn prediction_service.app:app --reload
+uv run uvicorn prediction_service.app:app --reload --port 9000
 ```
 
-Swagger UI is available at <http://localhost:8000/docs>.
+Swagger UI is available at <http://localhost:9000/docs>.
 
 To load an artifact from another location, set `MODEL_ARTIFACT_PATH` before
 starting Uvicorn. Its default is `artifacts/model_pipeline.joblib`.

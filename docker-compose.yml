@@ -5,7 +5,7 @@ services:
       dockerfile: prediction-service/Dockerfile
     image: housing-insights/prediction-service:local
     ports:
-      - "8000:8000"
+      - "9000:9000"
     healthcheck:
       test:
         - CMD
@@ -13,7 +13,7 @@ services:
         - -c
         - >-
           import urllib.request;
-          urllib.request.urlopen('http://localhost:8000/health', timeout=2)
+          urllib.request.urlopen('http://localhost:9000/health', timeout=2)
       interval: 10s
       timeout: 3s
       retries: 5
@@ -25,9 +25,9 @@ services:
       dockerfile: Dockerfile
     image: housing-insights/estimator-service:local
     ports:
-      - "8100:8100"
+      - "9001:9001"
     environment:
-      PREDICTION_SERVICE_URL: http://prediction-service:8000
+      PREDICTION_SERVICE_URL: http://prediction-service:9000
       PREDICTION_SERVICE_TIMEOUT_SECONDS: "5"
       ESTIMATOR_DATABASE_PATH: /app/data/estimator.db
     depends_on:
@@ -41,7 +41,7 @@ services:
         - -c
         - >-
           import urllib.request;
-          urllib.request.urlopen('http://localhost:8100/health', timeout=2)
+          urllib.request.urlopen('http://localhost:9001/health', timeout=2)
       interval: 10s
       timeout: 3s
       retries: 5

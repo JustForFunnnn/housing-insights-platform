@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Sequence
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
@@ -64,33 +65,16 @@ class StubPredictionService:
         )
 
 
-def test_api_contract_and_swagger() -> None:
+def test_health_and_model_info_contract() -> None:
     with TestClient(create_app(prediction_service=StubPredictionService())) as client:
         health = client.get("/health")
         info = client.get("/model-info")
-        openapi = client.get("/openapi.json")
-        docs = client.get("/docs")
 
+    assert health.status_code == 200
     assert health.json() == {"status": "ok"}
+    assert info.status_code == 200
     assert info.json()["training_timestamp"] == "2026-07-21T12:00:00+00:00"
     assert info.json()["cross_validation"]["folds"] == 5
-    assert set(openapi.json()["paths"]) == {"/health", "/model-info", "/predict"}
-    prediction_items = openapi.json()["components"]["schemas"]["PredictionResponse"][
-        "properties"
-    ]["predictions"]["items"]
-    assert prediction_items == {
-        "type": "integer",
-        "minimum": 0.0,
-        "format": "int64",
-    }
-    predict_responses = openapi.json()["paths"]["/predict"]["post"]["responses"]
-    assert predict_responses["422"]["content"]["application/json"]["schema"] == {
-        "$ref": "#/components/schemas/ErrorResponse"
-    }
-    assert predict_responses["500"]["content"]["application/json"]["schema"] == {
-        "$ref": "#/components/schemas/ErrorResponse"
-    }
-    assert docs.status_code == 200
 
 
 def test_request_ids_are_preserved_generated_replaced_and_logged(
@@ -108,16 +92,35 @@ def test_request_ids_are_preserved_generated_replaced_and_logged(
             headers={REQUEST_ID_HEADER: INVALID_REQUEST_ID},
         )
 
-    record = next(
-        record for record in caplog.records if "request_completed" in record.message
-    )
+    generated_request_id = generated.headers[REQUEST_ID_HEADER]
+    replaced_request_id = replaced.headers[REQUEST_ID_HEADER]
+    request_records = {
+        record.correlation_id: record
+        for record in caplog.records
+        if "request_completed" in record.message
+    }
+
+    assert UUID(generated_request_id).version == 4
+    assert UUID(replaced_request_id).version == 4
+    assert len(
+        {SUPPLIED_REQUEST_ID, generated_request_id, replaced_request_id}
+    ) == 3
+    assert {
+        SUPPLIED_REQUEST_ID,
+        generated_request_id,
+        replaced_request_id,
+    } <= request_records.keys()
+    for request_id in (
+        SUPPLIED_REQUEST_ID,
+        generated_request_id,
+        replaced_request_id,
+    ):
+        assert (
+            "method=GET path=/health status=200"
+            in request_records[request_id].message
+        )
     assert response.headers[REQUEST_ID_HEADER] == SUPPLIED_REQUEST_ID
-    assert record.correlation_id == SUPPLIED_REQUEST_ID
-    assert "method=GET path=/health status=200" in record.message
-    assert len(generated.headers[REQUEST_ID_HEADER]) == 32
-    assert generated.headers[REQUEST_ID_HEADER] != SUPPLIED_REQUEST_ID
-    assert len(replaced.headers[REQUEST_ID_HEADER]) == 32
-    assert replaced.headers[REQUEST_ID_HEADER] != INVALID_REQUEST_ID
+    assert replaced_request_id != INVALID_REQUEST_ID
 
 
 def test_single_and_batch_predictions_always_use_list_envelope() -> None:

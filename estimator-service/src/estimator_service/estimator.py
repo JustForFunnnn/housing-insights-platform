@@ -41,8 +41,10 @@ class EstimatorService:
         return records
 
     async def list_estimates(self, limit: int, offset: int) -> EstimatePage:
-        estimates = await self._store.list(limit=limit, offset=offset)
-        total = await self._store.count()
+        estimates, total = await self._store.list_page(
+            limit=limit,
+            offset=offset,
+        )
         return EstimatePage(
             estimates=estimates,
             total=total,

@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     prediction_service_url: AnyHttpUrl = Field(
-        default=AnyHttpUrl("http://localhost:8000"),
+        default=AnyHttpUrl("http://localhost:9000"),
         validation_alias="PREDICTION_SERVICE_URL",
     )
     prediction_service_timeout_seconds: float = Field(
