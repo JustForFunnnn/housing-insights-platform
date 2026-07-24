@@ -1,8 +1,11 @@
 package com.housinginsights.market.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.housinginsights.market.data.CsvPropertyDataLoader;
 import com.housinginsights.market.data.PropertyDataset;
 import com.housinginsights.market.support.observability.RequestCorrelation;
+import io.swagger.v3.core.jackson.ModelResolver;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import java.net.http.HttpClient;
@@ -18,18 +21,43 @@ import org.springframework.web.client.RestClient;
 public class MarketConfiguration {
 
     @Bean
-    OpenApiCustomizer requestIdHeaderOpenApiCustomizer() {
+    ModelResolver snakeCaseOpenApiModelResolver(ObjectMapper objectMapper) {
+        ObjectMapper openApiMapper = objectMapper.copy();
+        openApiMapper.setPropertyNamingStrategy(
+                PropertyNamingStrategies.SNAKE_CASE
+        );
+        return new ModelResolver(openApiMapper);
+    }
+
+    @Bean
+    OpenApiCustomizer marketContractOpenApiCustomizer() {
         return openApi -> openApi.getPaths().values().stream()
                 .flatMap(path -> path.readOperations().stream())
-                .forEach(operation -> operation.addParametersItem(new Parameter()
-                        .in("header")
-                        .name(RequestCorrelation.HEADER_NAME)
-                        .required(false)
-                        .description(
-                                "Optional UUID4 in hyphenated or 32-character "
-                                        + "hex form. Valid values are preserved."
-                        )
-                        .schema(new StringSchema())));
+                .forEach(operation -> {
+                    if (operation.getParameters() != null) {
+                        operation.getParameters().stream()
+                                .filter(parameter ->
+                                        "query".equals(parameter.getIn()))
+                                .forEach(parameter -> parameter.setName(
+                                        PropertyNamingStrategies.SNAKE_CASE
+                                                .nameForField(
+                                                        null,
+                                                        null,
+                                                        parameter.getName()
+                                                )
+                                ));
+                    }
+                    operation.addParametersItem(new Parameter()
+                            .in("header")
+                            .name(RequestCorrelation.HEADER_NAME)
+                            .required(false)
+                            .description(
+                                    "Optional UUID4 in hyphenated or "
+                                            + "32-character hex form. "
+                                            + "Valid values are preserved."
+                            )
+                            .schema(new StringSchema()));
+                });
     }
 
     @Bean

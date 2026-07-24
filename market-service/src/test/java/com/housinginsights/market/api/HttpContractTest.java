@@ -113,6 +113,40 @@ class HttpContractTest {
     }
 
     @Test
+    void openApiUsesPublicContractNames() throws Exception {
+        String featureProperties =
+                "$.components.schemas.PropertyFeaturesRequest.properties";
+
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(
+                        featureProperties + ".square_footage"
+                ).exists())
+                .andExpect(jsonPath(
+                        featureProperties + ".distance_to_city_center"
+                ).exists())
+                .andExpect(jsonPath(
+                        featureProperties + ".squareFootage"
+                ).doesNotExist())
+                .andExpect(jsonPath(
+                        "$.components.schemas.MarketAnalysis"
+                                + ".properties.price_summary"
+                ).exists())
+                .andExpect(jsonPath(
+                        "$.components.schemas.PropertyPage"
+                                + ".properties.total_pages"
+                ).exists())
+                .andExpect(jsonPath(
+                        "$.paths['/analysis'].get.parameters"
+                                + "[?(@.name == 'min_square_footage')]"
+                ).isNotEmpty())
+                .andExpect(jsonPath(
+                        "$.paths['/analysis'].get.parameters"
+                                + "[?(@.name == 'minSquareFootage')]"
+                ).isEmpty());
+    }
+
+    @Test
     void whatIfRejectsJsonCoercionAndPropagatesRequestId() throws Exception {
         mockMvc.perform(post("/what-if")
                         .contentType(MediaType.APPLICATION_JSON)

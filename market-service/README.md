@@ -102,12 +102,12 @@ Content-Type: application/json
   "scenarios": [
     {
       "square_footage": 2100,
-      "bedrooms": 3,
-      "bathrooms": 2,
-      "year_built": 1998,
-      "lot_size": 7500,
-      "distance_to_city_center": 5.6,
-      "school_rating": 8.2
+      "bedrooms": 4,
+      "bathrooms": 2.5,
+      "year_built": 2005,
+      "lot_size": 9200,
+      "distance_to_city_center": 7.3,
+      "school_rating": 8.5
     }
   ]
 }
