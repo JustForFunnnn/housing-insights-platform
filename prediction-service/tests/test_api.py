@@ -34,7 +34,8 @@ VALID_INSTANCE = {
     "distance_to_city_center": 5.6,
     "school_rating": 8.2,
 }
-SUPPLIED_REQUEST_ID = "123e4567-e89b-42d3-a456-426614174000"
+HYPHENATED_REQUEST_ID = "123E4567-E89B-42D3-A456-426614174000"
+SUPPLIED_REQUEST_ID = "123e4567e89b42d3a456426614174000"
 INVALID_REQUEST_ID = "upstream-request-123"
 
 
@@ -90,7 +91,7 @@ def test_request_ids_are_preserved_generated_replaced_and_logged(
     with TestClient(create_app(prediction_service=StubPredictionService())) as client:
         response = client.get(
             "/health",
-            headers={REQUEST_ID_HEADER: SUPPLIED_REQUEST_ID},
+            headers={REQUEST_ID_HEADER: HYPHENATED_REQUEST_ID},
         )
         generated = client.get("/health")
         replaced = client.get(
@@ -108,16 +109,18 @@ def test_request_ids_are_preserved_generated_replaced_and_logged(
 
     assert UUID(generated_request_id).version == 4
     assert UUID(replaced_request_id).version == 4
+    assert generated_request_id == UUID(generated_request_id).hex
+    assert replaced_request_id == UUID(replaced_request_id).hex
     assert len(
-        {SUPPLIED_REQUEST_ID, generated_request_id, replaced_request_id}
+        {HYPHENATED_REQUEST_ID, generated_request_id, replaced_request_id}
     ) == 3
     assert {
-        SUPPLIED_REQUEST_ID,
+        HYPHENATED_REQUEST_ID,
         generated_request_id,
         replaced_request_id,
     } <= request_records.keys()
     for request_id in (
-        SUPPLIED_REQUEST_ID,
+        HYPHENATED_REQUEST_ID,
         generated_request_id,
         replaced_request_id,
     ):
@@ -125,7 +128,7 @@ def test_request_ids_are_preserved_generated_replaced_and_logged(
             "method=GET path=/health status=200"
             in request_records[request_id].message
         )
-    assert response.headers[REQUEST_ID_HEADER] == SUPPLIED_REQUEST_ID
+    assert response.headers[REQUEST_ID_HEADER] == HYPHENATED_REQUEST_ID
     assert replaced_request_id != INVALID_REQUEST_ID
 
 

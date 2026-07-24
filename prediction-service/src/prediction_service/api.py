@@ -32,8 +32,9 @@ def document_request_id(
         Header(
             alias=REQUEST_ID_HEADER,
             description=(
-                "Optional UUID4 request identifier. Missing or invalid values "
-                "are replaced."
+                "Optional UUID4 request identifier. Valid values are preserved "
+                "exactly; missing or invalid values are replaced with a compact "
+                "UUID4."
             ),
         ),
     ] = None,

@@ -20,7 +20,8 @@ from estimator_service.errors import (
 )
 from tests.conftest import VALID_PROPERTY, StubPredictionClient
 
-SUPPLIED_REQUEST_ID = "123e4567-e89b-42d3-a456-426614174000"
+HYPHENATED_REQUEST_ID = "123E4567-E89B-42D3-A456-426614174000"
+SUPPLIED_REQUEST_ID = "123e4567e89b42d3a456426614174000"
 INVALID_REQUEST_ID = "estimate-request-123"
 
 
@@ -44,7 +45,7 @@ def test_create_single_and_batch_estimates_and_propagate_request_id(
         single = client.post(
             "/estimates",
             json={"properties": [VALID_PROPERTY]},
-            headers={"X-Request-ID": SUPPLIED_REQUEST_ID},
+            headers={"X-Request-ID": HYPHENATED_REQUEST_ID},
         )
         batch = client.post(
             "/estimates",
@@ -62,7 +63,7 @@ def test_create_single_and_batch_estimates_and_propagate_request_id(
         )
 
     assert single.status_code == 201
-    assert single.headers["X-Request-ID"] == SUPPLIED_REQUEST_ID
+    assert single.headers["X-Request-ID"] == HYPHENATED_REQUEST_ID
     assert single.json()["count"] == 1
     record = single.json()["estimates"][0]
     assert UUID(record["id"])
@@ -74,15 +75,17 @@ def test_create_single_and_batch_estimates_and_propagate_request_id(
         90000,
         210000,
     ]
-    assert prediction.calls[0][1] == SUPPLIED_REQUEST_ID
+    assert prediction.calls[0][1] == HYPHENATED_REQUEST_ID
     batch_request_id = batch.headers["X-Request-ID"]
     assert UUID(batch_request_id).version == 4
+    assert batch_request_id == UUID(batch_request_id).hex
     assert replaced.status_code == 201
     replaced_request_id = replaced.headers["X-Request-ID"]
     assert UUID(replaced_request_id).version == 4
+    assert replaced_request_id == UUID(replaced_request_id).hex
     assert replaced_request_id != INVALID_REQUEST_ID
     assert len(
-        {SUPPLIED_REQUEST_ID, batch_request_id, replaced_request_id}
+        {HYPHENATED_REQUEST_ID, batch_request_id, replaced_request_id}
     ) == 3
     assert prediction.calls[2][1] == replaced_request_id
     request_records = {
@@ -91,12 +94,12 @@ def test_create_single_and_batch_estimates_and_propagate_request_id(
         if "request_completed" in record.message
     }
     assert {
-        SUPPLIED_REQUEST_ID,
+        HYPHENATED_REQUEST_ID,
         batch_request_id,
         replaced_request_id,
     } <= request_records.keys()
     for request_id in (
-        SUPPLIED_REQUEST_ID,
+        HYPHENATED_REQUEST_ID,
         batch_request_id,
         replaced_request_id,
     ):

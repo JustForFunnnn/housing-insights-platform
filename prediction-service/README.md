@@ -44,10 +44,8 @@ starting Uvicorn. Its default is `artifacts/model_pipeline.joblib`.
 
 ## API
 
-Each request may include a UUID4 `X-Request-ID` header for request correlation.
-When the header is missing or invalid, the service generates a UUID4 identifier.
-The active identifier is included in application logs and returned in the
-response header; a valid supplied identifier is preserved unchanged.
+Every request supports an optional `X-Request-ID` for request correlation. The
+active identifier is included in application logs and returned in the response.
 
 ### Predict
 

@@ -28,8 +28,8 @@ import org.springframework.test.web.servlet.MockMvc;
 })
 @AutoConfigureMockMvc
 class HttpContractTest {
-    private static final String REQUEST_ID =
-            "123e4567-e89b-42d3-a456-426614174000";
+    private static final String HYPHENATED_REQUEST_ID =
+            "123E4567-E89B-42D3-A456-426614174000";
     private static final String COMPACT_REQUEST_ID =
             "123e4567e89b42d3a456426614174000";
 
@@ -40,13 +40,16 @@ class HttpContractTest {
     private PredictionClient predictionClient;
 
     @Test
-    void healthIsExactAndRequestIdsArePreservedOrGenerated() throws Exception {
+    void healthPreservesValidRequestIdsOrGeneratesCompactRequestIds() throws Exception {
         mockMvc.perform(get("/health")
-                        .header(RequestCorrelation.HEADER_NAME, REQUEST_ID))
+                        .header(
+                                RequestCorrelation.HEADER_NAME,
+                                HYPHENATED_REQUEST_ID
+                        ))
                 .andExpect(status().isOk())
                 .andExpect(header().string(
                         RequestCorrelation.HEADER_NAME,
-                        REQUEST_ID
+                        HYPHENATED_REQUEST_ID
                 ))
                 .andExpect(jsonPath("$.status").value("ok"));
 
@@ -65,10 +68,7 @@ class HttpContractTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string(
                         RequestCorrelation.HEADER_NAME,
-                        matchesPattern(
-                                "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-"
-                                        + "[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
-                        )
+                        matchesPattern("^[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15}$")
                 ));
     }
 
@@ -193,21 +193,21 @@ class HttpContractTest {
         when(predictionClient.predict(anyList())).thenAnswer(invocation -> {
             org.assertj.core.api.Assertions.assertThat(
                     RequestCorrelation.currentOrCreate()
-            ).isEqualTo(COMPACT_REQUEST_ID);
+            ).isEqualTo(HYPHENATED_REQUEST_ID);
             return List.of(200000L, 220000L);
         });
 
         mockMvc.perform(post("/what-if")
                         .header(
                                 RequestCorrelation.HEADER_NAME,
-                                COMPACT_REQUEST_ID
+                                HYPHENATED_REQUEST_ID
                         )
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validWhatIfJson()))
                 .andExpect(status().isOk())
                 .andExpect(header().string(
                         RequestCorrelation.HEADER_NAME,
-                        COMPACT_REQUEST_ID
+                        HYPHENATED_REQUEST_ID
                 ))
                 .andExpect(jsonPath("$.baseline_prediction").value(200000))
                 .andExpect(jsonPath("$.scenarios[0].price_difference")

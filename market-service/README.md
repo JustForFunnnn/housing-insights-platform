@@ -125,10 +125,9 @@ What-if data and downstream predictions are not persisted.
 
 ## Request correlation and errors
 
-Every request accepts an optional UUID version 4 `X-Request-ID` in standard
-hyphenated or 32-character hexadecimal form. A valid value is preserved exactly; a
-missing or invalid value is replaced. The active ID is returned on every response,
-propagated to prediction-service, and documented globally in OpenAPI.
+Every request supports an optional `X-Request-ID` for request correlation. The
+active identifier is returned in the response and propagated to
+prediction-service.
 
 Errors always use:
 

@@ -51,10 +51,9 @@ before Uvicorn so a new volume is initialized automatically.
 
 ## API
 
-Every request accepts an optional UUID4 `X-Request-ID`. A missing or invalid
-identifier is replaced with a generated UUID4 value. The active identifier is
-returned in the response and propagated unchanged to the prediction service
-through request context; a valid supplied identifier is preserved unchanged.
+Every request supports an optional `X-Request-ID` for request correlation. The
+active identifier is returned in the response and propagated to the prediction
+service.
 
 ### Create estimates
 

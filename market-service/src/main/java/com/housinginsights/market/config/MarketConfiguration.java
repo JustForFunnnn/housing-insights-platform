@@ -52,7 +52,9 @@ public class MarketConfiguration {
                             .name(RequestCorrelation.HEADER_NAME)
                             .required(false)
                             .description(
-                                    "Optional UUID4 in hyphenated or 32-character hex form. Valid values are preserved."
+                                    "Optional UUID4 in hyphenated or 32-character hex form. "
+                                            + "Valid values are preserved exactly; missing or invalid values "
+                                            + "are replaced with a compact UUID4."
                             )
                             .schema(new StringSchema()));
                 });

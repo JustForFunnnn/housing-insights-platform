@@ -5,7 +5,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -29,7 +28,7 @@ public class RequestCorrelationFilter extends OncePerRequestFilter {
         String supplied = request.getHeader(RequestCorrelation.HEADER_NAME);
         String requestId = RequestCorrelation.isUuid4(supplied)
                 ? supplied
-                : UUID.randomUUID().toString();
+                : RequestCorrelation.createUuid4();
 
         MDC.put(RequestCorrelation.MDC_KEY, requestId);
         response.setHeader(RequestCorrelation.HEADER_NAME, requestId);
