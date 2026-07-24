@@ -40,7 +40,7 @@ public class MarketController {
             @Valid @ParameterObject @ModelAttribute
             MarketFilterRequest filters
     ) {
-        return analysisService.analyse(filters.toDomain());
+        return analysisService.analyse(filters.toFilter());
     }
 
     @GetMapping("/properties")
@@ -57,7 +57,7 @@ public class MarketController {
             @Min(1) @Max(DomainLimits.MAX_PROPERTY_PAGE_SIZE) int size
     ) {
         return propertyQueryService.findPage(
-                filters.toDomain(),
+                filters.toFilter(),
                 SortField.parse(sortBy),
                 SortDirection.parse(sortDirection),
                 page,

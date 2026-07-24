@@ -18,9 +18,9 @@ public class WhatIfController {
     @PostMapping("/what-if")
     public WhatIfResult whatIf(@Valid @RequestBody WhatIfRequest request) {
         return whatIfService.compare(
-                request.baseline().toDomain(),
+                request.baseline().toFeatures(),
                 request.scenarios().stream()
-                        .map(PropertyFeaturesRequest::toDomain)
+                        .map(PropertyFeaturesRequest::toFeatures)
                         .toList()
         );
     }

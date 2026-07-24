@@ -47,7 +47,7 @@ public record PropertyFeaturesRequest(
         @DecimalMax(DomainLimits.MAX_SCHOOL_RATING_TEXT)
         Double schoolRating
 ) {
-    public PropertyFeatures toDomain() {
+    public PropertyFeatures toFeatures() {
         return new PropertyFeatures(
                 squareFootage,
                 bedrooms,

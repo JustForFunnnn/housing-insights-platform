@@ -79,7 +79,7 @@ public record MarketFilterRequest(
         bathrooms = bathrooms == null ? List.of() : List.copyOf(bathrooms);
     }
 
-    public MarketFilter toDomain() {
+    public MarketFilter toFilter() {
         return new MarketFilter(
                 minSquareFootage,
                 maxSquareFootage,

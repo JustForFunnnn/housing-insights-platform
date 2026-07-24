@@ -55,7 +55,7 @@ public class ExportController {
             String sortDirection
     ) {
         byte[] body = csvExportService.export(propertyQueryService.findAll(
-                filters.toDomain(),
+                filters.toFilter(),
                 SortField.parse(sortBy),
                 SortDirection.parse(sortDirection)
         ));
@@ -70,7 +70,7 @@ public class ExportController {
             @Valid @ParameterObject @ModelAttribute
             MarketFilterRequest filters
     ) {
-        MarketFilter filter = filters.toDomain();
+        MarketFilter filter = filters.toFilter();
         MarketAnalysis analysis = analysisService.analyse(filter);
         byte[] body = pdfExportService.export(filter, analysis);
         return download(body, MediaType.APPLICATION_PDF, "market-analysis.pdf");
