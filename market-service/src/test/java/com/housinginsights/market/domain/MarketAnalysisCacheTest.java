@@ -57,7 +57,7 @@ class MarketAnalysisCacheTest {
         );
     }
 
-    @Configuration(proxyBeanMethods = false)
+    @Configuration
     @EnableCaching
     static class TestConfiguration {
         @Bean

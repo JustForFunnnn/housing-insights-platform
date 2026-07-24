@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
-@Configuration(proxyBeanMethods = false)
+@Configuration
 @EnableConfigurationProperties(MarketProperties.class)
 public class MarketConfiguration {
 
@@ -52,9 +52,7 @@ public class MarketConfiguration {
                             .name(RequestCorrelation.HEADER_NAME)
                             .required(false)
                             .description(
-                                    "Optional UUID4 in hyphenated or "
-                                            + "32-character hex form. "
-                                            + "Valid values are preserved."
+                                    "Optional UUID4 in hyphenated or 32-character hex form. Valid values are preserved."
                             )
                             .schema(new StringSchema()));
                 });

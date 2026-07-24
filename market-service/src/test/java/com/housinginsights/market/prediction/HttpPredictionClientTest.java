@@ -10,6 +10,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.housinginsights.market.domain.PropertyFeatures;
 import com.housinginsights.market.support.error.PredictionServiceInvalidResponseException;
@@ -36,6 +37,7 @@ class HttpPredictionClientTest {
     @BeforeEach
     void setUp() {
         var mapper = JsonMapper.builder()
+                .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
                 .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .disable(DeserializationFeature.ACCEPT_FLOAT_AS_INT)
                 .disable(MapperFeature.ALLOW_COERCION_OF_SCALARS)

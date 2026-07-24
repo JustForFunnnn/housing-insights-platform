@@ -4,9 +4,6 @@ Spring Boot backend for read-only property market analysis. It loads the supplie
 housing CSV once at startup, serves filtered aggregate analysis and property records,
 exports CSV/PDF reports, and calls `prediction-service` only for what-if analysis.
 
-The service does not call `estimator-service`, read estimate history, accept CSV
-uploads, use a database, or persist market data.
-
 ## Design
 
 - `api` owns HTTP contracts and validation.

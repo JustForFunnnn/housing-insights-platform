@@ -1,12 +1,13 @@
 package com.housinginsights.market.prediction;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.housinginsights.market.domain.PropertyFeatures;
 import com.housinginsights.market.support.error.PredictionServiceInvalidResponseException;
 import com.housinginsights.market.support.error.PredictionServiceUnavailableException;
 import java.util.List;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
@@ -22,71 +23,55 @@ public class HttpPredictionClient implements PredictionClient {
 
     @Override
     public List<Long> predict(List<PropertyFeatures> properties) {
-        try {
-            var response = restClient.post()
-                    .uri("/predict")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .accept(MediaType.APPLICATION_JSON)
-                    .body(new PredictionRequest(properties.stream()
-                            .map(PredictionInstance::from)
-                            .toList()))
-                    .retrieve()
-                    .onStatus(
-                            status -> status.is5xxServerError(),
-                            (request, downstream) -> {
-                                throw new PredictionServiceUnavailableException(
-                                        "prediction service returned a server error"
-                                );
-                            }
-                    )
-                    .onStatus(
-                            status -> status.is4xxClientError(),
-                            (request, downstream) -> {
-                                throw new PredictionServiceInvalidResponseException(
-                                        "prediction service rejected the request"
-                                );
-                            }
-                    )
-                    .toEntity(PredictionResponse.class);
+        var response = request(
+                HttpMethod.POST,
+                "/predict",
+                new PredictionRequest(properties.stream().map(PredictionInstance::from).toList()),
+                PredictionResponse.class
+        );
 
-            if (response.getStatusCode() != HttpStatus.OK) {
-                throw new PredictionServiceInvalidResponseException(
-                        "prediction service returned an unexpected status"
-                );
+        if (response.getStatusCode() != HttpStatus.OK) {
+            throw new PredictionServiceInvalidResponseException("prediction service returned an unexpected status");
+        }
+        var responseBody = response.getBody();
+        validatePredictionResponse(responseBody, properties.size());
+        return List.copyOf(responseBody.predictions());
+    }
+
+    private <T> ResponseEntity<T> request(HttpMethod method, String path, Object payload, Class<T> responseType) {
+        try {
+            var requestSpec = restClient.method(method).uri(path).accept(MediaType.APPLICATION_JSON);
+            if (payload != null) {
+                requestSpec.contentType(MediaType.APPLICATION_JSON).body(payload);
             }
-            return validateResponse(response.getBody(), properties.size());
-        } catch (PredictionServiceUnavailableException
-                 | PredictionServiceInvalidResponseException exception) {
+            return requestSpec
+                    .retrieve()
+                    .onStatus(status -> status.is5xxServerError(), (request, downstream) -> {
+                        throw new PredictionServiceUnavailableException("prediction service returned a server error");
+                    })
+                    .onStatus(status -> status.is4xxClientError(), (request, downstream) -> {
+                        throw new PredictionServiceInvalidResponseException("prediction service rejected the request");
+                    })
+                    .toEntity(responseType);
+        } catch (PredictionServiceUnavailableException | PredictionServiceInvalidResponseException exception) {
             throw exception;
         } catch (ResourceAccessException exception) {
-            throw new PredictionServiceUnavailableException(
-                    "prediction service request failed",
-                    exception
-            );
+            throw new PredictionServiceUnavailableException("prediction service request failed", exception);
         } catch (RestClientException exception) {
             throw new PredictionServiceInvalidResponseException(
-                    "prediction service response could not be decoded",
-                    exception
-            );
+                    "prediction service response could not be decoded", exception);
         }
     }
 
-    private static List<Long> validateResponse(
-            PredictionResponse response,
-            int expectedCount
-    ) {
+    private static void validatePredictionResponse(PredictionResponse response, int expectedCount) {
         if (response == null
                 || response.predictions() == null
                 || response.count() != expectedCount
                 || response.predictions().size() != expectedCount
-                || response.predictions().stream().anyMatch(
-                value -> value == null || value < 0
-        )) {
+                || response.predictions().stream().anyMatch(value -> value == null || value < 0)) {
             throw new PredictionServiceInvalidResponseException(
-                    "prediction service returned an invalid prediction batch"
-            );
+                    "prediction service returned an invalid prediction batch");
         }
-        return List.copyOf(response.predictions());
     }
 
     private record PredictionRequest(List<PredictionInstance> instances) {
@@ -96,14 +81,13 @@ public class HttpPredictionClient implements PredictionClient {
     }
 
     private record PredictionInstance(
-            @JsonProperty("square_footage") double squareFootage,
+            double squareFootage,
             int bedrooms,
             double bathrooms,
-            @JsonProperty("year_built") int yearBuilt,
-            @JsonProperty("lot_size") double lotSize,
-            @JsonProperty("distance_to_city_center")
+            int yearBuilt,
+            double lotSize,
             double distanceToCityCenter,
-            @JsonProperty("school_rating") double schoolRating
+            double schoolRating
     ) {
         private static PredictionInstance from(PropertyFeatures features) {
             return new PredictionInstance(
