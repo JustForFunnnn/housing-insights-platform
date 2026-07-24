@@ -40,7 +40,6 @@ class PropertyQueryServiceTest {
         );
 
         assertThat(page.records()).extracting(PropertyRecord::id).containsExactly(3L);
-        assertThat(page.count()).isEqualTo(1);
         assertThat(page.total()).isEqualTo(2);
         assertThat(page.limit()).isEqualTo(1);
         assertThat(page.offset()).isZero();
@@ -57,7 +56,6 @@ class PropertyQueryServiceTest {
         );
 
         assertThat(page.records()).isEmpty();
-        assertThat(page.count()).isZero();
         assertThat(page.total()).isEqualTo(4);
         assertThat(page.limit()).isEqualTo(2);
         assertThat(page.offset()).isEqualTo(20);

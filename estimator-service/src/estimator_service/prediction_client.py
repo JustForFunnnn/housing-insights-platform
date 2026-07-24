@@ -68,11 +68,7 @@ class HttpPredictionClient:
                 "prediction service returned an invalid response"
             ) from exc
 
-        expected_count = len(properties)
-        if (
-            payload.count != expected_count
-            or len(payload.predictions) != expected_count
-        ):
+        if len(payload.predictions) != len(properties):
             raise PredictionServiceInvalidResponseError(
                 "prediction service returned the wrong number of predictions"
             )

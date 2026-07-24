@@ -28,18 +28,23 @@ The API is then available at <http://localhost:9000>, with Swagger UI at
 
 ## Estimator service
 
-The estimator calls the prediction service and stores estimate history in SQLite. For
-local Python development, run commands from `estimator-service/`:
+The estimator calls the prediction service and stores estimate history in PostgreSQL.
+Start its dependencies from the repository root:
+
+```bash
+docker compose up -d prediction-service estimator-database
+```
+
+For local Python development, run commands from `estimator-service/`:
 
 ```bash
 uv sync --extra dev
-uv run housing-estimator-init-db
 uv run pytest
 uv run uvicorn estimator_service.app:app --reload --port 9001
 ```
 
 See [estimator-service/README.md](estimator-service/README.md) for its API and
-configuration.
+local development.
 
 Build and start both backend services from the repository root:
 
@@ -54,9 +59,7 @@ The estimator API is available at <http://localhost:9001>, with Swagger UI at
 
 The Java market backend loads the fixed housing dataset into read-only memory and
 provides filtered aggregate analysis, visualisation data, pageable property records,
-what-if predictions, and CSV/PDF exports. It calls `prediction-service` only for
-what-if analysis; it does not call `estimator-service`, use a database, read estimate
-history, or accept CSV uploads.
+what-if predictions, and CSV/PDF exports.
 
 For local development with JDK 21, run commands from `market-service/`:
 

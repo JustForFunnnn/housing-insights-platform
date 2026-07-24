@@ -87,7 +87,7 @@ class HttpPredictionClientTest {
                         }
                         """))
                 .andRespond(withSuccess(
-                        "{\"predictions\":[265000],\"count\":1}",
+                        "{\"predictions\":[265000]}",
                         MediaType.APPLICATION_JSON
                 ));
 
@@ -110,7 +110,7 @@ class HttpPredictionClientTest {
     void rejectsRepresentativeInvalidResponses() {
         server.expect(requestTo("http://prediction.test/predict"))
                 .andRespond(withSuccess(
-                        "{\"predictions\":[],\"count\":0}",
+                        "{\"predictions\":[]}",
                         MediaType.APPLICATION_JSON
                 ));
 

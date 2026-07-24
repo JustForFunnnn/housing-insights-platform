@@ -1,4 +1,14 @@
-from sqlalchemy import BigInteger, CheckConstraint, Float, Index, Integer, String
+from datetime import datetime
+
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    DateTime,
+    Float,
+    Identity,
+    Index,
+    Integer,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -17,7 +27,11 @@ class EstimateRow(Base):
         ),
     )
 
-    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    id: Mapped[int] = mapped_column(
+        BigInteger,
+        Identity(),
+        primary_key=True,
+    )
     square_footage: Mapped[float] = mapped_column(Float)
     bedrooms: Mapped[int] = mapped_column(Integer)
     bathrooms: Mapped[float] = mapped_column(Float)
@@ -26,7 +40,7 @@ class EstimateRow(Base):
     distance_to_city_center: Mapped[float] = mapped_column(Float)
     school_rating: Mapped[float] = mapped_column(Float)
     estimated_price: Mapped[int] = mapped_column(BigInteger)
-    created_at: Mapped[str] = mapped_column(String)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 Index(

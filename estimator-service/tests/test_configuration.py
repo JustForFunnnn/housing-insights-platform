@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 from pydantic import ValidationError
 
@@ -8,18 +6,21 @@ from estimator_service.settings import Settings
 
 def test_settings_read_environment(
     monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
 ) -> None:
-    database_path = tmp_path / "estimator.db"
     monkeypatch.setenv("PREDICTION_SERVICE_URL", "https://prediction.example")
     monkeypatch.setenv("PREDICTION_SERVICE_TIMEOUT_SECONDS", "2.5")
-    monkeypatch.setenv("ESTIMATOR_DATABASE_PATH", str(database_path))
+    monkeypatch.setenv(
+        "ESTIMATOR_DATABASE_URL",
+        "postgresql+asyncpg://user:pass@database.example:5432/estimator",
+    )
 
     settings = Settings()
 
     assert str(settings.prediction_service_url) == "https://prediction.example/"
     assert settings.prediction_service_timeout_seconds == 2.5
-    assert settings.estimator_database_path == database_path
+    assert str(settings.estimator_database_url) == (
+        "postgresql+asyncpg://user:pass@database.example:5432/estimator"
+    )
 
 
 @pytest.mark.parametrize(
@@ -32,6 +33,11 @@ def test_settings_read_environment(
         ("PREDICTION_SERVICE_TIMEOUT_SECONDS", "-1"),
         ("PREDICTION_SERVICE_TIMEOUT_SECONDS", "nan"),
         ("PREDICTION_SERVICE_TIMEOUT_SECONDS", "inf"),
+        ("ESTIMATOR_DATABASE_URL", "not-a-url"),
+        (
+            "ESTIMATOR_DATABASE_URL",
+            "postgresql://user:pass@localhost:5432/estimator",
+        ),
     ],
 )
 def test_invalid_service_configuration_is_rejected(

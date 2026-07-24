@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-import asyncio
 from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
-from datetime import datetime
-from pathlib import Path
-from uuid import UUID
+from typing import Protocol
 
-from sqlalchemy import func, select, text
-from sqlalchemy.engine import URL
+from sqlalchemy import func, select
+from sqlalchemy.engine import URL, make_url
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -16,58 +13,60 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.pool import NullPool
 
-from estimator_service.constants import SQLITE_BUSY_TIMEOUT_MILLISECONDS
-from estimator_service.database.orm import EstimateRow
 from estimator_service.errors import StorageError, StorageUnavailableError
 from estimator_service.models import EstimateRecord, PropertyFeatures
+from estimator_service.tables import Base, EstimateRow
 
 
-class SQLiteEstimateStore:
+class EstimateStore(Protocol):
+    async def initialize_schema(self) -> None: ...
+
+    async def aclose(self) -> None: ...
+
+    async def health(self) -> None: ...
+
+    async def insert_many(self, records: Sequence[EstimateRecord]) -> None: ...
+
+    async def list_page(
+        self,
+        limit: int,
+        offset: int,
+    ) -> tuple[tuple[EstimateRecord, ...], int]: ...
+
+
+class PostgresEstimateStore:
     """Persist and query estimate records through SQLAlchemy ORM."""
 
-    def __init__(
-        self,
-        database_path: Path,
-        busy_timeout_milliseconds: int = SQLITE_BUSY_TIMEOUT_MILLISECONDS,
-    ) -> None:
-        self.database_path = database_path
-        self.busy_timeout_milliseconds = busy_timeout_milliseconds
-        self._write_lock = asyncio.Lock()
-        self._engine = self._create_engine()
+    def __init__(self, database_url: str | URL) -> None:
+        self._engine = self._create_engine(database_url)
         self._sessions = async_sessionmaker(
             self._engine,
             expire_on_commit=False,
         )
 
-    def _create_engine(self) -> AsyncEngine:
-        database_uri = f"file:{self.database_path.resolve().as_posix()}"
-        database_url = URL.create(
-            "sqlite+aiosqlite",
-            database=database_uri,
-            query={"mode": "rw", "uri": "true"},
-        )
+    @staticmethod
+    def _create_engine(database_url: str | URL) -> AsyncEngine:
+        url = make_url(database_url)
+        if url.drivername != "postgresql+asyncpg":
+            raise ValueError(
+                "database URL must use the postgresql+asyncpg driver"
+            )
         return create_async_engine(
-            database_url,
-            connect_args={
-                "timeout": self.busy_timeout_milliseconds / 1000,
-            },
+            url,
             hide_parameters=True,
-            poolclass=NullPool,
+            pool_pre_ping=True,
         )
 
-    async def verify_schema(self) -> None:
-        """Verify the externally initialized schema without creating it."""
+    async def initialize_schema(self) -> None:
+        """Create database objects missing from the ORM metadata."""
         try:
-            if not self.database_path.is_file():
-                raise StorageUnavailableError(
-                    "database has not been initialized"
-                )
-        except OSError as exc:
-            raise StorageUnavailableError("database is unavailable") from exc
-
-        await self.health()
+            async with self._engine.begin() as connection:
+                await connection.run_sync(Base.metadata.create_all)
+        except SQLAlchemyError as exc:
+            raise StorageUnavailableError(
+                "could not initialize database schema"
+            ) from exc
 
     async def aclose(self) -> None:
         await self._engine.dispose()
@@ -81,9 +80,8 @@ class SQLiteEstimateStore:
         if not rows:
             return
 
-        async with self._write_lock:
-            async with self._write_session() as session:
-                session.add_all(rows)
+        async with self._write_session() as session:
+            session.add_all(rows)
 
     async def list_page(
         self,
@@ -91,7 +89,6 @@ class SQLiteEstimateStore:
         offset: int,
     ) -> tuple[tuple[EstimateRecord, ...], int]:
         async with self._read_session() as session:
-            await session.execute(text("BEGIN"))
             result = await session.scalars(
                 select(EstimateRow)
                 .order_by(
@@ -108,15 +105,6 @@ class SQLiteEstimateStore:
                 select(func.count()).select_from(EstimateRow)
             )
         return records, int(total or 0)
-
-    async def get(self, estimate_id: UUID) -> EstimateRecord | None:
-        async with self._read_session() as session:
-            row = await session.scalar(
-                select(EstimateRow).where(
-                    EstimateRow.id == str(estimate_id)
-                )
-            )
-        return None if row is None else self._record_from_row(row)
 
     @asynccontextmanager
     async def _read_session(
@@ -144,7 +132,6 @@ class SQLiteEstimateStore:
     @staticmethod
     def _row_from_record(record: EstimateRecord) -> EstimateRow:
         return EstimateRow(
-            id=str(record.id),
             square_footage=record.property.square_footage,
             bedrooms=record.property.bedrooms,
             bathrooms=record.property.bathrooms,
@@ -153,13 +140,12 @@ class SQLiteEstimateStore:
             distance_to_city_center=record.property.distance_to_city_center,
             school_rating=record.property.school_rating,
             estimated_price=record.estimated_price,
-            created_at=record.created_at.isoformat(),
+            created_at=record.created_at,
         )
 
     @staticmethod
     def _record_from_row(row: EstimateRow) -> EstimateRecord:
         return EstimateRecord(
-            id=UUID(row.id),
             property=PropertyFeatures(
                 square_footage=row.square_footage,
                 bedrooms=row.bedrooms,
@@ -170,5 +156,5 @@ class SQLiteEstimateStore:
                 school_rating=row.school_rating,
             ),
             estimated_price=row.estimated_price,
-            created_at=datetime.fromisoformat(row.created_at),
+            created_at=row.created_at,
         )

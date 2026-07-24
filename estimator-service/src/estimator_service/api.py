@@ -1,5 +1,4 @@
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, Query, Request, status
 
@@ -9,12 +8,11 @@ from estimator_service.constants import (
     MAX_PAGE_LIMIT,
     REQUEST_ID_HEADER,
 )
-from estimator_service.data_access import SQLiteEstimateStore
+from estimator_service.data_access import EstimateStore
 from estimator_service.schemas import (
     ErrorResponse,
     EstimateBatchResponse,
     EstimatePageResponse,
-    EstimateRecordResponse,
     EstimateRequest,
     HealthResponse,
 )
@@ -65,7 +63,7 @@ def get_estimator_service(request: Request) -> EstimatorService:
     return request.app.state.estimator_service
 
 
-def get_estimate_store(request: Request) -> SQLiteEstimateStore:
+def get_estimate_store(request: Request) -> EstimateStore:
     return request.app.state.estimate_store
 
 
@@ -109,25 +107,6 @@ async def list_estimates(
 
 
 @router.get(
-    "/estimates/{estimate_id}",
-    response_model=EstimateRecordResponse,
-    responses={
-        200: RESPONSE_WITH_REQUEST_ID,
-        404: ERROR_RESPONSE_WITH_REQUEST_ID,
-        422: ERROR_RESPONSE_WITH_REQUEST_ID,
-        503: ERROR_RESPONSE_WITH_REQUEST_ID,
-    },
-)
-async def get_estimate(
-    estimate_id: UUID,
-    service: EstimatorService = Depends(get_estimator_service),
-) -> EstimateRecordResponse:
-    return EstimateRecordResponse.from_record(
-        await service.get_estimate(estimate_id)
-    )
-
-
-@router.get(
     "/health",
     response_model=HealthResponse,
     responses={
@@ -137,7 +116,7 @@ async def get_estimate(
     },
 )
 async def health(
-    store: SQLiteEstimateStore = Depends(get_estimate_store),
+    store: EstimateStore = Depends(get_estimate_store),
 ) -> HealthResponse:
     await store.health()
     return HealthResponse(status="ok")

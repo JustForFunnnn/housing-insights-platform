@@ -147,8 +147,8 @@ def test_single_and_batch_predictions_always_use_list_envelope() -> None:
         )
         bare = client.post("/predict", json={"instances": VALID_INSTANCE})
 
-    assert single.json() == {"predictions": [1850], "count": 1}
-    assert batch.json() == {"predictions": [2100, 900], "count": 2}
+    assert single.json() == {"predictions": [1850]}
+    assert batch.json() == {"predictions": [2100, 900]}
     assert bare.status_code == 422
     assert service.seen[0][0] == HousingFeatures(**VALID_INSTANCE)
 

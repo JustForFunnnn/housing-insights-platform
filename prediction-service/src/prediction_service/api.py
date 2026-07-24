@@ -72,7 +72,7 @@ def predict_prices(
     predictions = service.predict(
         [instance.to_features() for instance in payload.instances]
     )
-    return PredictionResponse(predictions=predictions, count=len(predictions))
+    return PredictionResponse(predictions=predictions)
 
 
 @router.get(

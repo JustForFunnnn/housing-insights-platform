@@ -1,7 +1,3 @@
-class EstimateNotFoundError(LookupError):
-    """Raised when an estimate identifier does not exist."""
-
-
 class PredictionServiceUnavailableError(RuntimeError):
     """Raised when the prediction service cannot currently serve a request."""
 
@@ -15,4 +11,4 @@ class StorageError(RuntimeError):
 
 
 class StorageUnavailableError(StorageError):
-    """Raised when the SQLite database cannot currently be used."""
+    """Raised when the database cannot currently be used."""

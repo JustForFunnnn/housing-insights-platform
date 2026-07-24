@@ -120,7 +120,7 @@ class HttpContractTest {
                         .param("offset", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.records[0].id").value(2))
-                .andExpect(jsonPath("$.count").value(1))
+                .andExpect(jsonPath("$.count").doesNotExist())
                 .andExpect(jsonPath("$.total").value(4))
                 .andExpect(jsonPath("$.limit").value(1))
                 .andExpect(jsonPath("$.offset").value(1))

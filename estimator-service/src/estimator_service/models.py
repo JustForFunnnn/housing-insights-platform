@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from uuid import UUID
 
 
 def validate_year_built(value: int) -> int:
@@ -36,7 +35,6 @@ class PropertyFeatures:
 
 @dataclass(frozen=True, slots=True)
 class EstimateRecord:
-    id: UUID
     property: PropertyFeatures
     estimated_price: int
     created_at: datetime

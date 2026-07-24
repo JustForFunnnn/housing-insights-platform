@@ -1,36 +1,33 @@
-from __future__ import annotations
-
-from pathlib import Path
+from datetime import datetime, timezone
 
 import pytest
-from sqlalchemy import create_engine, inspect
-from sqlalchemy.engine import URL
 
-from estimator_service.database.initialize import initialize_database
-from estimator_service.errors import StorageUnavailableError
+from estimator_service.data_access import PostgresEstimateStore
+from estimator_service.models import EstimateRecord, PropertyFeatures
 
 
-def test_database_initializer_creates_metadata_schema(tmp_path: Path) -> None:
-    database_path = tmp_path / "estimator.db"
-
-    initialize_database(database_path)
-
-    engine = create_engine(
-        URL.create(
-            "sqlite+pysqlite",
-            database=str(database_path.resolve()),
+def test_store_rejects_non_postgresql_driver() -> None:
+    with pytest.raises(ValueError, match="postgresql\\+asyncpg"):
+        PostgresEstimateStore(
+            "postgresql://user:pass@localhost:5432/estimator"
         )
+
+
+def test_record_round_trips_through_orm_row() -> None:
+    record = EstimateRecord(
+        property=PropertyFeatures(
+            square_footage=1850,
+            bedrooms=3,
+            bathrooms=2,
+            year_built=1998,
+            lot_size=7500,
+            distance_to_city_center=5.6,
+            school_rating=8.2,
+        ),
+        estimated_price=185000,
+        created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
     )
-    try:
-        schema = inspect(engine)
-        assert "estimates" in schema.get_table_names()
-    finally:
-        engine.dispose()
 
+    row = PostgresEstimateStore._row_from_record(record)
 
-def test_database_initializer_rejects_unusable_parent(tmp_path: Path) -> None:
-    blocker = tmp_path / "not-a-directory"
-    blocker.write_text("blocked", encoding="utf-8")
-
-    with pytest.raises(StorageUnavailableError, match="database directory"):
-        initialize_database(blocker / "estimator.db")
+    assert PostgresEstimateStore._record_from_row(row) == record

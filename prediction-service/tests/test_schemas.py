@@ -120,14 +120,9 @@ def test_training_schema_has_independent_coercion_and_extra_policy() -> None:
         TrainingRow.model_validate({**VALID_INSTANCE, "price": 265000.5})
 
 
-def test_prediction_response_rejects_negative_count() -> None:
-    with pytest.raises(ValidationError):
-        PredictionResponse(predictions=[285479], count=-1)
-
-
 def test_prediction_response_rejects_non_integer_prediction() -> None:
     with pytest.raises(ValidationError):
-        PredictionResponse(predictions=[285478.9], count=1)
+        PredictionResponse(predictions=[285478.9])
 
 
 @pytest.mark.parametrize("prediction", [-1, MAX_SIGNED_INT64 + 1])
@@ -135,7 +130,7 @@ def test_prediction_response_rejects_out_of_range_prediction(
     prediction: int,
 ) -> None:
     with pytest.raises(ValidationError):
-        PredictionResponse(predictions=[prediction], count=1)
+        PredictionResponse(predictions=[prediction])
 
 
 def test_metric_response_rejects_non_finite_values() -> None:

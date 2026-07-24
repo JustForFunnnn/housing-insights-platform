@@ -15,10 +15,9 @@ from estimator_service.constants import (
     ErrorCode,
     REQUEST_ID_HEADER,
 )
-from estimator_service.data_access import SQLiteEstimateStore
+from estimator_service.data_access import EstimateStore, PostgresEstimateStore
 from estimator_service.estimator import EstimatorService
 from estimator_service.errors import (
-    EstimateNotFoundError,
     PredictionServiceInvalidResponseError,
     PredictionServiceUnavailableError,
     StorageError,
@@ -41,7 +40,7 @@ LOGGER = logging.getLogger(__name__)
 
 def create_app(
     prediction_client: PredictionClient | None = None,
-    store: SQLiteEstimateStore | None = None,
+    store: EstimateStore | None = None,
     app_settings: Settings | None = None,
 ) -> FastAPI:
     if app_settings is None:
@@ -49,7 +48,9 @@ def create_app(
 
     should_close_store = False
     if store is None:
-        store = SQLiteEstimateStore(app_settings.estimator_database_path)
+        store = PostgresEstimateStore(
+            str(app_settings.estimator_database_url)
+        )
         should_close_store = True
 
     should_close_prediction_client = False
@@ -64,13 +65,14 @@ def create_app(
     async def lifespan(application: FastAPI):
         configure_logging()
         try:
-            await store.verify_schema()
+            await store.initialize_schema()
+            await store.health()
             application.state.estimate_store = store
             application.state.estimator_service = EstimatorService(
                 prediction_client,
                 store,
             )
-            LOGGER.info("database_ready path=%s", store.database_path)
+            LOGGER.info("database_ready")
             yield
         finally:
             if should_close_prediction_client:
@@ -120,17 +122,6 @@ def _register_error_handlers(application: FastAPI) -> None:
             status_code=422,
             error_code=ErrorCode.VALIDATION_ERROR,
             message="Request validation failed.",
-        )
-
-    @application.exception_handler(EstimateNotFoundError)
-    async def estimate_not_found(
-        _request: Request,
-        _exc: EstimateNotFoundError,
-    ) -> JSONResponse:
-        return _error_response(
-            status_code=404,
-            error_code=ErrorCode.ESTIMATE_NOT_FOUND,
-            message="The estimate was not found.",
         )
 
     @application.exception_handler(PredictionServiceUnavailableError)

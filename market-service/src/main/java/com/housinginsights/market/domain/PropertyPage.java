@@ -4,7 +4,6 @@ import java.util.List;
 
 public record PropertyPage(
         List<PropertyRecord> records,
-        int count,
         long total,
         int limit,
         int offset,

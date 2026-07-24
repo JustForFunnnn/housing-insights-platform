@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Annotated, Literal
-from uuid import UUID
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, field_validator
 
@@ -99,7 +98,6 @@ class PredictionResponse(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     predictions: list[NonNegativeInt64Price]
-    count: int = Field(ge=0)
 
 
 class ResponseModel(BaseModel):
@@ -121,7 +119,6 @@ class PropertyResponse(ResponseModel):
 
 
 class EstimateRecordResponse(ResponseModel):
-    id: UUID
     property: PropertyResponse
     estimated_price: NonNegativeInt64Price
     created_at: datetime
@@ -133,7 +130,6 @@ class EstimateRecordResponse(ResponseModel):
 
 class EstimateBatchResponse(ResponseModel):
     estimates: list[EstimateRecordResponse]
-    count: int = Field(ge=0)
 
     @classmethod
     def from_records(
@@ -144,7 +140,6 @@ class EstimateBatchResponse(ResponseModel):
             estimates=[
                 EstimateRecordResponse.from_record(record) for record in records
             ],
-            count=len(records),
         )
 
 
@@ -160,7 +155,6 @@ class EstimatePageResponse(EstimateBatchResponse):
                 EstimateRecordResponse.from_record(record)
                 for record in page.estimates
             ],
-            count=len(page.estimates),
             total=page.total,
             limit=page.limit,
             offset=page.offset,

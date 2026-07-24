@@ -70,8 +70,7 @@ prediction is represented by a one-item list; bare objects are not accepted:
 
 ```json
 {
-  "predictions": [285479],
-  "count": 1
+  "predictions": [285479]
 }
 ```
 

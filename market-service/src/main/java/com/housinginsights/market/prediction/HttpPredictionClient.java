@@ -66,7 +66,6 @@ public class HttpPredictionClient implements PredictionClient {
     private static void validatePredictionResponse(PredictionResponse response, int expectedCount) {
         if (response == null
                 || response.predictions() == null
-                || response.count() != expectedCount
                 || response.predictions().size() != expectedCount
                 || response.predictions().stream().anyMatch(value -> value == null || value < 0)) {
             throw new PredictionServiceInvalidResponseException(
@@ -102,6 +101,6 @@ public class HttpPredictionClient implements PredictionClient {
         }
     }
 
-    private record PredictionResponse(List<Long> predictions, int count) {
+    private record PredictionResponse(List<Long> predictions) {
     }
 }

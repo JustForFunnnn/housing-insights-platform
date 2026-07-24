@@ -117,7 +117,6 @@ class ResponseModel(BaseModel):
 
 class PredictionResponse(ResponseModel):
     predictions: list[NonNegativeInt64Price]
-    count: int = Field(ge=0)
 
 
 class ErrorResponse(ResponseModel):

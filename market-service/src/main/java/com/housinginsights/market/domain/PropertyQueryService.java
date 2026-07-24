@@ -47,7 +47,6 @@ public class PropertyQueryService {
                 );
         return new PropertyPage(
                 records,
-                records.size(),
                 total,
                 limit,
                 offset,

@@ -33,7 +33,7 @@ async def test_prediction_client_sends_contract_and_request_id() -> None:
         assert request.url.path == "/predict"
         assert request.headers["X-Request-ID"] == SUPPLIED_REQUEST_ID
         assert json.loads(request.read()) == {"instances": [VALID_PROPERTY]}
-        return httpx2.Response(200, json={"predictions": [265000], "count": 1})
+        return httpx2.Response(200, json={"predictions": [265000]})
 
     async with httpx2.AsyncClient(
         base_url="http://prediction.test",
@@ -70,11 +70,11 @@ async def test_prediction_client_maps_server_failures_to_unavailable(
     [
         httpx2.Response(422, json={"error_code": "validation_error"}),
         httpx2.Response(200, content=b"not-json"),
-        httpx2.Response(200, json={"predictions": [1.5], "count": 1}),
-        httpx2.Response(200, json={"predictions": [-1], "count": 1}),
-        httpx2.Response(200, json={"predictions": [2**63], "count": 1}),
-        httpx2.Response(200, json={"predictions": [], "count": 0}),
-        httpx2.Response(200, json={"predictions": [1], "count": 2}),
+        httpx2.Response(200, json={"predictions": [1.5]}),
+        httpx2.Response(200, json={"predictions": [-1]}),
+        httpx2.Response(200, json={"predictions": [2**63]}),
+        httpx2.Response(200, json={"predictions": []}),
+        httpx2.Response(200, json={"predictions": [1, 2]}),
     ],
 )
 async def test_prediction_client_rejects_contract_failures(
