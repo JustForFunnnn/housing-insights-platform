@@ -1,0 +1,273 @@
+package com.housinginsights.market.data;
+
+import com.housinginsights.market.domain.DomainLimits;
+import com.housinginsights.market.domain.PropertyRecord;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Year;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import org.apache.commons.io.input.BOMInputStream;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.csv.DuplicateHeaderMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CsvPropertyDataLoader {
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(CsvPropertyDataLoader.class);
+
+    private static final List<String> REQUIRED_COLUMNS = List.of(
+            "id",
+            "square_footage",
+            "bedrooms",
+            "bathrooms",
+            "year_built",
+            "lot_size",
+            "distance_to_city_center",
+            "school_rating",
+            "price"
+    );
+
+    private static final CSVFormat CSV_FORMAT = CSVFormat.DEFAULT.builder()
+            .setHeader()
+            .setSkipHeaderRecord(true)
+            .setIgnoreEmptyLines(false)
+            .setTrim(true)
+            .setDuplicateHeaderMode(DuplicateHeaderMode.DISALLOW)
+            .get();
+
+    public PropertyDataset load(Path path) {
+        if (path == null || !Files.isRegularFile(path) || !Files.isReadable(path)) {
+            throw new DatasetLoadingException("market dataset is missing or unreadable");
+        }
+
+        try (Reader reader = new InputStreamReader(
+                BOMInputStream.builder().setPath(path).get(),
+                StandardCharsets.UTF_8
+        );
+             CSVParser parser = CSV_FORMAT.parse(reader)) {
+            validateHeaders(parser);
+            var properties = parseRecords(parser);
+            var dataset = new PropertyDataset(properties);
+            LOGGER.info(
+                    "dataset_loaded records={} path={}",
+                    dataset.properties().size(),
+                    path
+            );
+            return dataset;
+        } catch (DatasetLoadingException exception) {
+            throw exception;
+        } catch (IOException | RuntimeException exception) {
+            throw new DatasetLoadingException("market dataset could not be read", exception);
+        }
+    }
+
+    private static void validateHeaders(CSVParser parser) {
+        Set<String> headers = parser.getHeaderMap().keySet();
+        List<String> missing = REQUIRED_COLUMNS.stream()
+                .filter(column -> !headers.contains(column))
+                .toList();
+        if (!missing.isEmpty()) {
+            throw new DatasetLoadingException(
+                    "market dataset is missing required columns: "
+                            + String.join(", ", missing)
+            );
+        }
+    }
+
+    private static List<PropertyRecord> parseRecords(CSVParser parser)
+            throws IOException {
+        List<PropertyRecord> properties = new ArrayList<>();
+        Set<Long> identifiers = new HashSet<>();
+
+        for (CSVRecord row : parser) {
+            long lineNumber = row.getRecordNumber() + 1;
+            PropertyRecord property = parseRecord(row, lineNumber);
+            if (!identifiers.add(property.id())) {
+                throw rowError(lineNumber, "id", "must be unique");
+            }
+            properties.add(property);
+        }
+        return properties;
+    }
+
+    private static PropertyRecord parseRecord(CSVRecord row, long lineNumber) {
+        long id = parseLong(row, lineNumber, "id");
+        double squareFootage = parseDouble(row, lineNumber, "square_footage");
+        int bedrooms = parseInteger(row, lineNumber, "bedrooms");
+        double bathrooms = parseDouble(row, lineNumber, "bathrooms");
+        int yearBuilt = parseInteger(row, lineNumber, "year_built");
+        double lotSize = parseDouble(row, lineNumber, "lot_size");
+        double distance = parseDouble(
+                row,
+                lineNumber,
+                "distance_to_city_center"
+        );
+        double schoolRating = parseDouble(row, lineNumber, "school_rating");
+        long price = parseLong(row, lineNumber, "price");
+
+        require(id > 0, lineNumber, "id", "must be positive");
+        require(
+                squareFootage > 0
+                        && squareFootage <= DomainLimits.MAX_SQUARE_FOOTAGE,
+                lineNumber,
+                "square_footage",
+                "is outside the supported range"
+        );
+        require(
+                bedrooms >= 0 && bedrooms <= DomainLimits.MAX_BEDROOMS,
+                lineNumber,
+                "bedrooms",
+                "is outside the supported range"
+        );
+        require(
+                bathrooms >= 0 && bathrooms <= DomainLimits.MAX_BATHROOMS,
+                lineNumber,
+                "bathrooms",
+                "is outside the supported range"
+        );
+        require(
+                yearBuilt >= DomainLimits.MIN_YEAR_BUILT
+                        && yearBuilt <= Year.now().getValue(),
+                lineNumber,
+                "year_built",
+                "is outside the supported range"
+        );
+        require(
+                lotSize > 0 && lotSize <= DomainLimits.MAX_LOT_SIZE,
+                lineNumber,
+                "lot_size",
+                "is outside the supported range"
+        );
+        require(
+                distance >= 0
+                        && distance <= DomainLimits.MAX_DISTANCE_TO_CITY_CENTER,
+                lineNumber,
+                "distance_to_city_center",
+                "is outside the supported range"
+        );
+        require(
+                schoolRating >= 0
+                        && schoolRating <= DomainLimits.MAX_SCHOOL_RATING,
+                lineNumber,
+                "school_rating",
+                "is outside the supported range"
+        );
+        require(price > 0, lineNumber, "price", "must be positive");
+
+        return new PropertyRecord(
+                id,
+                squareFootage,
+                bedrooms,
+                bathrooms,
+                yearBuilt,
+                lotSize,
+                distance,
+                schoolRating,
+                price
+        );
+    }
+
+    private static long parseLong(
+            CSVRecord row,
+            long lineNumber,
+            String column
+    ) {
+        String value = value(row, lineNumber, column);
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException exception) {
+            throw rowError(lineNumber, column, "must be an integer", exception);
+        }
+    }
+
+    private static int parseInteger(
+            CSVRecord row,
+            long lineNumber,
+            String column
+    ) {
+        String value = value(row, lineNumber, column);
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException exception) {
+            throw rowError(lineNumber, column, "must be an integer", exception);
+        }
+    }
+
+    private static double parseDouble(
+            CSVRecord row,
+            long lineNumber,
+            String column
+    ) {
+        String value = value(row, lineNumber, column);
+        try {
+            double number = Double.parseDouble(value);
+            if (!Double.isFinite(number)) {
+                throw rowError(lineNumber, column, "must be finite");
+            }
+            return number;
+        } catch (NumberFormatException exception) {
+            throw rowError(lineNumber, column, "must be numeric", exception);
+        }
+    }
+
+    private static String value(
+            CSVRecord row,
+            long lineNumber,
+            String column
+    ) {
+        try {
+            String value = row.get(column);
+            if (value == null || value.isBlank()) {
+                throw rowError(lineNumber, column, "must not be blank");
+            }
+            return value;
+        } catch (IllegalArgumentException exception) {
+            throw rowError(lineNumber, column, "is missing", exception);
+        }
+    }
+
+    private static void require(
+            boolean condition,
+            long lineNumber,
+            String column,
+            String message
+    ) {
+        if (!condition) {
+            throw rowError(lineNumber, column, message);
+        }
+    }
+
+    private static DatasetLoadingException rowError(
+            long lineNumber,
+            String column,
+            String message
+    ) {
+        return new DatasetLoadingException(
+                "CSV row " + lineNumber + " column '" + column + "' " + message
+        );
+    }
+
+    private static DatasetLoadingException rowError(
+            long lineNumber,
+            String column,
+            String message,
+            Throwable cause
+    ) {
+        return new DatasetLoadingException(
+                "CSV row " + lineNumber + " column '" + column + "' " + message,
+                cause
+        );
+    }
+}

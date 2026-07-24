@@ -49,3 +49,31 @@ docker compose up --build estimator-service
 
 The estimator API is available at <http://localhost:9001>, with Swagger UI at
 <http://localhost:9001/docs>.
+
+## Market service
+
+The Java market backend loads the fixed housing dataset into read-only memory and
+provides filtered aggregate analysis, visualisation data, pageable property records,
+what-if predictions, and CSV/PDF exports. It calls `prediction-service` only for
+what-if analysis; it does not call `estimator-service`, use a database, read estimate
+history, or accept CSV uploads.
+
+For local development with JDK 21, run commands from `market-service/`:
+
+```powershell
+.\mvnw.cmd test
+.\mvnw.cmd package
+.\mvnw.cmd spring-boot:run
+```
+
+See [market-service/README.md](market-service/README.md) for configuration, API
+examples, filters, exports, request correlation, and error contracts.
+
+Build and start the market and prediction services from the repository root:
+
+```bash
+docker compose up --build market-service
+```
+
+The market API is available at <http://localhost:9002>, with Swagger UI at
+<http://localhost:9002/swagger-ui.html>.

@@ -1,0 +1,30 @@
+server:
+  port: 9002
+
+spring:
+  application:
+    name: market-service
+  cache:
+    type: caffeine
+    cache-names: marketAnalysis
+    caffeine:
+      spec: maximumSize=256,expireAfterAccess=30m
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+    deserialization:
+      fail-on-unknown-properties: true
+      accept-float-as-int: false
+    mapper:
+      allow-coercion-of-scalars: false
+
+market:
+  dataset-path: "${MARKET_DATASET_PATH:../data/House Price Dataset.csv}"
+  prediction:
+    base-url: "${PREDICTION_SERVICE_URL:http://localhost:9000}"
+    timeout: "${PREDICTION_SERVICE_TIMEOUT_SECONDS:5}s"
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level request_id=%X{request_id:--} %logger{36} - %msg%n"
+  level:
+    com.housinginsights.market: INFO

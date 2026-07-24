@@ -47,5 +47,31 @@ services:
       retries: 5
       start_period: 5s
 
+  market-service:
+    build:
+      context: .
+      dockerfile: market-service/Dockerfile
+    image: housing-insights/market-service:local
+    ports:
+      - "9002:9002"
+    environment:
+      MARKET_DATASET_PATH: /app/data/House Price Dataset.csv
+      PREDICTION_SERVICE_URL: http://prediction-service:9000
+      PREDICTION_SERVICE_TIMEOUT_SECONDS: "5"
+    depends_on:
+      - prediction-service
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - --fail
+        - --silent
+        - --show-error
+        - http://localhost:9002/health
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
 volumes:
   estimator-data:
