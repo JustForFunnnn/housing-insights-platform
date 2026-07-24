@@ -35,7 +35,7 @@ Run commands from `market-service/`:
 ```
 
 The API is available at <http://localhost:9002>. Swagger UI is at
-<http://localhost:9002/swagger-ui.html>.
+<http://localhost:9002/docs>.
 
 Defaults assume commands run from this directory:
 

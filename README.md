@@ -76,4 +76,4 @@ docker compose up --build market-service
 ```
 
 The market API is available at <http://localhost:9002>, with Swagger UI at
-<http://localhost:9002/swagger-ui.html>.
+<http://localhost:9002/docs>.
