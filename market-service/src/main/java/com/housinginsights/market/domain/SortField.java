@@ -6,24 +6,24 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 public enum SortField {
-    ID("id", Comparator.comparingLong(PropertyRecord::id)),
+    ID(PropertyFieldNames.ID, Comparator.comparingLong(PropertyRecord::id)),
     SQUARE_FOOTAGE(
-            "square_footage",
+            PropertyFieldNames.SQUARE_FOOTAGE,
             Comparator.comparingDouble(PropertyRecord::squareFootage)
     ),
-    BEDROOMS("bedrooms", Comparator.comparingInt(PropertyRecord::bedrooms)),
-    BATHROOMS("bathrooms", Comparator.comparingDouble(PropertyRecord::bathrooms)),
-    YEAR_BUILT("year_built", Comparator.comparingInt(PropertyRecord::yearBuilt)),
-    LOT_SIZE("lot_size", Comparator.comparingDouble(PropertyRecord::lotSize)),
+    BEDROOMS(PropertyFieldNames.BEDROOMS, Comparator.comparingInt(PropertyRecord::bedrooms)),
+    BATHROOMS(PropertyFieldNames.BATHROOMS, Comparator.comparingDouble(PropertyRecord::bathrooms)),
+    YEAR_BUILT(PropertyFieldNames.YEAR_BUILT, Comparator.comparingInt(PropertyRecord::yearBuilt)),
+    LOT_SIZE(PropertyFieldNames.LOT_SIZE, Comparator.comparingDouble(PropertyRecord::lotSize)),
     DISTANCE_TO_CITY_CENTER(
-            "distance_to_city_center",
+            PropertyFieldNames.DISTANCE_TO_CITY_CENTER,
             Comparator.comparingDouble(PropertyRecord::distanceToCityCenter)
     ),
     SCHOOL_RATING(
-            "school_rating",
+            PropertyFieldNames.SCHOOL_RATING,
             Comparator.comparingDouble(PropertyRecord::schoolRating)
     ),
-    PRICE("price", Comparator.comparingLong(PropertyRecord::price));
+    PRICE(PropertyFieldNames.PRICE, Comparator.comparingLong(PropertyRecord::price));
 
     private final String value;
     private final Comparator<PropertyRecord> comparator;

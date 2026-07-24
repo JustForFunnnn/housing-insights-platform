@@ -14,63 +14,65 @@ import java.util.TreeSet;
 import org.springframework.web.bind.annotation.BindParam;
 
 public record MarketFilterRequest(
-        @BindParam("min_square_footage")
+        @BindParam(MarketQueryParameters.MIN_SQUARE_FOOTAGE)
         @Positive
         @DecimalMax(DomainLimits.MAX_SQUARE_FOOTAGE_TEXT)
         Double minSquareFootage,
 
-        @BindParam("max_square_footage")
+        @BindParam(MarketQueryParameters.MAX_SQUARE_FOOTAGE)
         @Positive
         @DecimalMax(DomainLimits.MAX_SQUARE_FOOTAGE_TEXT)
         Double maxSquareFootage,
 
+        @BindParam(MarketQueryParameters.BEDROOMS)
         List<@Min(0) @Max(DomainLimits.MAX_BEDROOMS) Integer> bedrooms,
 
+        @BindParam(MarketQueryParameters.BATHROOMS)
         List<@DecimalMin("0") @DecimalMax(DomainLimits.MAX_BATHROOMS_TEXT) Double> bathrooms,
 
-        @BindParam("min_year_built")
+        @BindParam(MarketQueryParameters.MIN_YEAR_BUILT)
         @Min(DomainLimits.MIN_YEAR_BUILT)
         Integer minYearBuilt,
 
-        @BindParam("max_year_built")
+        @BindParam(MarketQueryParameters.MAX_YEAR_BUILT)
         @Min(DomainLimits.MIN_YEAR_BUILT)
         Integer maxYearBuilt,
 
-        @BindParam("min_lot_size")
+        @BindParam(MarketQueryParameters.MIN_LOT_SIZE)
         @Positive
         @DecimalMax(DomainLimits.MAX_LOT_SIZE_TEXT)
         Double minLotSize,
 
-        @BindParam("max_lot_size")
+        @BindParam(MarketQueryParameters.MAX_LOT_SIZE)
         @Positive
         @DecimalMax(DomainLimits.MAX_LOT_SIZE_TEXT)
         Double maxLotSize,
 
-        @BindParam("min_distance_to_city_center")
+        @BindParam(MarketQueryParameters.MIN_DISTANCE_TO_CITY_CENTER)
         @DecimalMin("0")
         @DecimalMax(DomainLimits.MAX_DISTANCE_TO_CITY_CENTER_TEXT)
         Double minDistanceToCityCenter,
 
-        @BindParam("max_distance_to_city_center")
+        @BindParam(MarketQueryParameters.MAX_DISTANCE_TO_CITY_CENTER)
         @DecimalMin("0")
         @DecimalMax(DomainLimits.MAX_DISTANCE_TO_CITY_CENTER_TEXT)
         Double maxDistanceToCityCenter,
 
-        @BindParam("min_school_rating")
+        @BindParam(MarketQueryParameters.MIN_SCHOOL_RATING)
         @DecimalMin("0")
         @DecimalMax(DomainLimits.MAX_SCHOOL_RATING_TEXT)
         Double minSchoolRating,
 
-        @BindParam("max_school_rating")
+        @BindParam(MarketQueryParameters.MAX_SCHOOL_RATING)
         @DecimalMin("0")
         @DecimalMax(DomainLimits.MAX_SCHOOL_RATING_TEXT)
         Double maxSchoolRating,
 
-        @BindParam("min_price")
+        @BindParam(MarketQueryParameters.MIN_PRICE)
         @Positive
         Long minPrice,
 
-        @BindParam("max_price")
+        @BindParam(MarketQueryParameters.MAX_PRICE)
         @Positive
         Long maxPrice
 ) {

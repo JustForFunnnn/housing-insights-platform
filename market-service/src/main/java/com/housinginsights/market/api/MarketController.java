@@ -47,21 +47,36 @@ public class MarketController {
     public PropertyPage properties(
             @Valid @ParameterObject @ModelAttribute
             MarketFilterRequest filters,
-            @RequestParam(name = "sort_by", defaultValue = "id")
+            @RequestParam(
+                    name = MarketQueryParameters.SORT_BY,
+                    defaultValue = MarketQueryParameters.DEFAULT_SORT_BY
+            )
             String sortBy,
-            @RequestParam(name = "sort_direction", defaultValue = "asc")
+            @RequestParam(
+                    name = MarketQueryParameters.SORT_DIRECTION,
+                    defaultValue = MarketQueryParameters.DEFAULT_SORT_DIRECTION
+            )
             String sortDirection,
-            @RequestParam(defaultValue = "0")
-            @Min(0) int page,
-            @RequestParam(defaultValue = "20")
-            @Min(1) @Max(DomainLimits.MAX_PROPERTY_PAGE_SIZE) int size
+            @RequestParam(
+                    name = MarketQueryParameters.LIMIT,
+                    defaultValue = MarketQueryParameters.DEFAULT_PAGE_LIMIT
+            )
+            @Min(1)
+            @Max(DomainLimits.MAX_PAGE_LIMIT)
+            int limit,
+            @RequestParam(
+                    name = MarketQueryParameters.OFFSET,
+                    defaultValue = MarketQueryParameters.DEFAULT_PAGE_OFFSET
+            )
+            @Min(0)
+            int offset
     ) {
         return propertyQueryService.findPage(
                 filters.toFilter(),
                 SortField.parse(sortBy),
                 SortDirection.parse(sortDirection),
-                page,
-                size
+                limit,
+                offset
         );
     }
 

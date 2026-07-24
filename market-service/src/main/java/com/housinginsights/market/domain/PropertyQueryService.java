@@ -34,28 +34,23 @@ public class PropertyQueryService {
             MarketFilter filter,
             SortField sortField,
             SortDirection direction,
-            int page,
-            int size
+            int limit,
+            int offset
     ) {
         List<PropertyRecord> matched = findAll(filter, sortField, direction);
         long total = matched.size();
-        int totalPages = total == 0
-                ? 0
-                : Math.toIntExact((total + size - 1) / size);
-        long first = (long) page * size;
-        List<PropertyRecord> records = first >= total
+        List<PropertyRecord> records = offset >= total
                 ? List.of()
                 : matched.subList(
-                        Math.toIntExact(first),
-                        (int) Math.min(first + size, total)
+                        offset,
+                        Math.toIntExact(Math.min((long) offset + limit, total))
                 );
         return new PropertyPage(
                 records,
                 records.size(),
                 total,
-                page,
-                size,
-                totalPages,
+                limit,
+                offset,
                 sortField,
                 direction
         );

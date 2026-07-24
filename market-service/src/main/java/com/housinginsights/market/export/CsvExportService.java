@@ -1,5 +1,6 @@
 package com.housinginsights.market.export;
 
+import com.housinginsights.market.domain.PropertyFieldNames;
 import com.housinginsights.market.domain.PropertyRecord;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -12,17 +13,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class CsvExportService {
     private static final CSVFormat EXPORT_FORMAT = CSVFormat.DEFAULT.builder()
-            .setHeader(
-                    "id",
-                    "square_footage",
-                    "bedrooms",
-                    "bathrooms",
-                    "year_built",
-                    "lot_size",
-                    "distance_to_city_center",
-                    "school_rating",
-                    "price"
-            )
+            .setHeader(PropertyFieldNames.ALL.toArray(String[]::new))
             .get();
 
     public byte[] export(List<PropertyRecord> properties) {

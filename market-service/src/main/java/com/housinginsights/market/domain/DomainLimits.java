@@ -13,7 +13,7 @@ public final class DomainLimits {
     public static final String MAX_SCHOOL_RATING_TEXT = "10";
     public static final double MAX_SCHOOL_RATING = Double.parseDouble(MAX_SCHOOL_RATING_TEXT);
     public static final int MIN_YEAR_BUILT = 1800;
-    public static final int MAX_PROPERTY_PAGE_SIZE = 100;
+    public static final int MAX_PAGE_LIMIT = 100;
     public static final int MAX_WHAT_IF_SCENARIOS = 19;
 
     private DomainLimits() {

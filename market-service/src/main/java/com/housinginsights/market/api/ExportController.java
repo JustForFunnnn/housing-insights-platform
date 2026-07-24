@@ -49,9 +49,15 @@ public class ExportController {
     public ResponseEntity<byte[]> csv(
             @Valid @ParameterObject @ModelAttribute
             MarketFilterRequest filters,
-            @RequestParam(name = "sort_by", defaultValue = "id")
+            @RequestParam(
+                    name = MarketQueryParameters.SORT_BY,
+                    defaultValue = MarketQueryParameters.DEFAULT_SORT_BY
+            )
             String sortBy,
-            @RequestParam(name = "sort_direction", defaultValue = "asc")
+            @RequestParam(
+                    name = MarketQueryParameters.SORT_DIRECTION,
+                    defaultValue = MarketQueryParameters.DEFAULT_SORT_DIRECTION
+            )
             String sortDirection
     ) {
         byte[] body = csvExportService.export(propertyQueryService.findAll(

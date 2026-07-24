@@ -13,7 +13,7 @@ class PropertyQueryServiceTest {
             new PropertyQueryService(new PropertyDataset(RECORDS));
 
     @Test
-    void filtersSortsAndPagesWithStableOrder() {
+    void filtersSortsAndLimitsWithStableOrder() {
         MarketFilter filter = new MarketFilter(
                 null,
                 null,
@@ -35,27 +35,31 @@ class PropertyQueryServiceTest {
                 filter,
                 SortField.PRICE,
                 SortDirection.DESC,
-                0,
-                1
+                1,
+                0
         );
 
         assertThat(page.records()).extracting(PropertyRecord::id).containsExactly(3L);
+        assertThat(page.count()).isEqualTo(1);
         assertThat(page.total()).isEqualTo(2);
-        assertThat(page.totalPages()).isEqualTo(2);
+        assertThat(page.limit()).isEqualTo(1);
+        assertThat(page.offset()).isZero();
     }
 
     @Test
-    void pagePastTotalIsEmptyAndKeepsTotals() {
+    void offsetPastTotalIsEmptyAndKeepsPaginationMetadata() {
         PropertyPage page = service.findPage(
                 MarketFilter.empty(),
                 SortField.ID,
                 SortDirection.ASC,
-                20,
-                2
+                2,
+                20
         );
 
         assertThat(page.records()).isEmpty();
+        assertThat(page.count()).isZero();
         assertThat(page.total()).isEqualTo(4);
-        assertThat(page.totalPages()).isEqualTo(2);
+        assertThat(page.limit()).isEqualTo(2);
+        assertThat(page.offset()).isEqualTo(20);
     }
 }

@@ -73,12 +73,12 @@ Shared filters are inclusive:
 ### Property records
 
 ```http
-GET /properties?bedrooms=3&sort_by=price&sort_direction=desc&page=0&size=20
+GET /properties?bedrooms=3&sort_by=price&sort_direction=desc&limit=20&offset=0
 ```
 
 The sort whitelist is `id`, `square_footage`, `bedrooms`, `bathrooms`,
 `year_built`, `lot_size`, `distance_to_city_center`, `school_rating`, and `price`.
-Pages are zero-based and `size` is limited to 100.
+The default `limit` is 20, the maximum is 100, and the default `offset` is 0.
 
 ### What-if
 

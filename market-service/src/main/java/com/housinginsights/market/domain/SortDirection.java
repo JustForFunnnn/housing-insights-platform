@@ -4,8 +4,11 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.housinginsights.market.support.error.InvalidRequestException;
 
 public enum SortDirection {
-    ASC("asc"),
-    DESC("desc");
+    ASC(SortDirection.ASC_VALUE),
+    DESC(SortDirection.DESC_VALUE);
+
+    public static final String ASC_VALUE = "asc";
+    public static final String DESC_VALUE = "desc";
 
     private final String value;
 

@@ -8,8 +8,12 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public record WhatIfRequest(
-        @NotNull @Valid PropertyFeaturesRequest baseline,
-        @NotEmpty @Size(max = DomainLimits.MAX_WHAT_IF_SCENARIOS)
+        @NotNull
+        @Valid
+        PropertyFeaturesRequest baseline,
+
+        @NotEmpty
+        @Size(max = DomainLimits.MAX_WHAT_IF_SCENARIOS)
         List<@NotNull @Valid PropertyFeaturesRequest> scenarios
 ) {
     public WhatIfRequest {

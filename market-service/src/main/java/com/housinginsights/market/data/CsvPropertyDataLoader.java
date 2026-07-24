@@ -1,6 +1,7 @@
 package com.housinginsights.market.data;
 
 import com.housinginsights.market.domain.DomainLimits;
+import com.housinginsights.market.domain.PropertyFieldNames;
 import com.housinginsights.market.domain.PropertyRecord;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -27,17 +28,7 @@ public class CsvPropertyDataLoader {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(CsvPropertyDataLoader.class);
 
-    private static final List<String> REQUIRED_COLUMNS = List.of(
-            "id",
-            "square_footage",
-            "bedrooms",
-            "bathrooms",
-            "year_built",
-            "lot_size",
-            "distance_to_city_center",
-            "school_rating",
-            "price"
-    );
+    private static final List<String> REQUIRED_COLUMNS = PropertyFieldNames.ALL;
 
     private static final CSVFormat CSV_FORMAT = CSVFormat.DEFAULT.builder()
             .setHeader()
@@ -95,7 +86,7 @@ public class CsvPropertyDataLoader {
             long lineNumber = row.getRecordNumber() + 1;
             PropertyRecord property = parseRecord(row, lineNumber);
             if (!identifiers.add(property.id())) {
-                throw rowError(lineNumber, "id", "must be unique");
+                throw rowError(lineNumber, PropertyFieldNames.ID, "must be unique");
             }
             properties.add(property);
         }
@@ -103,68 +94,64 @@ public class CsvPropertyDataLoader {
     }
 
     private static PropertyRecord parseRecord(CSVRecord row, long lineNumber) {
-        long id = parseLong(row, lineNumber, "id");
-        double squareFootage = parseDouble(row, lineNumber, "square_footage");
-        int bedrooms = parseInteger(row, lineNumber, "bedrooms");
-        double bathrooms = parseDouble(row, lineNumber, "bathrooms");
-        int yearBuilt = parseInteger(row, lineNumber, "year_built");
-        double lotSize = parseDouble(row, lineNumber, "lot_size");
-        double distance = parseDouble(
-                row,
-                lineNumber,
-                "distance_to_city_center"
-        );
-        double schoolRating = parseDouble(row, lineNumber, "school_rating");
-        long price = parseLong(row, lineNumber, "price");
+        long id = parseLong(row, lineNumber, PropertyFieldNames.ID);
+        double squareFootage = parseDouble(row, lineNumber, PropertyFieldNames.SQUARE_FOOTAGE);
+        int bedrooms = parseInteger(row, lineNumber, PropertyFieldNames.BEDROOMS);
+        double bathrooms = parseDouble(row, lineNumber, PropertyFieldNames.BATHROOMS);
+        int yearBuilt = parseInteger(row, lineNumber, PropertyFieldNames.YEAR_BUILT);
+        double lotSize = parseDouble(row, lineNumber, PropertyFieldNames.LOT_SIZE);
+        double distance = parseDouble(row, lineNumber, PropertyFieldNames.DISTANCE_TO_CITY_CENTER);
+        double schoolRating = parseDouble(row, lineNumber, PropertyFieldNames.SCHOOL_RATING);
+        long price = parseLong(row, lineNumber, PropertyFieldNames.PRICE);
 
-        require(id > 0, lineNumber, "id", "must be positive");
+        require(id > 0, lineNumber, PropertyFieldNames.ID, "must be positive");
         require(
                 squareFootage > 0
                         && squareFootage <= DomainLimits.MAX_SQUARE_FOOTAGE,
                 lineNumber,
-                "square_footage",
+                PropertyFieldNames.SQUARE_FOOTAGE,
                 "is outside the supported range"
         );
         require(
                 bedrooms >= 0 && bedrooms <= DomainLimits.MAX_BEDROOMS,
                 lineNumber,
-                "bedrooms",
+                PropertyFieldNames.BEDROOMS,
                 "is outside the supported range"
         );
         require(
                 bathrooms >= 0 && bathrooms <= DomainLimits.MAX_BATHROOMS,
                 lineNumber,
-                "bathrooms",
+                PropertyFieldNames.BATHROOMS,
                 "is outside the supported range"
         );
         require(
                 yearBuilt >= DomainLimits.MIN_YEAR_BUILT
                         && yearBuilt <= Year.now().getValue(),
                 lineNumber,
-                "year_built",
+                PropertyFieldNames.YEAR_BUILT,
                 "is outside the supported range"
         );
         require(
                 lotSize > 0 && lotSize <= DomainLimits.MAX_LOT_SIZE,
                 lineNumber,
-                "lot_size",
+                PropertyFieldNames.LOT_SIZE,
                 "is outside the supported range"
         );
         require(
                 distance >= 0
                         && distance <= DomainLimits.MAX_DISTANCE_TO_CITY_CENTER,
                 lineNumber,
-                "distance_to_city_center",
+                PropertyFieldNames.DISTANCE_TO_CITY_CENTER,
                 "is outside the supported range"
         );
         require(
                 schoolRating >= 0
                         && schoolRating <= DomainLimits.MAX_SCHOOL_RATING,
                 lineNumber,
-                "school_rating",
+                PropertyFieldNames.SCHOOL_RATING,
                 "is outside the supported range"
         );
-        require(price > 0, lineNumber, "price", "must be positive");
+        require(price > 0, lineNumber, PropertyFieldNames.PRICE, "must be positive");
 
         return new PropertyRecord(
                 id,

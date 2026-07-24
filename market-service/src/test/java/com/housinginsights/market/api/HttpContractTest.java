@@ -98,7 +98,7 @@ class HttpContractTest {
 
     @Test
     void validationAndHttpErrorsUseFlatSafeContract() throws Exception {
-        mockMvc.perform(get("/properties").param("page", "-1"))
+        mockMvc.perform(get("/properties").param("limit", "0"))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.error_code").value("validation_error"))
                 .andExpect(jsonPath("$.message")
@@ -110,6 +110,23 @@ class HttpContractTest {
                 .andExpect(jsonPath("$.error_code").value("http_error"))
                 .andExpect(jsonPath("$.message")
                         .value("The request could not be completed."));
+    }
+
+    @Test
+    void propertiesUseLimitOffsetPagination() throws Exception {
+        mockMvc.perform(get("/properties")
+                        .param("sort_by", "id")
+                        .param("limit", "1")
+                        .param("offset", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.records[0].id").value(2))
+                .andExpect(jsonPath("$.count").value(1))
+                .andExpect(jsonPath("$.total").value(4))
+                .andExpect(jsonPath("$.limit").value(1))
+                .andExpect(jsonPath("$.offset").value(1))
+                .andExpect(jsonPath("$.page").doesNotExist())
+                .andExpect(jsonPath("$.size").doesNotExist())
+                .andExpect(jsonPath("$.total_pages").doesNotExist());
     }
 
     @Test
@@ -134,8 +151,24 @@ class HttpContractTest {
                 ).exists())
                 .andExpect(jsonPath(
                         "$.components.schemas.PropertyPage"
-                                + ".properties.total_pages"
+                                + ".properties.limit"
                 ).exists())
+                .andExpect(jsonPath(
+                        "$.components.schemas.PropertyPage"
+                                + ".properties.offset"
+                ).exists())
+                .andExpect(jsonPath(
+                        "$.components.schemas.PropertyPage"
+                                + ".properties.total_pages"
+                ).doesNotExist())
+                .andExpect(jsonPath(
+                        "$.paths['/properties'].get.parameters"
+                                + "[?(@.name == 'limit')]"
+                ).isNotEmpty())
+                .andExpect(jsonPath(
+                        "$.paths['/properties'].get.parameters"
+                                + "[?(@.name == 'offset')]"
+                ).isNotEmpty())
                 .andExpect(jsonPath(
                         "$.paths['/analysis'].get.parameters"
                                 + "[?(@.name == 'min_square_footage')]"

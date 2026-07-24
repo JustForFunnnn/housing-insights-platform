@@ -6,9 +6,8 @@ public record PropertyPage(
         List<PropertyRecord> records,
         int count,
         long total,
-        int page,
-        int size,
-        int totalPages,
+        int limit,
+        int offset,
         SortField sortBy,
         SortDirection sortDirection
 ) {
