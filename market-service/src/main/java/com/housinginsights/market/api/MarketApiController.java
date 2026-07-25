@@ -12,5 +12,5 @@ import org.springframework.web.bind.annotation.RestController;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @RestController
-@RequestMapping("/api/v1/market")
+@RequestMapping("/api")
 public @interface MarketApiController {}

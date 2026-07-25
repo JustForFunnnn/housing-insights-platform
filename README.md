@@ -95,10 +95,10 @@ The market API is available at <http://localhost:9002>, with Swagger UI at
 
 ## Backend routes
 
-- Prediction: `POST /predict`, `GET /model-info`, `GET /health`
-- Estimator: `POST/GET /api/v1/estimates`,
-  `GET /api/v1/estimates/metadata`, `GET /api/v1/health`
-- Market: `GET /api/v1/market/metadata`,
-  `GET /api/v1/market/properties`, `GET /api/v1/market/analysis`,
-  `POST /api/v1/market/what-if`, `GET /api/v1/market/exports/csv`,
-  `GET /api/v1/health`
+- Prediction: `POST /api/predict`, `GET /api/model-info`,
+  `GET /api/health`
+- Estimator: `POST/GET /api/estimates`, `GET /api/metadata`,
+  `GET /api/health`
+- Market: `GET /api/metadata`, `GET /api/properties`,
+  `GET /api/analysis`, `POST /api/what-if`,
+  `GET /api/properties/export/csv`, `GET /api/health`

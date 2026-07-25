@@ -17,7 +17,7 @@ services:
         - -c
         - >-
           import urllib.request;
-          urllib.request.urlopen('http://localhost:9000/health', timeout=2)
+          urllib.request.urlopen('http://localhost:9000/api/health', timeout=2)
       interval: 10s
       timeout: 3s
       retries: 5
@@ -50,7 +50,7 @@ services:
         - -c
         - >-
           import urllib.request;
-          urllib.request.urlopen('http://localhost:9001/api/v1/health', timeout=2)
+          urllib.request.urlopen('http://localhost:9001/api/health', timeout=2)
       interval: 10s
       timeout: 3s
       retries: 5
@@ -98,7 +98,7 @@ services:
         - --fail
         - --silent
         - --show-error
-        - http://localhost:9002/api/v1/health
+        - http://localhost:9002/api/health
       interval: 10s
       timeout: 3s
       retries: 5

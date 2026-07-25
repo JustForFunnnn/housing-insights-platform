@@ -47,7 +47,7 @@ class HttpContractTest {
 
     @Test
     void healthPreservesValidRequestIdsOrGeneratesCompactRequestIds() throws Exception {
-        mockMvc.perform(get("/api/v1/health")
+        mockMvc.perform(get("/api/health")
                         .header(
                                 RequestCorrelation.HEADER_NAME,
                                 HYPHENATED_REQUEST_ID))
@@ -55,14 +55,14 @@ class HttpContractTest {
                 .andExpect(header().string(RequestCorrelation.HEADER_NAME, HYPHENATED_REQUEST_ID))
                 .andExpect(jsonPath("$.status").value("ok"));
 
-        mockMvc.perform(get("/api/v1/health")
+        mockMvc.perform(get("/api/health")
                         .header(
                                 RequestCorrelation.HEADER_NAME,
                                 COMPACT_REQUEST_ID))
                 .andExpect(status().isOk())
                 .andExpect(header().string(RequestCorrelation.HEADER_NAME, COMPACT_REQUEST_ID));
 
-        mockMvc.perform(get("/api/v1/health"))
+        mockMvc.perform(get("/api/health"))
                 .andExpect(status().isOk())
                 .andExpect(header().string(
                                 RequestCorrelation.HEADER_NAME,
@@ -71,7 +71,7 @@ class HttpContractTest {
 
     @Test
     void csvValidationErrorsOverrideBinaryAcceptWithJson() throws Exception {
-        mockMvc.perform(get("/api/v1/market/exports/csv")
+        mockMvc.perform(get("/api/properties/export/csv")
                         .param("sort_by", "not_a_field")
                         .accept(MediaType.parseMediaType("text/csv")))
                 .andExpect(status().isUnprocessableEntity())
@@ -83,7 +83,7 @@ class HttpContractTest {
 
     @Test
     void validationAndHttpErrorsUseFlatContract(CapturedOutput output) throws Exception {
-        mockMvc.perform(get("/api/v1/market/properties").param("limit", "0"))
+        mockMvc.perform(get("/api/properties").param("limit", "0"))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.error_code").value("validation_error"))
                 .andExpect(jsonPath("$.message").value("Request validation failed."))
@@ -94,7 +94,7 @@ class HttpContractTest {
                 .andExpect(jsonPath("$.error_code").value("http_error"))
                 .andExpect(jsonPath("$.message").value("The request could not be completed."));
 
-        mockMvc.perform(get("/api/v1/market/properties")
+        mockMvc.perform(get("/api/properties")
                         .param("bathrooms", "101"))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.error_code").value("validation_error"));
@@ -102,12 +102,12 @@ class HttpContractTest {
         assertThat(output)
                 .contains(
                         "request_validation_failed method=GET "
-                                + "path=/api/v1/market/properties error=");
+                                + "path=/api/properties error=");
     }
 
     @Test
     void propertiesUseLimitOffsetPagination() throws Exception {
-        mockMvc.perform(get("/api/v1/market/properties")
+        mockMvc.perform(get("/api/properties")
                         .param("sort_by", "id")
                         .param("limit", "1")
                         .param("offset", "1"))
@@ -124,7 +124,7 @@ class HttpContractTest {
 
     @Test
     void analysisReturnsPublicResponse() throws Exception {
-        mockMvc.perform(get("/api/v1/market/analysis"))
+        mockMvc.perform(get("/api/analysis"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.count").value(4))
                 .andExpect(jsonPath("$.price_summary.average").isNumber())
@@ -135,7 +135,7 @@ class HttpContractTest {
     @Test
     void metadataReturnsSharedFieldsAndFullDatasetFilterOptions()
             throws Exception {
-        mockMvc.perform(get("/api/v1/market/metadata"))
+        mockMvc.perform(get("/api/metadata"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.fields.square_footage.type")
                         .doesNotExist())
@@ -159,19 +159,19 @@ class HttpContractTest {
     @Test
     void propertiesAnalysisAndCsvShareTheSameCompleteFilterResult()
             throws Exception {
-        mockMvc.perform(get("/api/v1/market/properties")
+        mockMvc.perform(get("/api/properties")
                         .param("bedrooms", "3")
                         .param("limit", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.records.length()").value(1))
                 .andExpect(jsonPath("$.total").value(2));
 
-        mockMvc.perform(get("/api/v1/market/analysis")
+        mockMvc.perform(get("/api/analysis")
                         .param("bedrooms", "3"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.count").value(2));
 
-        String csv = mockMvc.perform(get("/api/v1/market/exports/csv")
+        String csv = mockMvc.perform(get("/api/properties/export/csv")
                         .param("bedrooms", "3")
                         .param("limit", "1")
                         .param("sort_by", "id"))
@@ -192,7 +192,7 @@ class HttpContractTest {
                         "/analysis",
                         "/exports/properties.csv",
                         "/exports/market-analysis.pdf",
-                        "/api/v1/market/exports/market-analysis.pdf")) {
+                        "/api/properties/export/pdf")) {
             mockMvc.perform(get(path)).andExpect(status().isNotFound());
         }
         mockMvc.perform(post("/what-if")
@@ -213,34 +213,35 @@ class HttpContractTest {
                         jsonPath("$.components.schemas.MarketAnalysisResponse").exists())
                 .andExpect(jsonPath("$.components.schemas.PropertyPageResponse").exists())
                 .andExpect(jsonPath("$.components.schemas.WhatIfResponse").exists())
-                .andExpect(jsonPath("$.paths['/api/v1/market/metadata'].get")
-                        .exists())
-                .andExpect(jsonPath("$.paths['/api/v1/market/exports/csv'].get")
+                .andExpect(jsonPath("$.paths['/api/metadata'].get")
                         .exists())
                 .andExpect(jsonPath(
-                                "$.paths['/api/v1/market/exports/market-analysis.pdf']")
+                                "$.paths['/api/properties/export/csv'].get")
+                        .exists())
+                .andExpect(jsonPath(
+                                "$.paths['/api/properties/export/pdf']")
                         .doesNotExist())
                 .andExpect(jsonPath(
-                                "$.paths['/api/v1/market/properties'].get.parameters"
+                                "$.paths['/api/properties'].get.parameters"
                                         + "[?(@.name == 'limit')]")
                         .isNotEmpty())
                 .andExpect(jsonPath(
-                                "$.paths['/api/v1/market/properties'].get.parameters"
+                                "$.paths['/api/properties'].get.parameters"
                                         + "[?(@.name == 'offset')]")
                         .isNotEmpty())
                 .andExpect(jsonPath(
-                                "$.paths['/api/v1/market/analysis'].get.parameters"
+                                "$.paths['/api/analysis'].get.parameters"
                                         + "[?(@.name == 'min_square_footage')]")
                         .isNotEmpty())
                 .andExpect(jsonPath(
-                                "$.paths['/api/v1/market/analysis'].get.parameters"
+                                "$.paths['/api/analysis'].get.parameters"
                                         + "[?(@.name == 'minSquareFootage')]")
                         .isEmpty());
     }
 
     @Test
     void whatIfRejectsJsonCoercionAndPropagatesRequestId() throws Exception {
-        mockMvc.perform(post("/api/v1/market/what-if")
+        mockMvc.perform(post("/api/what-if")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validWhatIfJson().replace("\"square_footage\": 1850", "\"square_footage\": \"1850\"")))
                 .andExpect(status().isUnprocessableEntity())
@@ -253,7 +254,7 @@ class HttpContractTest {
             return List.of(200000L, 220000L);
         });
 
-        mockMvc.perform(post("/api/v1/market/what-if")
+        mockMvc.perform(post("/api/what-if")
                         .header(RequestCorrelation.HEADER_NAME, HYPHENATED_REQUEST_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validWhatIfJson()))
@@ -270,7 +271,7 @@ class HttpContractTest {
         var error = new PredictionServiceUnavailableException("prediction service request failed", rootCause);
         when(predictionClient.predict(anyList())).thenThrow(error);
 
-        mockMvc.perform(post("/api/v1/market/what-if")
+        mockMvc.perform(post("/api/what-if")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validWhatIfJson()))
                 .andExpect(status().isServiceUnavailable())

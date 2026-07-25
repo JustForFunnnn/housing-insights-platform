@@ -32,7 +32,9 @@ public class ExportController {
         this.propertyMetadata = propertyMetadata;
     }
 
-    @GetMapping(value = "/exports/csv", produces = "text/csv;charset=UTF-8")
+    @GetMapping(
+            value = "/properties/export/csv",
+            produces = "text/csv;charset=UTF-8")
     public ResponseEntity<byte[]> csv(
             @Valid @ParameterObject @ModelAttribute MarketFilterRequest filters,
             @ParameterObject @ModelAttribute MarketSortRequest sort) {

@@ -109,7 +109,7 @@ async def list_estimates(
 
 
 @router.get(
-    "/estimates/metadata",
+    "/metadata",
     response_model=PropertyMetadataResponse,
     responses={
         200: RESPONSE_WITH_REQUEST_ID,

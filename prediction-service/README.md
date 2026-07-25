@@ -48,7 +48,7 @@ active identifier is included in application logs and returned in the response.
 
 ### Predict
 
-`POST /predict` always accepts a list of 1 to 20 property records. A single
+`POST /api/predict` always accepts a list of 1 to 20 property records. A single
 prediction is represented by a one-item list; bare objects are not accepted:
 
 ```json
@@ -81,8 +81,7 @@ integer prices; OpenAPI exposes each prediction as an `int64` value.
 The prediction, estimator, and market services load the same
 `contracts/property-field-metadata.json` once at startup. Field constraints and
 units are intentionally not duplicated in this README. They are exposed to portal
-clients by `GET /api/v1/estimates/metadata` and
-`GET /api/v1/market/metadata`.
+clients by each application's `GET /api/metadata` endpoint.
 
 Prediction requests are validated against the same metadata. Strict types, finite
 numbers, batch size, extra-field rejection, and signed 64-bit result checks also
@@ -90,12 +89,12 @@ remain in effect. Configuration changes require a service restart.
 
 ### Model Information
 
-`GET /model-info` returns the training timestamp, feature coefficients, intercept,
+`GET /api/model-info` returns the training timestamp, feature coefficients, intercept,
 and five-fold R², RMSE, and MAE mean/standard-deviation summaries.
 
 ### Health Check
 
-`GET /health` returns `{"status":"ok"}`. A missing or incompatible model artifact
+`GET /api/health` returns `{"status":"ok"}`. A missing or incompatible model artifact
 prevents the application from starting.
 
 ### Error Responses

@@ -30,7 +30,7 @@ def request_id_context():
 @pytest.mark.anyio
 async def test_prediction_client_sends_contract_and_request_id() -> None:
     async def handler(request: httpx2.Request) -> httpx2.Response:
-        assert request.url.path == "/predict"
+        assert request.url.path == "/api/predict"
         assert request.headers["X-Request-ID"] == SUPPLIED_REQUEST_ID
         assert json.loads(request.read()) == {"instances": [VALID_PROPERTY]}
         return httpx2.Response(200, json={"predictions": [265000]})

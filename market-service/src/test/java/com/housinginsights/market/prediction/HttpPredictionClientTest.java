@@ -63,7 +63,7 @@ class HttpPredictionClientTest {
 
     @Test
     void sendsOrderedBatchAndRequestId() {
-        server.expect(requestTo("http://prediction.test/predict"))
+        server.expect(requestTo("http://prediction.test/api/predict"))
                 .andExpect(header(RequestCorrelation.HEADER_NAME, REQUEST_ID))
                 .andExpect(content().json("""
                         {
@@ -90,7 +90,7 @@ class HttpPredictionClientTest {
 
     @Test
     void mapsServerFailureToUnavailable() {
-        server.expect(requestTo("http://prediction.test/predict"))
+        server.expect(requestTo("http://prediction.test/api/predict"))
                 .andRespond(withStatus(HttpStatus.SERVICE_UNAVAILABLE));
 
         assertThatThrownBy(() -> client.predict(List.of(validFeatures())))
@@ -100,7 +100,7 @@ class HttpPredictionClientTest {
 
     @Test
     void rejectsRepresentativeInvalidResponses() {
-        server.expect(requestTo("http://prediction.test/predict"))
+        server.expect(requestTo("http://prediction.test/api/predict"))
                 .andRespond(withSuccess("{\"predictions\":[0]}", MediaType.APPLICATION_JSON));
 
         assertThatThrownBy(() -> client.predict(List.of(validFeatures())))
@@ -109,7 +109,7 @@ class HttpPredictionClientTest {
 
     @Test
     void mapsRejectedRequestToInvalidResponse() {
-        server.expect(requestTo("http://prediction.test/predict"))
+        server.expect(requestTo("http://prediction.test/api/predict"))
                 .andRespond(withStatus(HttpStatus.UNPROCESSABLE_ENTITY));
 
         assertThatThrownBy(() -> client.predict(List.of(validFeatures())))

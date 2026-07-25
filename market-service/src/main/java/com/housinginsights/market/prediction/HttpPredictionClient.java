@@ -25,7 +25,7 @@ public class HttpPredictionClient implements PredictionClient {
     public List<Long> predict(List<PropertyFeatures> properties) {
         var response = request(
                 HttpMethod.POST,
-                "/predict",
+                "/api/predict",
                 new PredictionRequest(
                         properties.stream().map(PredictionInstance::from).toList()),
                 PredictionResponse.class);

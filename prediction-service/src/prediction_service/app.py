@@ -68,7 +68,7 @@ def create_app(
         version="0.1.0",
         lifespan=lifespan,
     )
-    application.include_router(router)
+    application.include_router(router, prefix="/api")
     application.middleware("http")(log_request)
     application.add_middleware(
         CorrelationIdMiddleware,

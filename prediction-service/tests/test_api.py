@@ -72,8 +72,8 @@ class StubPredictionService:
 
 def test_health_and_model_info_contract() -> None:
     with TestClient(create_app(prediction_service=StubPredictionService())) as client:
-        health = client.get("/health")
-        info = client.get("/model-info")
+        health = client.get("/api/health")
+        info = client.get("/api/model-info")
 
     assert health.status_code == 200
     assert health.json() == {"status": "ok"}
@@ -103,12 +103,12 @@ def test_request_ids_are_preserved_generated_replaced_and_logged(
     caplog.set_level(logging.INFO, logger="prediction_service.observability")
     with TestClient(create_app(prediction_service=StubPredictionService())) as client:
         response = client.get(
-            "/health",
+            "/api/health",
             headers={REQUEST_ID_HEADER: HYPHENATED_REQUEST_ID},
         )
-        generated = client.get("/health")
+        generated = client.get("/api/health")
         replaced = client.get(
-            "/health",
+            "/api/health",
             headers={REQUEST_ID_HEADER: INVALID_REQUEST_ID},
         )
 
@@ -138,7 +138,7 @@ def test_request_ids_are_preserved_generated_replaced_and_logged(
         replaced_request_id,
     ):
         assert (
-            "method=GET path=/health status=200"
+            "method=GET path=/api/health status=200"
             in request_records[request_id].message
         )
     assert response.headers[REQUEST_ID_HEADER] == HYPHENATED_REQUEST_ID
@@ -148,9 +148,12 @@ def test_request_ids_are_preserved_generated_replaced_and_logged(
 def test_single_and_batch_predictions_always_use_list_envelope() -> None:
     service = StubPredictionService()
     with TestClient(create_app(prediction_service=service)) as client:
-        single = client.post("/predict", json={"instances": [VALID_INSTANCE]})
+        single = client.post(
+            "/api/predict",
+            json={"instances": [VALID_INSTANCE]},
+        )
         batch = client.post(
-            "/predict",
+            "/api/predict",
             json={
                 "instances": [
                     {**VALID_INSTANCE, "square_footage": 2100},
@@ -158,7 +161,10 @@ def test_single_and_batch_predictions_always_use_list_envelope() -> None:
                 ]
             },
         )
-        bare = client.post("/predict", json={"instances": VALID_INSTANCE})
+        bare = client.post(
+            "/api/predict",
+            json={"instances": VALID_INSTANCE},
+        )
 
     assert single.json() == {"predictions": [1850]}
     assert batch.json() == {"predictions": [2100, 900]}
@@ -169,7 +175,7 @@ def test_single_and_batch_predictions_always_use_list_envelope() -> None:
 def test_validation_error_uses_standard_response_and_request_id() -> None:
     with TestClient(create_app(prediction_service=StubPredictionService())) as client:
         response = client.post(
-            "/predict",
+            "/api/predict",
             json={},
             headers={REQUEST_ID_HEADER: SUPPLIED_REQUEST_ID},
         )
@@ -193,7 +199,7 @@ def test_shared_metadata_constraint_rejects_request() -> None:
         ]
     }
     with TestClient(create_app(prediction_service=service)) as client:
-        response = client.post("/predict", json=payload)
+        response = client.post("/api/predict", json=payload)
 
     assert response.status_code == 422
     assert service.seen == []
@@ -207,7 +213,7 @@ def test_non_finite_request_returns_serializable_422() -> None:
     )
     with TestClient(create_app(prediction_service=StubPredictionService())) as client:
         response = client.post(
-            "/predict",
+            "/api/predict",
             content=body,
             headers={"content-type": "application/json"},
         )
@@ -226,7 +232,7 @@ def test_http_errors_use_standard_responses() -> None:
             headers={REQUEST_ID_HEADER: SUPPLIED_REQUEST_ID},
         )
         wrong_method = client.get(
-            "/predict",
+            "/api/predict",
             headers={REQUEST_ID_HEADER: SUPPLIED_REQUEST_ID},
         )
 
@@ -253,7 +259,7 @@ def test_failure_is_logged_and_returns_standard_response(
     request_id = SUPPLIED_REQUEST_ID
     with TestClient(app, raise_server_exceptions=False) as client:
         response = client.post(
-            "/predict",
+            "/api/predict",
             json={"instances": [VALID_INSTANCE]},
             headers={REQUEST_ID_HEADER: request_id},
         )
@@ -284,7 +290,7 @@ def test_app_loads_explicit_artifact_path(
     save_artifact(artifact, path)
 
     with TestClient(create_app(artifact_path=str(path))) as client:
-        response = client.get("/model-info")
+        response = client.get("/api/model-info")
 
     assert response.status_code == 200
     assert response.json()["training_timestamp"] == artifact["trained_at"]
@@ -300,7 +306,7 @@ def test_app_loads_default_artifact(
     save_artifact(artifact_factory(), path)
 
     with TestClient(create_app()) as client:
-        response = client.get("/model-info")
+        response = client.get("/api/model-info")
 
     assert response.status_code == 200
 

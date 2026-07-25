@@ -52,7 +52,7 @@ service.
 
 ### Create estimates
 
-`POST /api/v1/estimates` accepts 1 to 20 properties:
+`POST /api/estimates` accepts 1 to 20 properties:
 
 ```json
 {
@@ -70,20 +70,20 @@ service.
 }
 ```
 
-Use `GET /api/v1/estimates/metadata` for the current form constraints and units.
+Use `GET /api/metadata` for the current form constraints and units.
 
 ### Query history
 
-- `GET /api/v1/estimates?limit=20&offset=0` returns newest records first and includes the
+- `GET /api/estimates?limit=20&offset=0` returns newest records first and includes the
   total record count.
-- `GET /api/v1/estimates/metadata` returns `{"fields": {...}}` for form
+- `GET /api/metadata` returns `{"fields": {...}}` for form
   generation and client-side validation.
 
 An offset at or beyond the total returns `200` with an empty list.
 
 ### Health
 
-`GET /api/v1/health` verifies that PostgreSQL is reachable and queryable. It does not call
+`GET /api/health` verifies that PostgreSQL is reachable and queryable. It does not call
 the prediction service, so a prediction-service outage does not make this endpoint
 fail.
 

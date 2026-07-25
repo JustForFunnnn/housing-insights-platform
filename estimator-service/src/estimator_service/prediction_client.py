@@ -57,7 +57,7 @@ class HttpPredictionClient:
     ) -> list[int]:
         response = await self._request(
             method="POST",
-            path="/predict",
+            path="/api/predict",
             json={"instances": [item.as_dict() for item in properties]},
         )
 

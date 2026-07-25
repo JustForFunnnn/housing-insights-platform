@@ -22,7 +22,7 @@ shown on screen.
 
 The dataset and property metadata are loaded once into immutable memory. Missing,
 unreadable, empty, or invalid data prevents startup. Prediction-service availability
-is deliberately not checked at startup or by `/api/v1/health`.
+is deliberately not checked at startup or by `/api/health`.
 
 ## Local development
 
@@ -59,7 +59,7 @@ All JSON uses `snake_case`.
 ### Analysis
 
 ```http
-GET /api/v1/market/analysis?bedrooms=3&min_price=200000&max_price=300000
+GET /api/analysis?bedrooms=3&min_price=200000&max_price=300000
 ```
 
 Returns the matching count, minimum/maximum/average/median price, price distribution,
@@ -81,7 +81,7 @@ Shared filters are inclusive:
 ### Property records
 
 ```http
-GET /api/v1/market/properties?bedrooms=3&sort_by=price&sort_direction=desc&limit=20&offset=0
+GET /api/properties?bedrooms=3&sort_by=price&sort_direction=desc&limit=20&offset=0
 ```
 
 The sort whitelist is `id`, `square_footage`, `bedrooms`, `bathrooms`,
@@ -91,7 +91,7 @@ The default `limit` is 20, the maximum is 100, and the default `offset` is 0.
 ### What-if
 
 ```http
-POST /api/v1/market/what-if
+POST /api/what-if
 Content-Type: application/json
 
 {
@@ -118,21 +118,21 @@ Content-Type: application/json
 }
 ```
 
-Baseline and scenarios are sent in one ordered `/predict` batch. The response includes
+Baseline and scenarios are sent in one ordered `/api/predict` batch. The response includes
 the baseline prediction and signed absolute/percentage differences for every scenario.
 What-if data and downstream predictions are not persisted.
 
 ### Metadata, export, and health
 
-- `GET /api/v1/market/metadata` returns the shared property fields plus
+- `GET /api/metadata` returns the shared property fields plus
   `filter_options` calculated from the complete CSV. Price range and actual
   bedroom/bathroom options therefore remain dataset-derived.
-- `GET /api/v1/market/exports/csv` accepts the shared filters plus sorting and exports all
+- `GET /api/properties/export/csv` accepts the shared filters plus sorting and exports all
   matching records, regardless of table pagination.
 - PDF remains a portal requirement: Next.js calls
-  `GET /api/v1/market/analysis` and exports the corresponding aggregate analysis
+  `GET /api/analysis` and exports the corresponding aggregate analysis
   and the same visualisations rendered in the browser. Java has no PDF endpoint.
-- `GET /api/v1/health` returns exactly `{"status":"ok"}` when the application and local
+- `GET /api/health` returns exactly `{"status":"ok"}` when the application and local
   dataset are ready.
 
 ## Request correlation and errors
