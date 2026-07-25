@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from unittest.mock import AsyncMock
 
 import pytest
 
 from estimator_service.app import create_app
-from estimator_service.data_access import EstimateStore
-from estimator_service.errors import StorageError, StorageUnavailableError
+from estimator_service.data_access import Database, EstimateStore
+from estimator_service.errors import StorageError
 from estimator_service.models import EstimateRecord, PropertyFeatures
 from estimator_service.observability import current_request_id
 
@@ -41,27 +42,12 @@ class InMemoryEstimateStore:
     def __init__(
         self,
         *,
-        schema_initialized: bool = True,
         fail_on_square_footage: float | None = None,
     ) -> None:
-        self.schema_initialized = schema_initialized
         self.fail_on_square_footage = fail_on_square_footage
-        self.available = True
         self.records: list[EstimateRecord] = []
 
-    async def initialize_schema(self) -> None:
-        await self.health()
-        self.schema_initialized = True
-
-    async def aclose(self) -> None:
-        return None
-
-    async def health(self) -> None:
-        if not self.available:
-            raise StorageUnavailableError("database is unavailable")
-
     async def insert_many(self, records: Sequence[EstimateRecord]) -> None:
-        await self.health()
         if self.fail_on_square_footage is not None and any(
             record.property.square_footage == self.fail_on_square_footage
             for record in records
@@ -74,7 +60,6 @@ class InMemoryEstimateStore:
         limit: int,
         offset: int,
     ) -> tuple[tuple[EstimateRecord, ...], int]:
-        await self.health()
         records = sorted(
             enumerate(self.records, start=1),
             key=lambda item: (item[1].created_at, item[0]),
@@ -95,20 +80,22 @@ def anyio_backend() -> str:
 def app_factory():
     def build(
         prediction_client: StubPredictionClient | None = None,
+        database: Database | None = None,
         store: EstimateStore | None = None,
-        initialize_schema: bool = True,
     ):
+        if database is None:
+            database = AsyncMock(spec=Database)
         if store is None:
-            store = InMemoryEstimateStore(
-                schema_initialized=initialize_schema,
-            )
+            store = InMemoryEstimateStore()
         if prediction_client is None:
             prediction_client = StubPredictionClient()
         return (
             create_app(
                 prediction_client=prediction_client,
+                database=database,
                 store=store,
             ),
+            database,
             store,
             prediction_client,
         )

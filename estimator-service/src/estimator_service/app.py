@@ -15,7 +15,7 @@ from estimator_service.constants import (
     ErrorCode,
     REQUEST_ID_HEADER,
 )
-from estimator_service.data_access import EstimateStore, PostgresEstimateStore
+from estimator_service.data_access import Database, EstimateStore, PostgresDatabase, PostgresEstimateStore
 from estimator_service.estimator import EstimatorService
 from estimator_service.errors import (
     PredictionServiceInvalidResponseError,
@@ -40,18 +40,20 @@ LOGGER = logging.getLogger(__name__)
 
 def create_app(
     prediction_client: PredictionClient | None = None,
+    database: Database | None = None,
     store: EstimateStore | None = None,
     app_settings: Settings | None = None,
 ) -> FastAPI:
     if app_settings is None:
         app_settings = Settings()
 
-    should_close_store = False
+    should_close_database = False
+    if database is None:
+        database = PostgresDatabase(str(app_settings.estimator_database_url))
+        should_close_database = True
+
     if store is None:
-        store = PostgresEstimateStore(
-            str(app_settings.estimator_database_url)
-        )
-        should_close_store = True
+        store = PostgresEstimateStore(database)
 
     should_close_prediction_client = False
     if prediction_client is None:
@@ -65,9 +67,9 @@ def create_app(
     async def lifespan(application: FastAPI):
         configure_logging()
         try:
-            await store.initialize_schema()
-            await store.health()
-            application.state.estimate_store = store
+            await database.initialize_schema()
+            await database.health()
+            application.state.database = database
             application.state.estimator_service = EstimatorService(
                 prediction_client,
                 store,
@@ -77,8 +79,8 @@ def create_app(
         finally:
             if should_close_prediction_client:
                 await prediction_client.aclose()
-            if should_close_store:
-                await store.aclose()
+            if should_close_database:
+                await database.aclose()
 
     application = FastAPI(
         title="Housing Insights Estimator Service",
@@ -115,9 +117,10 @@ def _error_response(
 def _register_error_handlers(application: FastAPI) -> None:
     @application.exception_handler(RequestValidationError)
     async def validation_error(
-        _request: Request,
-        _exc: RequestValidationError,
+        request: Request,
+        exc: RequestValidationError,
     ) -> JSONResponse:
+        LOGGER.info("request_validation_failed method=%s path=%s error=%s", request.method, request.url.path, exc)
         return _error_response(
             status_code=422,
             error_code=ErrorCode.VALIDATION_ERROR,
@@ -129,10 +132,7 @@ def _register_error_handlers(application: FastAPI) -> None:
         _request: Request,
         exc: PredictionServiceUnavailableError,
     ) -> JSONResponse:
-        LOGGER.error(
-            "prediction_unavailable error=%s",
-            exc,
-        )
+        LOGGER.error("prediction_unavailable error=%s", exc, exc_info=exc)
         return _error_response(
             status_code=503,
             error_code=ErrorCode.PREDICTION_SERVICE_UNAVAILABLE,
@@ -144,10 +144,7 @@ def _register_error_handlers(application: FastAPI) -> None:
         _request: Request,
         exc: PredictionServiceInvalidResponseError,
     ) -> JSONResponse:
-        LOGGER.error(
-            "prediction_invalid_response error=%s",
-            exc,
-        )
+        LOGGER.error("prediction_invalid_response error=%s", exc, exc_info=exc)
         return _error_response(
             status_code=502,
             error_code=ErrorCode.PREDICTION_SERVICE_INVALID_RESPONSE,
@@ -159,10 +156,7 @@ def _register_error_handlers(application: FastAPI) -> None:
         _request: Request,
         exc: StorageUnavailableError,
     ) -> JSONResponse:
-        LOGGER.error(
-            "database_unavailable error=%s",
-            exc,
-        )
+        LOGGER.error("database_unavailable error=%s", exc, exc_info=exc)
         return _error_response(
             status_code=503,
             error_code=ErrorCode.DATABASE_UNAVAILABLE,
@@ -174,10 +168,7 @@ def _register_error_handlers(application: FastAPI) -> None:
         _request: Request,
         exc: StorageError,
     ) -> JSONResponse:
-        LOGGER.error(
-            "database_operation_failed error=%s",
-            exc,
-        )
+        LOGGER.error("database_operation_failed error=%s", exc, exc_info=exc)
         return _error_response(
             status_code=500,
             error_code=ErrorCode.INTERNAL_ERROR,

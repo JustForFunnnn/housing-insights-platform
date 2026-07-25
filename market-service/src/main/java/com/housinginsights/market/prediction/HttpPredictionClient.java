@@ -31,7 +31,10 @@ public class HttpPredictionClient implements PredictionClient {
         );
 
         if (response.getStatusCode() != HttpStatus.OK) {
-            throw new PredictionServiceInvalidResponseException("prediction service returned an unexpected status");
+            throw new PredictionServiceInvalidResponseException(
+                    "prediction service returned unexpected status "
+                            + response.getStatusCode().value()
+            );
         }
         var responseBody = response.getBody();
         validatePredictionResponse(responseBody, properties.size());
@@ -47,14 +50,18 @@ public class HttpPredictionClient implements PredictionClient {
             return requestSpec
                     .retrieve()
                     .onStatus(status -> status.is5xxServerError(), (request, downstream) -> {
-                        throw new PredictionServiceUnavailableException("prediction service returned a server error");
+                        throw new PredictionServiceUnavailableException(
+                                "prediction service returned status "
+                                        + downstream.getStatusCode().value()
+                        );
                     })
                     .onStatus(status -> status.is4xxClientError(), (request, downstream) -> {
-                        throw new PredictionServiceInvalidResponseException("prediction service rejected the request");
+                        throw new PredictionServiceInvalidResponseException(
+                                "prediction service rejected request with status "
+                                        + downstream.getStatusCode().value()
+                        );
                     })
                     .toEntity(responseType);
-        } catch (PredictionServiceUnavailableException | PredictionServiceInvalidResponseException exception) {
-            throw exception;
         } catch (ResourceAccessException exception) {
             throw new PredictionServiceUnavailableException("prediction service request failed", exception);
         } catch (RestClientException exception) {

@@ -7,7 +7,7 @@ in PostgreSQL.
 
 The service follows the same application structure as `prediction-service`:
 
-- `app.py` assembles the application, lifecycle, and safe exception handlers.
+- `app.py` assembles the application, lifecycle, and exception handlers.
 - `api.py` owns the public HTTP endpoints.
 - `schemas.py` defines the strict public and downstream contracts.
 - `prediction_client.py` integrates with the prediction service.
@@ -15,7 +15,7 @@ The service follows the same application structure as `prediction-service`:
 - `data_access.py` owns SQLAlchemy ORM initialization, transactions, and queries.
 - `tables.py` is the single source for table, constraint, and index metadata.
 - `settings.py` validates environment-backed configuration.
-- `observability.py` owns request correlation and safe request logging.
+- `observability.py` owns request correlation and request logging.
 
 Estimate history is global and batch inserts are atomic.
 

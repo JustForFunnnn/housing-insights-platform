@@ -109,7 +109,7 @@ prevents the application from starting.
 
 ### Error Responses
 
-API errors use a consistent and safe response shape. The correlation identifier is
+API errors use a consistent response shape. The correlation identifier is
 returned in the `X-Request-ID` response header:
 
 ```json

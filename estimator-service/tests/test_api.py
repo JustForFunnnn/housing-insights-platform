@@ -11,6 +11,7 @@ from estimator_service.constants import MAX_PAGE_LIMIT, MAX_SQUARE_FOOTAGE
 from estimator_service.errors import (
     PredictionServiceInvalidResponseError,
     PredictionServiceUnavailableError,
+    StorageUnavailableError,
 )
 from tests.conftest import (
     VALID_PROPERTY,
@@ -24,7 +25,7 @@ INVALID_REQUEST_ID = "estimate-request-123"
 
 
 def test_health_contract(app_factory) -> None:
-    app, _store, _prediction = app_factory()
+    app, _database, _store, _prediction = app_factory()
     with TestClient(app) as client:
         health = client.get("/health")
 
@@ -38,7 +39,7 @@ def test_create_single_and_batch_estimates_and_propagate_request_id(
 ) -> None:
     caplog.set_level(logging.INFO, logger="estimator_service.observability")
     prediction = StubPredictionClient()
-    app, _store, _prediction = app_factory(prediction_client=prediction)
+    app, _database, _store, _prediction = app_factory(prediction_client=prediction)
     with TestClient(app) as client:
         single = client.post(
             "/estimates",
@@ -107,7 +108,7 @@ def test_create_single_and_batch_estimates_and_propagate_request_id(
 
 
 def test_history_pagination_and_out_of_range_offset(app_factory) -> None:
-    app, _store, _prediction = app_factory()
+    app, _database, _store, _prediction = app_factory()
     with TestClient(app) as client:
         client.post(
             "/estimates",
@@ -146,8 +147,8 @@ def test_history_pagination_and_out_of_range_offset(app_factory) -> None:
         assert response.json()["total"] == 3
 
 
-def test_validation_and_http_errors_use_safe_contract(app_factory) -> None:
-    app, _store, _prediction = app_factory()
+def test_validation_and_http_errors_use_contract(app_factory) -> None:
+    app, _database, _store, _prediction = app_factory()
     with TestClient(app) as client:
         invalid = client.post(
             "/estimates",
@@ -167,13 +168,20 @@ def test_validation_and_http_errors_use_safe_contract(app_factory) -> None:
         "message": "Request validation failed.",
     }
     assert missing_route.status_code == 404
-    assert missing_route.json()["error_code"] == "http_error"
+    assert missing_route.json() == {
+        "error_code": "http_error",
+        "message": "The request could not be completed.",
+    }
     assert invalid_limit.status_code == 422
-    assert invalid_limit.json()["error_code"] == "validation_error"
+    assert invalid_limit.json() == {
+        "error_code": "validation_error",
+        "message": "Request validation failed.",
+    }
 
 
-def test_feature_above_static_limit_returns_422(app_factory) -> None:
-    app, _store, prediction = app_factory()
+def test_feature_above_static_limit_logs_validation_error(app_factory, caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.INFO, logger="estimator_service.app")
+    app, _database, _store, prediction = app_factory()
     payload = {
         "properties": [
             {
@@ -186,34 +194,48 @@ def test_feature_above_static_limit_returns_422(app_factory) -> None:
         response = client.post("/estimates", json=payload)
 
     assert response.status_code == 422
-    assert response.json()["error_code"] == "validation_error"
+    assert response.json() == {
+        "error_code": "validation_error",
+        "message": "Request validation failed.",
+    }
     assert prediction.calls == []
+    assert "request_validation_failed method=POST path=/estimates" in caplog.text
+    assert "less_than_equal" in caplog.text
 
 
 @pytest.mark.parametrize(
-    ("error", "status_code", "error_code"),
+    ("error", "status_code", "expected_response", "log_event"),
     [
         (
-            PredictionServiceUnavailableError("secret offline details"),
+            PredictionServiceUnavailableError("prediction service unavailable"),
             503,
-            "prediction_service_unavailable",
+            {
+                "error_code": "prediction_service_unavailable",
+                "message": "Price estimation is temporarily unavailable.",
+            },
+            "prediction_unavailable",
         ),
         (
-            PredictionServiceInvalidResponseError("secret invalid response"),
+            PredictionServiceInvalidResponseError("invalid prediction response"),
             502,
-            "prediction_service_invalid_response",
+            {
+                "error_code": "prediction_service_invalid_response",
+                "message": "The prediction service returned an invalid response.",
+            },
+            "prediction_invalid_response",
         ),
     ],
 )
-def test_prediction_failures_are_safe(
+def test_prediction_failures_are_logged_and_mapped(
     app_factory,
+    caplog: pytest.LogCaptureFixture,
     error: Exception,
     status_code: int,
-    error_code: str,
+    expected_response: dict[str, str],
+    log_event: str,
 ) -> None:
-    app, _store, _prediction = app_factory(
-        prediction_client=StubPredictionClient(error=error)
-    )
+    caplog.set_level(logging.ERROR, logger="estimator_service.app")
+    app, _database, _store, _prediction = app_factory(prediction_client=StubPredictionClient(error=error))
     with TestClient(app) as client:
         response = client.post(
             "/estimates",
@@ -221,17 +243,15 @@ def test_prediction_failures_are_safe(
         )
 
     assert response.status_code == status_code
-    assert response.json()["error_code"] == error_code
-    assert "secret" not in response.text
+    assert response.json() == expected_response
+    record = next(record for record in caplog.records if log_event in record.message)
+    assert record.exc_info is not None
+    assert record.exc_info[1] is error
 
 
-def test_health_ignores_prediction_service_but_estimates_return_503(
-    app_factory,
-) -> None:
-    app, _store, _prediction = app_factory(
-        prediction_client=StubPredictionClient(
-            error=PredictionServiceUnavailableError("offline")
-        )
+def test_health_ignores_prediction_service_but_estimates_return_503(app_factory) -> None:
+    app, _database, _store, _prediction = app_factory(
+        prediction_client=StubPredictionClient(error=PredictionServiceUnavailableError("offline"))
     )
     with TestClient(app) as client:
         health = client.get("/health")
@@ -243,32 +263,33 @@ def test_health_ignores_prediction_service_but_estimates_return_503(
     assert health.status_code == 200
     assert health.json() == {"status": "ok"}
     assert estimate.status_code == 503
+    assert estimate.json() == {
+        "error_code": "prediction_service_unavailable",
+        "message": "Price estimation is temporarily unavailable.",
+    }
 
 
-def test_health_returns_503_when_database_becomes_unavailable(
-    app_factory,
-) -> None:
-    app, store, _prediction = app_factory()
+def test_health_returns_503_when_database_becomes_unavailable(app_factory) -> None:
+    app, database, _store, _prediction = app_factory()
     with TestClient(app) as client:
         assert client.get("/health").status_code == 200
-        store.available = False
+        database.health.side_effect = StorageUnavailableError("database is unavailable")
         response = client.get("/health")
 
     assert response.status_code == 503
-    assert response.json()["error_code"] == "database_unavailable"
+    assert response.json() == {
+        "error_code": "database_unavailable",
+        "message": "The estimator database is temporarily unavailable.",
+    }
 
 
-def test_startup_initializes_schema(
-    app_factory,
-) -> None:
-    app, store, _prediction = app_factory(
-        initialize_schema=False,
-    )
+def test_startup_initializes_schema(app_factory) -> None:
+    app, database, _store, _prediction = app_factory()
 
-    assert not store.schema_initialized
+    database.initialize_schema.assert_not_awaited()
     with TestClient(app) as client:
         assert client.get("/health").status_code == 200
-    assert store.schema_initialized
+    database.initialize_schema.assert_awaited_once_with()
 
 
 def test_store_failure_returns_500_without_partial_history(
@@ -279,7 +300,7 @@ def test_store_failure_returns_500_without_partial_history(
     store = InMemoryEstimateStore(
         fail_on_square_footage=9999,
     )
-    app, _store, _prediction = app_factory(store=store)
+    app, _database, _store, _prediction = app_factory(store=store)
     with TestClient(app, raise_server_exceptions=False) as client:
         response = client.post(
             "/estimates",
@@ -292,41 +313,16 @@ def test_store_failure_returns_500_without_partial_history(
         )
 
     assert response.status_code == 500
-    assert response.json()["error_code"] == "internal_error"
+    assert response.json() == {
+        "error_code": "internal_error",
+        "message": "An unexpected server error occurred.",
+    }
     assert store.records == []
     record = next(
         record
         for record in caplog.records
         if "database_operation_failed" in record.message
     )
-    assert record.exc_info is None
+    assert record.exc_info is not None
+    assert str(record.exc_info[1]) == "could not persist estimate batch"
     assert "could not persist estimate batch" in record.message
-    assert "1000" not in caplog.text
-    assert "9999" not in caplog.text
-    assert "100000" not in caplog.text
-    assert "999900" not in caplog.text
-
-
-def test_request_log_contains_correlation_but_not_housing_data(
-    app_factory,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    caplog.set_level(logging.INFO, logger="estimator_service.observability")
-    app, _store, _prediction = app_factory()
-    with TestClient(app) as client:
-        response = client.post(
-            "/estimates",
-            json={"properties": [VALID_PROPERTY]},
-            headers={"X-Request-ID": SUPPLIED_REQUEST_ID},
-        )
-
-    request_record = next(
-        record for record in caplog.records if "request_completed" in record.message
-    )
-    assert request_record.correlation_id == SUPPLIED_REQUEST_ID
-    assert "method=POST path=/estimates status=201" in request_record.message
-    assert "1850" not in request_record.message
-    assert (
-        str(response.json()["estimates"][0]["estimated_price"])
-        not in request_record.message
-    )

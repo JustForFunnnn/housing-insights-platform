@@ -103,7 +103,8 @@ class HttpPredictionClientTest {
                 .andRespond(withStatus(HttpStatus.SERVICE_UNAVAILABLE));
 
         assertThatThrownBy(() -> client.predict(List.of(validFeatures())))
-                .isInstanceOf(PredictionServiceUnavailableException.class);
+                .isInstanceOf(PredictionServiceUnavailableException.class)
+                .hasMessage("prediction service returned status 503");
     }
 
     @Test
@@ -124,7 +125,8 @@ class HttpPredictionClientTest {
                 .andRespond(withStatus(HttpStatus.UNPROCESSABLE_ENTITY));
 
         assertThatThrownBy(() -> client.predict(List.of(validFeatures())))
-                .isInstanceOf(PredictionServiceInvalidResponseException.class);
+                .isInstanceOf(PredictionServiceInvalidResponseException.class)
+                .hasMessage("prediction service rejected request with status 422");
     }
 
     private static PropertyFeatures validFeatures() {

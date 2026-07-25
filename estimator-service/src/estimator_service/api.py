@@ -8,7 +8,7 @@ from estimator_service.constants import (
     MAX_PAGE_LIMIT,
     REQUEST_ID_HEADER,
 )
-from estimator_service.data_access import EstimateStore
+from estimator_service.data_access import Database
 from estimator_service.schemas import (
     ErrorResponse,
     EstimateBatchResponse,
@@ -63,8 +63,8 @@ def get_estimator_service(request: Request) -> EstimatorService:
     return request.app.state.estimator_service
 
 
-def get_estimate_store(request: Request) -> EstimateStore:
-    return request.app.state.estimate_store
+def get_database(request: Request) -> Database:
+    return request.app.state.database
 
 
 @router.post(
@@ -116,7 +116,7 @@ async def list_estimates(
     },
 )
 async def health(
-    store: EstimateStore = Depends(get_estimate_store),
+    database: Database = Depends(get_database),
 ) -> HealthResponse:
-    await store.health()
+    await database.health()
     return HealthResponse(status="ok")

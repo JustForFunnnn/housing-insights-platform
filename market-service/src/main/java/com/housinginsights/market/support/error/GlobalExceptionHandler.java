@@ -32,18 +32,14 @@ public class GlobalExceptionHandler {
             MethodArgumentTypeMismatchException.class,
             HttpMessageNotReadableException.class,
             MissingServletRequestParameterException.class,
-            InvalidRequestException.class
+            InvalidRequestException.class,
+            BindException.class
     })
-    public ResponseEntity<ApiError> validationError(Exception exception) {
-        return response(
-                HttpStatus.UNPROCESSABLE_ENTITY,
-                ErrorCode.VALIDATION_ERROR,
-                "Request validation failed."
+    public ResponseEntity<ApiError> validationError(HttpServletRequest request, Exception exception) {
+        LOGGER.info(
+                "request_validation_failed method={} path={} error={}",
+                request.getMethod(), request.getRequestURI(), exception.toString()
         );
-    }
-
-    @ExceptionHandler(BindException.class)
-    public ResponseEntity<ApiError> bindingError(BindException exception) {
         return response(
                 HttpStatus.UNPROCESSABLE_ENTITY,
                 ErrorCode.VALIDATION_ERROR,
@@ -55,7 +51,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> predictionUnavailable(
             PredictionServiceUnavailableException exception
     ) {
-        LOGGER.error("prediction_unavailable error={}", exception.getMessage());
+        LOGGER.error("prediction_unavailable error={}", exception.getMessage(), exception);
         return response(
                 HttpStatus.SERVICE_UNAVAILABLE,
                 ErrorCode.PREDICTION_SERVICE_UNAVAILABLE,
@@ -67,7 +63,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> predictionInvalid(
             PredictionServiceInvalidResponseException exception
     ) {
-        LOGGER.error("prediction_invalid_response error={}", exception.getMessage());
+        LOGGER.error("prediction_invalid_response error={}", exception.getMessage(), exception);
         return response(
                 HttpStatus.BAD_GATEWAY,
                 ErrorCode.PREDICTION_SERVICE_INVALID_RESPONSE,

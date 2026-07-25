@@ -2,15 +2,13 @@ from datetime import datetime, timezone
 
 import pytest
 
-from estimator_service.data_access import PostgresEstimateStore
+from estimator_service.data_access import PostgresDatabase, PostgresEstimateStore
 from estimator_service.models import EstimateRecord, PropertyFeatures
 
 
-def test_store_rejects_non_postgresql_driver() -> None:
+def test_database_rejects_non_postgresql_driver() -> None:
     with pytest.raises(ValueError, match="postgresql\\+asyncpg"):
-        PostgresEstimateStore(
-            "postgresql://user:pass@localhost:5432/estimator"
-        )
+        PostgresDatabase("postgresql://user:pass@localhost:5432/estimator")
 
 
 def test_record_round_trips_through_orm_row() -> None:

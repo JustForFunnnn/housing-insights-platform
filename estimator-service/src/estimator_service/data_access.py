@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Sequence
-from contextlib import asynccontextmanager
+from collections.abc import AsyncGenerator, Sequence
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from typing import Protocol
 
 from sqlalchemy import func, select
@@ -19,13 +19,19 @@ from estimator_service.models import EstimateRecord, PropertyFeatures
 from estimator_service.tables import Base, EstimateRow
 
 
-class EstimateStore(Protocol):
-    async def initialize_schema(self) -> None: ...
+class Database(Protocol):
+    def session(self) -> AbstractAsyncContextManager[AsyncSession]: ...
 
-    async def aclose(self) -> None: ...
+    def transaction(self) -> AbstractAsyncContextManager[AsyncSession]: ...
+
+    async def initialize_schema(self) -> None: ...
 
     async def health(self) -> None: ...
 
+    async def aclose(self) -> None: ...
+
+
+class EstimateStore(Protocol):
     async def insert_many(self, records: Sequence[EstimateRecord]) -> None: ...
 
     async def list_page(
@@ -35,28 +41,32 @@ class EstimateStore(Protocol):
     ) -> tuple[tuple[EstimateRecord, ...], int]: ...
 
 
-class PostgresEstimateStore:
-    """Persist and query estimate records through SQLAlchemy ORM."""
+class PostgresDatabase:
+    """Own the PostgreSQL engine, sessions, and application lifecycle."""
 
     def __init__(self, database_url: str | URL) -> None:
-        self._engine = self._create_engine(database_url)
+        url = make_url(database_url)
+        if url.drivername != "postgresql+asyncpg":
+            raise ValueError("database URL must use the postgresql+asyncpg driver")
+        self._engine: AsyncEngine = create_async_engine(
+            url,
+            hide_parameters=True,
+            pool_pre_ping=True,
+        )
         self._sessions = async_sessionmaker(
             self._engine,
             expire_on_commit=False,
         )
 
-    @staticmethod
-    def _create_engine(database_url: str | URL) -> AsyncEngine:
-        url = make_url(database_url)
-        if url.drivername != "postgresql+asyncpg":
-            raise ValueError(
-                "database URL must use the postgresql+asyncpg driver"
-            )
-        return create_async_engine(
-            url,
-            hide_parameters=True,
-            pool_pre_ping=True,
-        )
+    @asynccontextmanager
+    async def session(self) -> AsyncGenerator[AsyncSession, None]:
+        async with self._sessions() as session:
+            yield session
+
+    @asynccontextmanager
+    async def transaction(self) -> AsyncGenerator[AsyncSession, None]:
+        async with self._sessions.begin() as session:
+            yield session
 
     async def initialize_schema(self) -> None:
         """Create database objects missing from the ORM metadata."""
@@ -68,66 +78,59 @@ class PostgresEstimateStore:
                 "could not initialize database schema"
             ) from exc
 
+    async def health(self) -> None:
+        try:
+            async with self.session() as session:
+                await session.scalar(select(EstimateRow).limit(1))
+        except SQLAlchemyError as exc:
+            raise StorageUnavailableError("database health check failed") from exc
+
     async def aclose(self) -> None:
         await self._engine.dispose()
 
-    async def health(self) -> None:
-        async with self._read_session("database health check failed") as session:
-            await session.scalar(select(EstimateRow).limit(1))
+
+class PostgresEstimateStore:
+    """Persist and query estimate records through SQLAlchemy ORM."""
+
+    def __init__(self, database: Database) -> None:
+        self._database = database
 
     async def insert_many(self, records: Sequence[EstimateRecord]) -> None:
         rows = [self._row_from_record(record) for record in records]
         if not rows:
             return
 
-        async with self._write_session() as session:
-            session.add_all(rows)
-
-    async def list_page(
-        self,
-        limit: int,
-        offset: int,
-    ) -> tuple[tuple[EstimateRecord, ...], int]:
-        async with self._read_session() as session:
-            result = await session.scalars(
-                select(EstimateRow)
-                .order_by(
-                    EstimateRow.created_at.desc(),
-                    EstimateRow.id.desc(),
-                )
-                .limit(limit)
-                .offset(offset)
-            )
-            records = tuple(
-                self._record_from_row(row) for row in result.all()
-            )
-            total = await session.scalar(
-                select(func.count()).select_from(EstimateRow)
-            )
-        return records, int(total or 0)
-
-    @asynccontextmanager
-    async def _read_session(
-        self,
-        error_message: str = "database read failed",
-    ) -> AsyncIterator[AsyncSession]:
         try:
-            async with self._sessions() as session:
-                yield session
-        except SQLAlchemyError as exc:
-            raise StorageUnavailableError(error_message) from exc
-
-    @asynccontextmanager
-    async def _write_session(self) -> AsyncIterator[AsyncSession]:
-        try:
-            async with self._sessions.begin() as session:
-                yield session
+            async with self._database.transaction() as session:
+                session.add_all(rows)
         except IntegrityError as exc:
             raise StorageError("could not persist estimate batch") from exc
         except OperationalError as exc:
             raise StorageUnavailableError("database write failed") from exc
         except SQLAlchemyError as exc:
             raise StorageError("could not persist estimate batch") from exc
+
+    async def list_page(
+        self,
+        limit: int,
+        offset: int,
+    ) -> tuple[tuple[EstimateRecord, ...], int]:
+        try:
+            async with self._database.session() as session:
+                result = await session.scalars(
+                    select(EstimateRow)
+                    .order_by(
+                        EstimateRow.created_at.desc(),
+                        EstimateRow.id.desc(),
+                    )
+                    .limit(limit)
+                    .offset(offset)
+                )
+                records = tuple(self._record_from_row(row) for row in result.all())
+                total = await session.scalar(select(func.count()).select_from(EstimateRow))
+        except SQLAlchemyError as exc:
+            raise StorageUnavailableError("database read failed") from exc
+        return records, int(total or 0)
 
     @staticmethod
     def _row_from_record(record: EstimateRecord) -> EstimateRow:

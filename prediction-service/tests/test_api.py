@@ -169,7 +169,10 @@ def test_validation_error_uses_standard_response_and_request_id() -> None:
     }
 
 
-def test_feature_above_static_limit_returns_422() -> None:
+def test_feature_above_static_limit_logs_validation_error(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO, logger="prediction_service.app")
     payload = {
         "instances": [
             {
@@ -182,7 +185,12 @@ def test_feature_above_static_limit_returns_422() -> None:
         response = client.post("/predict", json=payload)
 
     assert response.status_code == 422
-    assert response.json()["error_code"] == "validation_error"
+    assert response.json() == {
+        "error_code": "validation_error",
+        "message": "Request validation failed.",
+    }
+    assert "request_validation_failed method=POST path=/predict" in caplog.text
+    assert "less_than_equal" in caplog.text
 
 
 def test_non_finite_request_returns_serializable_422() -> None:
@@ -199,10 +207,13 @@ def test_non_finite_request_returns_serializable_422() -> None:
         )
 
     assert response.status_code == 422
-    assert response.json()["error_code"] == "validation_error"
+    assert response.json() == {
+        "error_code": "validation_error",
+        "message": "Request validation failed.",
+    }
 
 
-def test_http_errors_use_standard_safe_responses() -> None:
+def test_http_errors_use_standard_responses() -> None:
     with TestClient(create_app(prediction_service=StubPredictionService())) as client:
         missing = client.get(
             "/missing",
@@ -227,11 +238,11 @@ def test_http_errors_use_standard_safe_responses() -> None:
     }
 
 
-def test_failure_is_logged_and_returns_safe_standard_response(
+def test_failure_is_logged_and_returns_standard_response(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     caplog.set_level(logging.ERROR, logger="prediction_service.app")
-    error = RuntimeError("secret model failure")
+    error = RuntimeError("model failure")
     app = create_app(prediction_service=StubPredictionService(error=error))
     request_id = SUPPLIED_REQUEST_ID
     with TestClient(app, raise_server_exceptions=False) as client:
@@ -255,7 +266,6 @@ def test_failure_is_logged_and_returns_safe_standard_response(
         "error_code": "internal_error",
         "message": "An unexpected server error occurred.",
     }
-    assert "secret" not in response.text
 
 
 def test_app_loads_explicit_artifact_path(

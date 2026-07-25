@@ -1,6 +1,7 @@
 package com.housinginsights.market.api;
 
 import static org.hamcrest.Matchers.matchesPattern;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -11,12 +12,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.housinginsights.market.prediction.PredictionClient;
+import com.housinginsights.market.support.error.PredictionServiceUnavailableException;
 import com.housinginsights.market.support.observability.RequestCorrelation;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,6 +32,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "market.prediction.timeout=1s"
 })
 @AutoConfigureMockMvc
+@ExtendWith(OutputCaptureExtension.class)
 class HttpContractTest {
     private static final String HYPHENATED_REQUEST_ID =
             "123E4567-E89B-42D3-A456-426614174000";
@@ -97,7 +103,7 @@ class HttpContractTest {
     }
 
     @Test
-    void validationAndHttpErrorsUseFlatSafeContract() throws Exception {
+    void validationAndHttpErrorsUseFlatContract(CapturedOutput output) throws Exception {
         mockMvc.perform(get("/properties").param("limit", "0"))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.error_code").value("validation_error"))
@@ -110,6 +116,10 @@ class HttpContractTest {
                 .andExpect(jsonPath("$.error_code").value("http_error"))
                 .andExpect(jsonPath("$.message")
                         .value("The request could not be completed."));
+
+        assertThat(output)
+                .contains("request_validation_failed method=GET path=/properties error=")
+                .contains("properties.limit");
     }
 
     @Test
@@ -188,7 +198,9 @@ class HttpContractTest {
                                 "\"square_footage\": \"1850\""
                         )))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.error_code").value("validation_error"));
+                .andExpect(jsonPath("$.error_code").value("validation_error"))
+                .andExpect(jsonPath("$.message")
+                        .value("Request validation failed."));
 
         when(predictionClient.predict(anyList())).thenAnswer(invocation -> {
             org.assertj.core.api.Assertions.assertThat(
@@ -213,6 +225,27 @@ class HttpContractTest {
                 .andExpect(jsonPath("$.scenarios[0].price_difference")
                         .value(20000))
                 .andExpect(jsonPath("$.scenarios").isArray());
+    }
+
+    @Test
+    void predictionFailureLogsRootCause(CapturedOutput output) throws Exception {
+        var rootCause = new IllegalStateException("connection refused");
+        var error = new PredictionServiceUnavailableException(
+                "prediction service request failed", rootCause
+        );
+        when(predictionClient.predict(anyList())).thenThrow(error);
+
+        mockMvc.perform(post("/what-if")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validWhatIfJson()))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.error_code").value("prediction_service_unavailable"))
+                .andExpect(jsonPath("$.message")
+                        .value("Price estimation is temporarily unavailable."));
+
+        assertThat(output)
+                .contains("prediction_unavailable error=prediction service request failed")
+                .contains("Caused by: java.lang.IllegalStateException: connection refused");
     }
 
     private static String validWhatIfJson() {

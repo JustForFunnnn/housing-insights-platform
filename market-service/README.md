@@ -12,7 +12,7 @@ exports CSV/PDF reports, and calls `prediction-service` only for what-if analysi
 - `prediction` is the external prediction-service boundary.
 - `export` creates CSV and PDF output from shared query/analysis results.
 - `config` wires validated configuration, HTTP, and cache support.
-- `support.error` and `support.observability` own safe errors, logging, and request
+- `support.error` and `support.observability` own errors, logging, and request
   correlation.
 
 The dataset is loaded into an immutable in-memory list. Missing, unreadable, empty, or
@@ -138,8 +138,7 @@ Errors always use:
 }
 ```
 
-Logs contain the request ID, method, path, and response status. Request bodies,
-filters, housing records, and prediction values are not logged.
+Logs contain the request ID, method, path, and response status.
 
 ## Caching
 
