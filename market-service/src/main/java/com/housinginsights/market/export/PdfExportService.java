@@ -2,6 +2,7 @@ package com.housinginsights.market.export;
 
 import com.housinginsights.market.domain.MarketAnalysis;
 import com.housinginsights.market.domain.MarketFilter;
+import com.housinginsights.market.error.ExportGenerationException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;

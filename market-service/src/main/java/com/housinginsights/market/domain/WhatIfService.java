@@ -2,7 +2,7 @@ package com.housinginsights.market.domain;
 
 import com.housinginsights.market.domain.WhatIfResult.ScenarioResult;
 import com.housinginsights.market.prediction.PredictionClient;
-import com.housinginsights.market.support.error.PredictionServiceInvalidResponseException;
+import com.housinginsights.market.error.PredictionServiceInvalidResponseException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;

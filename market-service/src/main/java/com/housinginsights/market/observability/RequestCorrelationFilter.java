@@ -1,4 +1,4 @@
-package com.housinginsights.market.support.observability;
+package com.housinginsights.market.observability;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

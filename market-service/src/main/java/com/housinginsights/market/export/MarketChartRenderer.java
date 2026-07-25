@@ -1,6 +1,7 @@
 package com.housinginsights.market.export;
 
 import com.housinginsights.market.domain.MarketAnalysis;
+import com.housinginsights.market.error.ExportGenerationException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;

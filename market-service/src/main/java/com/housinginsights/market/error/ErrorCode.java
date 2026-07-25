@@ -1,4 +1,4 @@
-package com.housinginsights.market.support.error;
+package com.housinginsights.market.error;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 

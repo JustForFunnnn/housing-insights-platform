@@ -12,8 +12,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.housinginsights.market.prediction.PredictionClient;
-import com.housinginsights.market.support.error.PredictionServiceUnavailableException;
-import com.housinginsights.market.support.observability.RequestCorrelation;
+import com.housinginsights.market.error.PredictionServiceUnavailableException;
+import com.housinginsights.market.observability.RequestCorrelation;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

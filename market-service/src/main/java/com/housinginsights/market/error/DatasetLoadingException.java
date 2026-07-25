@@ -1,4 +1,4 @@
-package com.housinginsights.market.data;
+package com.housinginsights.market.error;
 
 public class DatasetLoadingException extends RuntimeException {
     public DatasetLoadingException(String message) {

@@ -1,8 +1,8 @@
 package com.housinginsights.market.prediction;
 
 import com.housinginsights.market.domain.PropertyFeatures;
-import com.housinginsights.market.support.error.PredictionServiceInvalidResponseException;
-import com.housinginsights.market.support.error.PredictionServiceUnavailableException;
+import com.housinginsights.market.error.PredictionServiceInvalidResponseException;
+import com.housinginsights.market.error.PredictionServiceUnavailableException;
 import java.util.List;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;

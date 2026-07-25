@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.housinginsights.market.data.CsvPropertyDataLoader;
 import com.housinginsights.market.data.PropertyDataset;
-import com.housinginsights.market.support.observability.RequestCorrelation;
+import com.housinginsights.market.observability.RequestCorrelation;
 import io.swagger.v3.core.jackson.ModelResolver;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;

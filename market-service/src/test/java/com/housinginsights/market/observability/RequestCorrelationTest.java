@@ -1,4 +1,4 @@
-package com.housinginsights.market.support.observability;
+package com.housinginsights.market.observability;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

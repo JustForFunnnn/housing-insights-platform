@@ -3,6 +3,7 @@ package com.housinginsights.market.data;
 import com.housinginsights.market.domain.DomainLimits;
 import com.housinginsights.market.domain.PropertyFieldNames;
 import com.housinginsights.market.domain.PropertyRecord;
+import com.housinginsights.market.error.DatasetLoadingException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;

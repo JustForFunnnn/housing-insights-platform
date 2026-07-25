@@ -1,4 +1,4 @@
-package com.housinginsights.market.support.error;
+package com.housinginsights.market.error;
 
 public record ApiError(ErrorCode errorCode, String message) {
 }

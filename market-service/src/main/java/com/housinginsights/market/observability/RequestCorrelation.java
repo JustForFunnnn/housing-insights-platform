@@ -1,4 +1,4 @@
-package com.housinginsights.market.support.observability;
+package com.housinginsights.market.observability;
 
 import java.util.UUID;
 import org.slf4j.MDC;

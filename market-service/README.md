@@ -12,8 +12,8 @@ exports CSV/PDF reports, and calls `prediction-service` only for what-if analysi
 - `prediction` is the external prediction-service boundary.
 - `export` creates CSV and PDF output from shared query/analysis results.
 - `config` wires validated configuration, HTTP, and cache support.
-- `support.error` and `support.observability` own errors, logging, and request
-  correlation.
+- `error` owns custom exceptions, HTTP error responses, and exception mapping.
+- `observability` owns logging and request correlation.
 
 The dataset is loaded into an immutable in-memory list. Missing, unreadable, empty, or
 invalid data prevents startup. Prediction-service availability is deliberately not

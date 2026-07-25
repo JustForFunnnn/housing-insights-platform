@@ -2,6 +2,7 @@ package com.housinginsights.market.export;
 
 import com.housinginsights.market.domain.PropertyFieldNames;
 import com.housinginsights.market.domain.PropertyRecord;
+import com.housinginsights.market.error.ExportGenerationException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;

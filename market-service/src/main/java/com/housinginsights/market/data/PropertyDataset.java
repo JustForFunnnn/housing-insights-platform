@@ -1,6 +1,7 @@
 package com.housinginsights.market.data;
 
 import com.housinginsights.market.domain.PropertyRecord;
+import com.housinginsights.market.error.DatasetLoadingException;
 import java.util.List;
 
 public record PropertyDataset(List<PropertyRecord> properties) {

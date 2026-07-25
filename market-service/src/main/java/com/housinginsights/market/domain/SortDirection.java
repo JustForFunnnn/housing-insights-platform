@@ -1,7 +1,7 @@
 package com.housinginsights.market.domain;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.housinginsights.market.support.error.InvalidRequestException;
+import com.housinginsights.market.error.InvalidRequestException;
 
 public enum SortDirection {
     ASC(SortDirection.ASC_VALUE),
