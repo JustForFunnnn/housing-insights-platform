@@ -1,5 +1,7 @@
-package com.housinginsights.market.domain;
+package com.housinginsights.market.application;
 
+import com.housinginsights.market.domain.MarketAnalysis;
+import com.housinginsights.market.domain.MarketFilter;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 

@@ -1,8 +1,10 @@
-package com.housinginsights.market.domain;
+package com.housinginsights.market.application;
 
+import com.housinginsights.market.domain.PropertyFeatures;
+import com.housinginsights.market.domain.WhatIfResult;
 import com.housinginsights.market.domain.WhatIfResult.ScenarioResult;
-import com.housinginsights.market.prediction.PredictionClient;
 import com.housinginsights.market.error.PredictionServiceInvalidResponseException;
+import com.housinginsights.market.prediction.PredictionClient;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;

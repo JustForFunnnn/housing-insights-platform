@@ -1,9 +1,11 @@
-package com.housinginsights.market.domain;
+package com.housinginsights.market.application;
 
 import static com.housinginsights.market.TestProperties.RECORDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.housinginsights.market.data.PropertyDataset;
+import com.housinginsights.market.domain.MarketAnalysis;
+import com.housinginsights.market.domain.MarketFilter;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.TreeSet;

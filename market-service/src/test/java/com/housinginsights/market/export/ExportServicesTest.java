@@ -3,11 +3,11 @@ package com.housinginsights.market.export;
 import static com.housinginsights.market.TestProperties.RECORDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.housinginsights.market.application.MarketAnalysisCalculator;
+import com.housinginsights.market.application.PropertyQueryService;
 import com.housinginsights.market.data.PropertyDataset;
 import com.housinginsights.market.domain.MarketAnalysis;
-import com.housinginsights.market.domain.MarketAnalysisCalculator;
 import com.housinginsights.market.domain.MarketFilter;
-import com.housinginsights.market.domain.PropertyQueryService;
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;

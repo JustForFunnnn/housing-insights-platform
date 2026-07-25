@@ -1,5 +1,6 @@
 package com.housinginsights.market.error;
 
+import com.housinginsights.market.api.schema.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -35,7 +36,7 @@ public class GlobalExceptionHandler {
             InvalidRequestException.class,
             BindException.class
     })
-    public ResponseEntity<ApiError> validationError(HttpServletRequest request, Exception exception) {
+    public ResponseEntity<ApiErrorResponse> validationError(HttpServletRequest request, Exception exception) {
         logger.info(
                 "request_validation_failed method={} path={} error={}",
                 request.getMethod(), request.getRequestURI(), exception.toString()
@@ -48,7 +49,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(PredictionServiceUnavailableException.class)
-    public ResponseEntity<ApiError> predictionUnavailable(
+    public ResponseEntity<ApiErrorResponse> predictionUnavailable(
             PredictionServiceUnavailableException exception
     ) {
         logger.error("prediction_unavailable error={}", exception.getMessage(), exception);
@@ -60,7 +61,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(PredictionServiceInvalidResponseException.class)
-    public ResponseEntity<ApiError> predictionInvalid(
+    public ResponseEntity<ApiErrorResponse> predictionInvalid(
             PredictionServiceInvalidResponseException exception
     ) {
         logger.error("prediction_invalid_response error={}", exception.getMessage(), exception);
@@ -72,12 +73,12 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ApiError> notFound(NoResourceFoundException exception) {
+    public ResponseEntity<ApiErrorResponse> notFound(NoResourceFoundException exception) {
         return httpError(exception.getStatusCode().value());
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ApiError> methodNotAllowed(
+    public ResponseEntity<ApiErrorResponse> methodNotAllowed(
             HttpRequestMethodNotSupportedException exception
     ) {
         return httpError(exception.getStatusCode().value());
@@ -87,7 +88,7 @@ public class GlobalExceptionHandler {
             HttpMediaTypeNotSupportedException.class,
             HttpMediaTypeNotAcceptableException.class
     })
-    public ResponseEntity<ApiError> mediaTypeError(Exception exception) {
+    public ResponseEntity<ApiErrorResponse> mediaTypeError(Exception exception) {
         if (exception instanceof HttpMediaTypeNotSupportedException unsupported) {
             return httpError(unsupported.getStatusCode().value());
         }
@@ -95,7 +96,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> unexpectedError(
+    public ResponseEntity<ApiErrorResponse> unexpectedError(
             HttpServletRequest request,
             Exception exception
     ) {
@@ -113,22 +114,22 @@ public class GlobalExceptionHandler {
         );
     }
 
-    private static ResponseEntity<ApiError> httpError(int status) {
+    private static ResponseEntity<ApiErrorResponse> httpError(int status) {
         return ResponseEntity.status(status)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new ApiError(
-                        ErrorCode.HTTP_ERROR,
+                .body(new ApiErrorResponse(
+                        ErrorCode.HTTP_ERROR.value(),
                         "The request could not be completed."
                 ));
     }
 
-    private static ResponseEntity<ApiError> response(
+    private static ResponseEntity<ApiErrorResponse> response(
             HttpStatus status,
             ErrorCode errorCode,
             String message
     ) {
         return ResponseEntity.status(status)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new ApiError(errorCode, message));
+                .body(new ApiErrorResponse(errorCode.value(), message));
     }
 }

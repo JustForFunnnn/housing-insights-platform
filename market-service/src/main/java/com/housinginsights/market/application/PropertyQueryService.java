@@ -1,6 +1,11 @@
-package com.housinginsights.market.domain;
+package com.housinginsights.market.application;
 
 import com.housinginsights.market.data.PropertyDataset;
+import com.housinginsights.market.domain.MarketFilter;
+import com.housinginsights.market.domain.PropertyPage;
+import com.housinginsights.market.domain.PropertyRecord;
+import com.housinginsights.market.domain.SortDirection;
+import com.housinginsights.market.domain.SortField;
 import java.util.Comparator;
 import java.util.List;
 import org.springframework.stereotype.Service;

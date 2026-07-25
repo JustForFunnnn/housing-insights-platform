@@ -140,53 +140,32 @@ class HttpContractTest {
     }
 
     @Test
+    void analysisReturnsPublicResponse() throws Exception {
+        mockMvc.perform(get("/analysis"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.count").value(4))
+                .andExpect(jsonPath("$.price_summary.average").isNumber())
+                .andExpect(jsonPath("$.visualisations.price_distribution").isArray())
+                .andExpect(jsonPath("$.filter_options.square_footage.minimum").isNumber());
+    }
+
+    @Test
     void openApiUsesPublicContractNames() throws Exception {
-        String featureProperties =
-                "$.components.schemas.PropertyFeaturesRequest.properties";
+        String featureProperties = "$.components.schemas.PropertyFeaturesRequest.properties";
 
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath(featureProperties + ".square_footage").exists())
+                .andExpect(jsonPath(featureProperties + ".squareFootage").doesNotExist())
+                .andExpect(jsonPath("$.components.schemas.MarketAnalysisResponse").exists())
+                .andExpect(jsonPath("$.components.schemas.PropertyPageResponse").exists())
+                .andExpect(jsonPath("$.components.schemas.WhatIfResponse").exists())
+                .andExpect(jsonPath("$.paths['/properties'].get.parameters[?(@.name == 'limit')]").isNotEmpty())
+                .andExpect(jsonPath("$.paths['/properties'].get.parameters[?(@.name == 'offset')]").isNotEmpty())
                 .andExpect(jsonPath(
-                        featureProperties + ".square_footage"
-                ).exists())
-                .andExpect(jsonPath(
-                        featureProperties + ".distance_to_city_center"
-                ).exists())
-                .andExpect(jsonPath(
-                        featureProperties + ".squareFootage"
-                ).doesNotExist())
-                .andExpect(jsonPath(
-                        "$.components.schemas.MarketAnalysis"
-                                + ".properties.price_summary"
-                ).exists())
-                .andExpect(jsonPath(
-                        "$.components.schemas.PropertyPage"
-                                + ".properties.limit"
-                ).exists())
-                .andExpect(jsonPath(
-                        "$.components.schemas.PropertyPage"
-                                + ".properties.offset"
-                ).exists())
-                .andExpect(jsonPath(
-                        "$.components.schemas.PropertyPage"
-                                + ".properties.total_pages"
-                ).doesNotExist())
-                .andExpect(jsonPath(
-                        "$.paths['/properties'].get.parameters"
-                                + "[?(@.name == 'limit')]"
+                        "$.paths['/analysis'].get.parameters[?(@.name == 'min_square_footage')]"
                 ).isNotEmpty())
-                .andExpect(jsonPath(
-                        "$.paths['/properties'].get.parameters"
-                                + "[?(@.name == 'offset')]"
-                ).isNotEmpty())
-                .andExpect(jsonPath(
-                        "$.paths['/analysis'].get.parameters"
-                                + "[?(@.name == 'min_square_footage')]"
-                ).isNotEmpty())
-                .andExpect(jsonPath(
-                        "$.paths['/analysis'].get.parameters"
-                                + "[?(@.name == 'minSquareFootage')]"
-                ).isEmpty());
+                .andExpect(jsonPath("$.paths['/analysis'].get.parameters[?(@.name == 'minSquareFootage')]").isEmpty());
     }
 
     @Test

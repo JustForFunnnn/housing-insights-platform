@@ -1,13 +1,15 @@
-package com.housinginsights.market.domain;
+package com.housinginsights.market.application;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.housinginsights.market.domain.MarketAnalysis;
 import com.housinginsights.market.domain.MarketAnalysis.FilterOptions;
 import com.housinginsights.market.domain.MarketAnalysis.PriceSummary;
 import com.housinginsights.market.domain.MarketAnalysis.Visualisations;
+import com.housinginsights.market.domain.MarketFilter;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;

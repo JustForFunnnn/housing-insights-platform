@@ -1,8 +1,8 @@
-package com.housinginsights.market.api;
+package com.housinginsights.market.api.schema;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.housinginsights.market.domain.DomainLimits;
 import com.housinginsights.market.domain.PropertyFeatures;
+import com.housinginsights.market.domain.PropertyLimits;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -15,36 +15,36 @@ import java.time.Year;
 public record PropertyFeaturesRequest(
         @NotNull
         @Positive
-        @DecimalMax(DomainLimits.MAX_SQUARE_FOOTAGE_TEXT)
+        @DecimalMax(PropertyLimits.MAX_SQUARE_FOOTAGE_TEXT)
         Double squareFootage,
 
         @NotNull
         @Min(0)
-        @Max(DomainLimits.MAX_BEDROOMS)
+        @Max(PropertyLimits.MAX_BEDROOMS)
         Integer bedrooms,
 
         @NotNull
         @DecimalMin("0")
-        @DecimalMax(DomainLimits.MAX_BATHROOMS_TEXT)
+        @DecimalMax(PropertyLimits.MAX_BATHROOMS_TEXT)
         Double bathrooms,
 
         @NotNull
-        @Min(DomainLimits.MIN_YEAR_BUILT)
+        @Min(PropertyLimits.MIN_YEAR_BUILT)
         Integer yearBuilt,
 
         @NotNull
         @Positive
-        @DecimalMax(DomainLimits.MAX_LOT_SIZE_TEXT)
+        @DecimalMax(PropertyLimits.MAX_LOT_SIZE_TEXT)
         Double lotSize,
 
         @NotNull
         @DecimalMin("0")
-        @DecimalMax(DomainLimits.MAX_DISTANCE_TO_CITY_CENTER_TEXT)
+        @DecimalMax(PropertyLimits.MAX_DISTANCE_TO_CITY_CENTER_TEXT)
         Double distanceToCityCenter,
 
         @NotNull
         @DecimalMin("0")
-        @DecimalMax(DomainLimits.MAX_SCHOOL_RATING_TEXT)
+        @DecimalMax(PropertyLimits.MAX_SCHOOL_RATING_TEXT)
         Double schoolRating
 ) {
     public PropertyFeatures toFeatures() {

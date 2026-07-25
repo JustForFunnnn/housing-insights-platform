@@ -1,6 +1,7 @@
-package com.housinginsights.market.domain;
+package com.housinginsights.market.application;
 
 import com.housinginsights.market.data.PropertyDataset;
+import com.housinginsights.market.domain.MarketAnalysis;
 import com.housinginsights.market.domain.MarketAnalysis.BedroomPriceGroup;
 import com.housinginsights.market.domain.MarketAnalysis.DoubleRange;
 import com.housinginsights.market.domain.MarketAnalysis.FilterOptions;
@@ -11,6 +12,8 @@ import com.housinginsights.market.domain.MarketAnalysis.PriceSummary;
 import com.housinginsights.market.domain.MarketAnalysis.SquareFootagePriceGroup;
 import com.housinginsights.market.domain.MarketAnalysis.Visualisations;
 import com.housinginsights.market.domain.MarketAnalysis.YearDecadePriceGroup;
+import com.housinginsights.market.domain.MarketFilter;
+import com.housinginsights.market.domain.PropertyRecord;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;

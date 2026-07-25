@@ -1,6 +1,6 @@
 package com.housinginsights.market.domain;
 
-public final class DomainLimits {
+public final class PropertyLimits {
     public static final String MAX_SQUARE_FOOTAGE_TEXT = "100000";
     public static final double MAX_SQUARE_FOOTAGE = Double.parseDouble(MAX_SQUARE_FOOTAGE_TEXT);
     public static final int MAX_BEDROOMS = 10_000;
@@ -13,9 +13,7 @@ public final class DomainLimits {
     public static final String MAX_SCHOOL_RATING_TEXT = "10";
     public static final double MAX_SCHOOL_RATING = Double.parseDouble(MAX_SCHOOL_RATING_TEXT);
     public static final int MIN_YEAR_BUILT = 1800;
-    public static final int MAX_PAGE_LIMIT = 100;
-    public static final int MAX_WHAT_IF_SCENARIOS = 19;
 
-    private DomainLimits() {
+    private PropertyLimits() {
     }
 }

@@ -1,11 +1,12 @@
 package com.housinginsights.market.api;
 
+import com.housinginsights.market.application.MarketAnalysisService;
+import com.housinginsights.market.application.PropertyQueryService;
+import com.housinginsights.market.api.schema.HealthResponse;
+import com.housinginsights.market.api.schema.MarketAnalysisResponse;
+import com.housinginsights.market.api.schema.MarketFilterRequest;
+import com.housinginsights.market.api.schema.PropertyPageResponse;
 import com.housinginsights.market.data.PropertyDataset;
-import com.housinginsights.market.domain.DomainLimits;
-import com.housinginsights.market.domain.MarketAnalysis;
-import com.housinginsights.market.domain.MarketAnalysisService;
-import com.housinginsights.market.domain.PropertyPage;
-import com.housinginsights.market.domain.PropertyQueryService;
 import com.housinginsights.market.domain.SortDirection;
 import com.housinginsights.market.domain.SortField;
 import jakarta.validation.Valid;
@@ -36,15 +37,16 @@ public class MarketController {
     }
 
     @GetMapping("/analysis")
-    public MarketAnalysis analysis(
+    public MarketAnalysisResponse analysis(
             @Valid @ParameterObject @ModelAttribute
             MarketFilterRequest filters
     ) {
-        return analysisService.analyse(filters.toFilter());
+        var analysis = analysisService.analyse(filters.toFilter());
+        return MarketAnalysisResponse.from(analysis);
     }
 
     @GetMapping("/properties")
-    public PropertyPage properties(
+    public PropertyPageResponse properties(
             @Valid @ParameterObject @ModelAttribute
             MarketFilterRequest filters,
             @RequestParam(
@@ -62,7 +64,7 @@ public class MarketController {
                     defaultValue = MarketQueryParameters.DEFAULT_PAGE_LIMIT
             )
             @Min(1)
-            @Max(DomainLimits.MAX_PAGE_LIMIT)
+            @Max(MarketQueryParameters.MAX_PAGE_LIMIT)
             int limit,
             @RequestParam(
                     name = MarketQueryParameters.OFFSET,
@@ -71,13 +73,14 @@ public class MarketController {
             @Min(0)
             int offset
     ) {
-        return propertyQueryService.findPage(
+        var page = propertyQueryService.findPage(
                 filters.toFilter(),
                 SortField.parse(sortBy),
                 SortDirection.parse(sortDirection),
                 limit,
                 offset
         );
+        return PropertyPageResponse.from(page);
     }
 
     @GetMapping("/health")

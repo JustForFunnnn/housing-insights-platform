@@ -1,7 +1,5 @@
 package com.housinginsights.market.error;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-
 public enum ErrorCode {
     VALIDATION_ERROR("validation_error"),
     PREDICTION_SERVICE_UNAVAILABLE("prediction_service_unavailable"),
@@ -15,7 +13,6 @@ public enum ErrorCode {
         this.value = value;
     }
 
-    @JsonValue
     public String value() {
         return value;
     }

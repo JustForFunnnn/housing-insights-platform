@@ -1,9 +1,10 @@
 package com.housinginsights.market.api;
 
+import com.housinginsights.market.application.MarketAnalysisService;
+import com.housinginsights.market.application.PropertyQueryService;
+import com.housinginsights.market.api.schema.MarketFilterRequest;
 import com.housinginsights.market.domain.MarketAnalysis;
-import com.housinginsights.market.domain.MarketAnalysisService;
 import com.housinginsights.market.domain.MarketFilter;
-import com.housinginsights.market.domain.PropertyQueryService;
 import com.housinginsights.market.domain.SortDirection;
 import com.housinginsights.market.domain.SortField;
 import com.housinginsights.market.export.CsvExportService;

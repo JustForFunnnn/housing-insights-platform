@@ -1,7 +1,9 @@
-package com.housinginsights.market.domain;
+package com.housinginsights.market.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.housinginsights.market.domain.PropertyFeatures;
+import com.housinginsights.market.domain.WhatIfResult;
 import com.housinginsights.market.prediction.PredictionClient;
 import java.math.BigDecimal;
 import java.util.ArrayList;

@@ -6,13 +6,14 @@ exports CSV/PDF reports, and calls `prediction-service` only for what-if analysi
 
 ## Design
 
-- `api` owns HTTP contracts and validation.
-- `domain` owns filters, sorting, statistics, paging, caching, and what-if rules.
+- `api` owns HTTP endpoints; `api.schema` owns request and response contracts.
+- `application` owns querying, analysis orchestration and caching, and what-if use cases.
+- `domain` owns property, filtering, sorting, paging, analysis, and what-if models and rules.
 - `data` loads and validates the fixed read-only CSV.
 - `prediction` is the external prediction-service boundary.
 - `export` creates CSV and PDF output from shared query/analysis results.
 - `config` wires validated configuration, HTTP, and cache support.
-- `error` owns custom exceptions, HTTP error responses, and exception mapping.
+- `error` owns custom exceptions and exception mapping.
 - `observability` owns logging and request correlation.
 
 The dataset is loaded into an immutable in-memory list. Missing, unreadable, empty, or

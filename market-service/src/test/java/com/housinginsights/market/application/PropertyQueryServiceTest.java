@@ -1,9 +1,14 @@
-package com.housinginsights.market.domain;
+package com.housinginsights.market.application;
 
 import static com.housinginsights.market.TestProperties.RECORDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.housinginsights.market.data.PropertyDataset;
+import com.housinginsights.market.domain.MarketFilter;
+import com.housinginsights.market.domain.PropertyPage;
+import com.housinginsights.market.domain.PropertyRecord;
+import com.housinginsights.market.domain.SortDirection;
+import com.housinginsights.market.domain.SortField;
 import java.util.Collections;
 import java.util.TreeSet;
 import org.junit.jupiter.api.Test;

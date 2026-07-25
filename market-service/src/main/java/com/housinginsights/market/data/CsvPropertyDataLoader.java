@@ -1,7 +1,7 @@
 package com.housinginsights.market.data;
 
-import com.housinginsights.market.domain.DomainLimits;
 import com.housinginsights.market.domain.PropertyFieldNames;
+import com.housinginsights.market.domain.PropertyLimits;
 import com.housinginsights.market.domain.PropertyRecord;
 import com.housinginsights.market.error.DatasetLoadingException;
 import java.io.IOException;
@@ -108,46 +108,46 @@ public class CsvPropertyDataLoader {
         require(id > 0, lineNumber, PropertyFieldNames.ID, "must be positive");
         require(
                 squareFootage > 0
-                        && squareFootage <= DomainLimits.MAX_SQUARE_FOOTAGE,
+                        && squareFootage <= PropertyLimits.MAX_SQUARE_FOOTAGE,
                 lineNumber,
                 PropertyFieldNames.SQUARE_FOOTAGE,
                 "is outside the supported range"
         );
         require(
-                bedrooms >= 0 && bedrooms <= DomainLimits.MAX_BEDROOMS,
+                bedrooms >= 0 && bedrooms <= PropertyLimits.MAX_BEDROOMS,
                 lineNumber,
                 PropertyFieldNames.BEDROOMS,
                 "is outside the supported range"
         );
         require(
-                bathrooms >= 0 && bathrooms <= DomainLimits.MAX_BATHROOMS,
+                bathrooms >= 0 && bathrooms <= PropertyLimits.MAX_BATHROOMS,
                 lineNumber,
                 PropertyFieldNames.BATHROOMS,
                 "is outside the supported range"
         );
         require(
-                yearBuilt >= DomainLimits.MIN_YEAR_BUILT
+                yearBuilt >= PropertyLimits.MIN_YEAR_BUILT
                         && yearBuilt <= Year.now().getValue(),
                 lineNumber,
                 PropertyFieldNames.YEAR_BUILT,
                 "is outside the supported range"
         );
         require(
-                lotSize > 0 && lotSize <= DomainLimits.MAX_LOT_SIZE,
+                lotSize > 0 && lotSize <= PropertyLimits.MAX_LOT_SIZE,
                 lineNumber,
                 PropertyFieldNames.LOT_SIZE,
                 "is outside the supported range"
         );
         require(
                 distance >= 0
-                        && distance <= DomainLimits.MAX_DISTANCE_TO_CITY_CENTER,
+                        && distance <= PropertyLimits.MAX_DISTANCE_TO_CITY_CENTER,
                 lineNumber,
                 PropertyFieldNames.DISTANCE_TO_CITY_CENTER,
                 "is outside the supported range"
         );
         require(
                 schoolRating >= 0
-                        && schoolRating <= DomainLimits.MAX_SCHOOL_RATING,
+                        && schoolRating <= PropertyLimits.MAX_SCHOOL_RATING,
                 lineNumber,
                 PropertyFieldNames.SCHOOL_RATING,
                 "is outside the supported range"

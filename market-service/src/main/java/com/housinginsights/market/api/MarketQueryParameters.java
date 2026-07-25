@@ -26,6 +26,7 @@ public final class MarketQueryParameters {
 
     public static final String DEFAULT_SORT_BY = PropertyFieldNames.ID;
     public static final String DEFAULT_SORT_DIRECTION = SortDirection.ASC_VALUE;
+    public static final int MAX_PAGE_LIMIT = 100;
     public static final String DEFAULT_PAGE_LIMIT = "20";
     public static final String DEFAULT_PAGE_OFFSET = "0";
 
