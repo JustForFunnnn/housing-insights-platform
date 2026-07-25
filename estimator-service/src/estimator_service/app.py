@@ -118,7 +118,14 @@ def _register_error_handlers(application: FastAPI) -> None:
         request: Request,
         exc: RequestValidationError,
     ) -> JSONResponse:
-        logger.info("request_validation_failed method=%s path=%s error=%s", request.method, request.url.path, exc)
+        errors = exc.errors()
+        reason = errors[0]["msg"] if errors else str(exc)
+        logger.info(
+            "request_validation_failed method=%s path=%s reason=%s",
+            request.method,
+            request.url.path,
+            reason,
+        )
         return _error_response(
             status_code=422,
             error_code=ErrorCode.VALIDATION_ERROR,

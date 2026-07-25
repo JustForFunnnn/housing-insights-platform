@@ -208,6 +208,7 @@ class HttpContractTest {
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath(featureProperties + ".square_footage").exists())
+                .andExpect(jsonPath(featureProperties + ".square_footage.example").value(1850))
                 .andExpect(jsonPath(featureProperties + ".squareFootage").doesNotExist())
                 .andExpect(
                         jsonPath("$.components.schemas.MarketAnalysisResponse").exists())
