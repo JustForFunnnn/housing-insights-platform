@@ -21,19 +21,23 @@ MetadataNumber = StrictInt | StrictFloat
 class PropertyFieldMetadata(BaseModel):
     model_config = ConfigDict(extra="ignore", frozen=True, strict=True)
 
-    min: MetadataNumber
-    max: MetadataNumber
+    min: MetadataNumber | None
+    max: MetadataNumber | None
     unit: str | None
 
     @model_validator(mode="after")
     def validate_values(self) -> PropertyFieldMetadata:
-        values = (self.min, self.max)
+        values = (value for value in (self.min, self.max) if value is not None)
         if not all(
             isinstance(value, int) or math.isfinite(value)
             for value in values
         ):
             raise ValueError("min and max must be finite")
-        if self.min > self.max:
+        if (
+            self.min is not None
+            and self.max is not None
+            and self.min > self.max
+        ):
             raise ValueError("min must not exceed max")
         return self
 
@@ -48,6 +52,7 @@ class PropertyMetadata(BaseModel):
     lot_size: PropertyFieldMetadata
     distance_to_city_center: PropertyFieldMetadata
     school_rating: PropertyFieldMetadata
+    price: PropertyFieldMetadata
 
     @classmethod
     def load(cls, path: Path) -> PropertyMetadata:

@@ -5,10 +5,7 @@ import java.math.BigDecimal;
 
 public record PropertyFieldMetadata(BigDecimal min, BigDecimal max, String unit) {
     public PropertyFieldMetadata {
-        if (min == null || max == null) {
-            throw new IllegalArgumentException("min and max are required");
-        }
-        if (min.compareTo(max) > 0) {
+        if (min != null && max != null && min.compareTo(max) > 0) {
             throw new IllegalArgumentException("min must not exceed max");
         }
     }
@@ -20,9 +17,14 @@ public record PropertyFieldMetadata(BigDecimal min, BigDecimal max, String unit)
         } catch (NumberFormatException exception) {
             throw new InvalidRequestException(name + " must be finite");
         }
-        if (!Double.isFinite(value.doubleValue())
-                || number.compareTo(min) < 0
-                || number.compareTo(max) > 0) {
+        if (!Double.isFinite(value.doubleValue())) {
+            throw new InvalidRequestException(name + " must be finite");
+        }
+        if (min != null && number.compareTo(min) < 0) {
+            throw new InvalidRequestException(
+                    name + " is outside the supported range");
+        }
+        if (max != null && number.compareTo(max) > 0) {
             throw new InvalidRequestException(
                     name + " is outside the supported range");
         }

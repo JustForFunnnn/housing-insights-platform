@@ -14,8 +14,14 @@ CONTRACT_PATH = (
 
 
 def test_loads_exact_contract_once_as_immutable_snapshot(tmp_path: Path) -> None:
+    configured = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
+    configured["price"] = {
+        "min": None,
+        "max": None,
+        "unit": "fixture_currency",
+    }
     path = tmp_path / "property-field-metadata.json"
-    path.write_text(CONTRACT_PATH.read_text(encoding="utf-8"), encoding="utf-8")
+    path.write_text(json.dumps(configured), encoding="utf-8")
 
     metadata = PropertyMetadata.load(path)
     path.write_text("{}", encoding="utf-8")
@@ -28,12 +34,9 @@ def test_loads_exact_contract_once_as_immutable_snapshot(tmp_path: Path) -> None
         "lot_size",
         "distance_to_city_center",
         "school_rating",
+        "price",
     }
-    assert metadata.year_built.model_dump() == {
-        "min": 1800,
-        "max": 2026,
-        "unit": "year",
-    }
+    assert metadata.price.model_dump() == configured["price"]
 
 
 def test_rejects_missing_or_invalid_metadata(tmp_path: Path) -> None:

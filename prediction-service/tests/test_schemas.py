@@ -8,6 +8,7 @@ from prediction_service.constants import (
     MAX_PREDICTION_INSTANCES,
 )
 from prediction_service.models import HousingFeatures
+from prediction_service.property_metadata import PROPERTY_METADATA
 from prediction_service.schemas import (
     PredictionRequest,
     TrainingRow,
@@ -51,9 +52,6 @@ def test_request_maps_to_semantic_domain_features() -> None:
         {"instances": [{**VALID_INSTANCE, "unknown": "value"}]},
         {"instances": [{**VALID_INSTANCE, "square_footage": "1850"}]},
         {"instances": [{**VALID_INSTANCE, "square_footage": True}]},
-        {"instances": [{**VALID_INSTANCE, "square_footage": 100001}]},
-        {"instances": [{**VALID_INSTANCE, "year_built": 2027}]},
-        {"instances": [{**VALID_INSTANCE, "school_rating": 10.1}]},
     ],
     ids=[
         "missing-instances",
@@ -63,14 +61,38 @@ def test_request_maps_to_semantic_domain_features() -> None:
         "unknown-instance-field",
         "string-feature",
         "boolean-feature",
-        "square-footage-out-of-range",
-        "year-built-out-of-range",
-        "school-rating-out-of-range",
     ],
 )
 def test_invalid_requests_are_rejected(payload: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
         PredictionRequest.model_validate(payload)
+
+
+def test_configured_feature_bounds_are_enforced() -> None:
+    PredictionRequest.model_validate({"instances": [VALID_INSTANCE]})
+    tested_bound = False
+
+    for field_name in FEATURE_NAMES:
+        metadata = getattr(PROPERTY_METADATA, field_name)
+        if metadata.min is not None:
+            tested_bound = True
+            invalid = {
+                **VALID_INSTANCE,
+                field_name: metadata.min - 1,
+            }
+            with pytest.raises(ValidationError):
+                PredictionRequest.model_validate({"instances": [invalid]})
+        if metadata.max is not None:
+            tested_bound = True
+            invalid = {
+                **VALID_INSTANCE,
+                field_name: metadata.max + 1,
+            }
+            with pytest.raises(ValidationError):
+                PredictionRequest.model_validate({"instances": [invalid]})
+
+    if not tested_bound:
+        pytest.skip("no feature bounds are configured")
 
 
 def test_training_schema_has_independent_coercion_and_extra_policy() -> None:

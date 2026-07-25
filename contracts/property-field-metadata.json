@@ -33,5 +33,10 @@
     "min": 0,
     "max": 10,
     "unit": null
+  },
+  "price": {
+    "min": 1,
+    "max": null,
+    "unit": "USD"
   }
 }

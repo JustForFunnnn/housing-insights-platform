@@ -16,8 +16,8 @@ import java.util.Set;
 
 public final class PropertyMetadata {
     private static final Set<String> FIELD_KEYS = Set.of("min", "max", "unit");
-    private static final Set<String> FEATURE_FIELDS =
-            Set.copyOf(PropertyFieldNames.FEATURE_COLUMNS);
+    private static final Set<String> REQUIRED_FIELDS =
+            Set.copyOf(PropertyFieldNames.METADATA_FIELDS);
 
     private final Map<String, PropertyFieldMetadata> fields;
 
@@ -41,13 +41,13 @@ public final class PropertyMetadata {
         }
         if (root == null
                 || !root.isObject()
-                || !FEATURE_FIELDS.stream().allMatch(root::has)) {
+                || !REQUIRED_FIELDS.stream().allMatch(root::has)) {
             throw new PropertyMetadataException(
-                    "property metadata must contain the supported feature fields");
+                    "property metadata must contain the supported fields");
         }
 
         Map<String, PropertyFieldMetadata> fields = new LinkedHashMap<>();
-        for (String name : PropertyFieldNames.FEATURE_COLUMNS) {
+        for (String name : PropertyFieldNames.METADATA_FIELDS) {
             JsonNode fieldNode = root.get(name);
             if (fieldNode == null
                     || !fieldNode.isObject()
@@ -111,15 +111,19 @@ public final class PropertyMetadata {
         validateNullable(
                 PropertyFieldNames.SCHOOL_RATING,
                 filter.maxSchoolRating());
+        validateNullable(PropertyFieldNames.PRICE, filter.minPrice());
+        validateNullable(PropertyFieldNames.PRICE, filter.maxPrice());
     }
 
     private static PropertyFieldMetadata parseField(
             String name, JsonNode node) {
         try {
+            JsonNode minimum = node.get("min");
+            JsonNode maximum = node.get("max");
             JsonNode unit = node.get("unit");
             return new PropertyFieldMetadata(
-                    node.get("min").decimalValue(),
-                    node.get("max").decimalValue(),
+                    minimum.isNull() ? null : minimum.decimalValue(),
+                    maximum.isNull() ? null : maximum.decimalValue(),
                     unit.isNull() ? null : unit.textValue());
         } catch (IllegalArgumentException exception) {
             throw new PropertyMetadataException(
@@ -139,8 +143,12 @@ public final class PropertyMetadata {
 
     private static boolean hasExpectedValueTypes(JsonNode node) {
         JsonNode unit = node.get("unit");
-        return node.get("min").isNumber()
-                && node.get("max").isNumber()
+        return isNumberOrNull(node.get("min"))
+                && isNumberOrNull(node.get("max"))
                 && (unit.isNull() || unit.isTextual());
+    }
+
+    private static boolean isNumberOrNull(JsonNode node) {
+        return node.isNull() || node.isNumber();
     }
 }

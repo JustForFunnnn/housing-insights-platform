@@ -19,6 +19,7 @@ from estimator_service.models import (
 from estimator_service.property_metadata import (
     PROPERTY_METADATA,
     PropertyFieldMetadata,
+    PropertyMetadata,
 )
 
 
@@ -149,13 +150,33 @@ class HealthResponse(ResponseModel):
 
 
 class PropertyFieldMetadataResponse(ResponseModel):
-    min: int | float
-    max: int | float
+    min: int | float | None
+    max: int | float | None
     unit: str | None
 
 
+class PropertyMetadataFieldsResponse(ResponseModel):
+    square_footage: PropertyFieldMetadataResponse
+    bedrooms: PropertyFieldMetadataResponse
+    bathrooms: PropertyFieldMetadataResponse
+    year_built: PropertyFieldMetadataResponse
+    lot_size: PropertyFieldMetadataResponse
+    distance_to_city_center: PropertyFieldMetadataResponse
+    school_rating: PropertyFieldMetadataResponse
+    price: PropertyFieldMetadataResponse
+
+
 class PropertyMetadataResponse(ResponseModel):
-    fields: dict[str, PropertyFieldMetadataResponse]
+    fields: PropertyMetadataFieldsResponse
+
+    @classmethod
+    def from_metadata(
+        cls,
+        metadata: PropertyMetadata,
+    ) -> PropertyMetadataResponse:
+        return cls(
+            fields=PropertyMetadataFieldsResponse.model_validate(metadata),
+        )
 
 
 class ErrorResponse(ResponseModel):

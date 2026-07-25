@@ -118,9 +118,7 @@ async def list_estimates(
     },
 )
 async def estimate_metadata() -> PropertyMetadataResponse:
-    return PropertyMetadataResponse.model_validate(
-        {"fields": PROPERTY_METADATA.model_dump()}
-    )
+    return PropertyMetadataResponse.from_metadata(PROPERTY_METADATA)
 
 
 @router.get(

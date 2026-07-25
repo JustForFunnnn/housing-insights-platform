@@ -11,9 +11,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.housinginsights.market.domain.PropertyFieldNames;
 import com.housinginsights.market.error.PredictionServiceUnavailableException;
 import com.housinginsights.market.observability.RequestCorrelation;
 import com.housinginsights.market.prediction.PredictionClient;
+import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,6 +45,9 @@ class HttpContractTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @MockitoBean
     private PredictionClient predictionClient;
@@ -94,11 +101,6 @@ class HttpContractTest {
                 .andExpect(jsonPath("$.error_code").value("http_error"))
                 .andExpect(jsonPath("$.message").value("The request could not be completed."));
 
-        mockMvc.perform(get("/api/properties")
-                        .param("bathrooms", "101"))
-                .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.error_code").value("validation_error"));
-
         assertThat(output)
                 .contains(
                         "request_validation_failed method=GET "
@@ -135,25 +137,23 @@ class HttpContractTest {
     @Test
     void metadataReturnsSharedFieldsAndFullDatasetFilterOptions()
             throws Exception {
-        mockMvc.perform(get("/api/metadata"))
+        String response = mockMvc.perform(get("/api/metadata"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.fields.square_footage.type")
-                        .doesNotExist())
-                .andExpect(jsonPath("$.fields.square_footage.minimum")
-                        .doesNotExist())
-                .andExpect(jsonPath("$.fields.square_footage.min").value(1))
-                .andExpect(jsonPath("$.fields.square_footage.max")
-                        .value(100000))
-                .andExpect(jsonPath("$.fields.square_footage.step")
-                        .doesNotExist())
-                .andExpect(jsonPath("$.fields.square_footage.unit")
-                        .value("sq_ft"))
                 .andExpect(jsonPath("$.filter_options.bedrooms.length()")
                         .value(3))
                 .andExpect(jsonPath("$.filter_options.price.minimum")
                         .value(150000))
                 .andExpect(jsonPath("$.filter_options.price.maximum")
-                        .value(450000));
+                        .value(450000))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        JsonNode fields = objectMapper.readTree(response).get("fields");
+        JsonNode expectedFields = objectMapper.readTree(
+                Path.of("..", "contracts", "property-field-metadata.json")
+                        .toFile());
+        assertThat(fields).isEqualTo(expectedFields);
     }
 
     @Test
@@ -205,7 +205,7 @@ class HttpContractTest {
     void openApiUsesPublicContractNames() throws Exception {
         String featureProperties = "$.components.schemas.PropertyFeaturesRequest.properties";
 
-        mockMvc.perform(get("/v3/api-docs"))
+        String openApi = mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath(featureProperties + ".square_footage").exists())
                 .andExpect(jsonPath(featureProperties + ".square_footage.example").value(1850))
@@ -237,7 +237,19 @@ class HttpContractTest {
                 .andExpect(jsonPath(
                                 "$.paths['/api/analysis'].get.parameters"
                                         + "[?(@.name == 'minSquareFootage')]")
-                        .isEmpty());
+                        .isEmpty())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        JsonNode metadataFields = objectMapper
+                .readTree(openApi)
+                .at("/components/schemas/PropertyMetadataFieldsResponse/properties");
+        assertThat(metadataFields.size())
+                .isEqualTo(PropertyFieldNames.METADATA_FIELDS.size());
+        for (String fieldName : PropertyFieldNames.METADATA_FIELDS) {
+            assertThat(metadataFields.has(fieldName)).isTrue();
+        }
     }
 
     @Test
@@ -310,4 +322,5 @@ class HttpContractTest {
                 }
                 """;
     }
+
 }

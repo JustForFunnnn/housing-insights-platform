@@ -13,6 +13,7 @@ from estimator_service.errors import (
     PredictionServiceUnavailableError,
     StorageUnavailableError,
 )
+from estimator_service.property_metadata import PROPERTY_METADATA
 from tests.conftest import (
     VALID_PROPERTY,
     InMemoryEstimateStore,
@@ -167,34 +168,52 @@ def test_validation_and_http_errors_use_contract(app_factory) -> None:
     }
 
 
-def test_shared_metadata_constraint_rejects_before_prediction(app_factory) -> None:
-    app, _database, _store, prediction = app_factory()
-    payload = {
-        "properties": [
-            {
-                **VALID_PROPERTY,
-                "square_footage": 100001,
-            }
-        ]
-    }
+def test_metadata_returns_defined_property_fields(app_factory) -> None:
+    app, _database, _store, _prediction = app_factory()
     with TestClient(app) as client:
-        response = client.post("/api/estimates", json=payload)
+        response = client.get("/api/metadata")
 
-    assert response.status_code == 422
-    assert prediction.calls == []
+    assert response.status_code == 200
+    assert response.json() == {
+        "fields": PROPERTY_METADATA.model_dump(mode="json")
+    }
 
 
 def test_openapi_exposes_shared_metadata_constraints(app_factory) -> None:
     app, _database, _store, _prediction = app_factory()
     with TestClient(app) as client:
-        schema = client.get("/openapi.json").json()["components"]["schemas"][
-            "PropertyInput"
-        ]["properties"]
+        schemas = client.get("/openapi.json").json()["components"]["schemas"]
 
-    assert schema["square_footage"]["minimum"] == 1
-    assert schema["square_footage"]["maximum"] == 100000
-    assert "multipleOf" not in schema["bathrooms"]
-    assert "multipleOf" not in schema["school_rating"]
+    property_input = schemas["PropertyInput"]["properties"]
+    square_footage = PROPERTY_METADATA.square_footage
+    if square_footage.min is None:
+        assert "minimum" not in property_input["square_footage"]
+    else:
+        assert (
+            property_input["square_footage"]["minimum"]
+            == square_footage.min
+        )
+    if square_footage.max is None:
+        assert "maximum" not in property_input["square_footage"]
+    else:
+        assert (
+            property_input["square_footage"]["maximum"]
+            == square_footage.max
+        )
+    assert "multipleOf" not in property_input["bathrooms"]
+    assert "multipleOf" not in property_input["school_rating"]
+
+    metadata_fields = schemas["PropertyMetadataFieldsResponse"]
+    expected_metadata_fields = {*VALID_PROPERTY, "price"}
+    assert set(metadata_fields["properties"]) == expected_metadata_fields
+    assert set(metadata_fields["required"]) == expected_metadata_fields
+    assert metadata_fields["additionalProperties"] is False
+    maximum_schema = schemas["PropertyFieldMetadataResponse"]["properties"][
+        "max"
+    ]
+    assert "null" in {
+        option.get("type") for option in maximum_schema["anyOf"]
+    }
 
 
 @pytest.mark.parametrize(

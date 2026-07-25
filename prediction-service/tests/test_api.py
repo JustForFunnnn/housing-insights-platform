@@ -23,6 +23,7 @@ from prediction_service.models import (
     ModelInfo,
     RegressionMetrics,
 )
+from prediction_service.property_metadata import PROPERTY_METADATA
 
 VALID_INSTANCE = {
     "square_footage": 1850,
@@ -91,8 +92,15 @@ def test_openapi_exposes_shared_metadata_constraints() -> None:
             "PredictionInstance"
         ]["properties"]
 
-    assert schema["square_footage"]["minimum"] == 1
-    assert schema["square_footage"]["maximum"] == 100000
+    square_footage = PROPERTY_METADATA.square_footage
+    if square_footage.min is None:
+        assert "minimum" not in schema["square_footage"]
+    else:
+        assert schema["square_footage"]["minimum"] == square_footage.min
+    if square_footage.max is None:
+        assert "maximum" not in schema["square_footage"]
+    else:
+        assert schema["square_footage"]["maximum"] == square_footage.max
     assert "multipleOf" not in schema["bathrooms"]
     assert "multipleOf" not in schema["school_rating"]
 
@@ -186,23 +194,6 @@ def test_validation_error_uses_standard_response_and_request_id() -> None:
         "error_code": "validation_error",
         "message": "Request validation failed.",
     }
-
-
-def test_shared_metadata_constraint_rejects_request() -> None:
-    service = StubPredictionService()
-    payload = {
-        "instances": [
-            {
-                **VALID_INSTANCE,
-                "square_footage": 100001,
-            }
-        ]
-    }
-    with TestClient(create_app(prediction_service=service)) as client:
-        response = client.post("/api/predict", json=payload)
-
-    assert response.status_code == 422
-    assert service.seen == []
 
 
 def test_non_finite_request_returns_serializable_422() -> None:

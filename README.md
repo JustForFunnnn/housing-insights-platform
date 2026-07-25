@@ -20,6 +20,9 @@ All three backend images include
 read-only at `/app/contracts/property-field-metadata.json`, so a normal
 `docker compose up` starts with the current shared contract. Each service reads it
 once at startup; restart the affected containers after changing it.
+Metadata `min` and `max` values may be `null`, meaning that side has no configured
+limit. `year_built` uses the configured bounds without a runtime override. The
+contract also includes `price` metadata with the `USD` unit.
 
 ## Prediction service
 
