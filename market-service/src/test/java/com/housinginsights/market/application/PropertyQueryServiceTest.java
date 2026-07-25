@@ -14,8 +14,7 @@ import java.util.TreeSet;
 import org.junit.jupiter.api.Test;
 
 class PropertyQueryServiceTest {
-    private final PropertyQueryService service =
-            new PropertyQueryService(new PropertyDataset(RECORDS));
+    private final PropertyQueryService service = new PropertyQueryService(new PropertyDataset(RECORDS));
 
     @Test
     void filtersSortsAndLimitsWithStableOrder() {
@@ -33,16 +32,9 @@ class PropertyQueryServiceTest {
                 null,
                 null,
                 null,
-                null
-        );
+                null);
 
-        PropertyPage page = service.findPage(
-                filter,
-                SortField.PRICE,
-                SortDirection.DESC,
-                1,
-                0
-        );
+        PropertyPage page = service.findPage(filter, SortField.PRICE, SortDirection.DESC, 1, 0);
 
         assertThat(page.records()).extracting(PropertyRecord::id).containsExactly(3L);
         assertThat(page.total()).isEqualTo(2);
@@ -52,13 +44,7 @@ class PropertyQueryServiceTest {
 
     @Test
     void offsetPastTotalIsEmptyAndKeepsPaginationMetadata() {
-        PropertyPage page = service.findPage(
-                MarketFilter.empty(),
-                SortField.ID,
-                SortDirection.ASC,
-                2,
-                20
-        );
+        PropertyPage page = service.findPage(MarketFilter.empty(), SortField.ID, SortDirection.ASC, 2, 20);
 
         assertThat(page.records()).isEmpty();
         assertThat(page.total()).isEqualTo(4);

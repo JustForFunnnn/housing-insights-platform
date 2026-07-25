@@ -13,50 +13,27 @@ import jakarta.validation.constraints.Positive;
 import java.time.Year;
 
 public record PropertyFeaturesRequest(
-        @NotNull
-        @Positive
-        @DecimalMax(PropertyLimits.MAX_SQUARE_FOOTAGE_TEXT)
+        @NotNull @Positive @DecimalMax(PropertyLimits.MAX_SQUARE_FOOTAGE_TEXT)
         Double squareFootage,
 
-        @NotNull
-        @Min(0)
-        @Max(PropertyLimits.MAX_BEDROOMS)
-        Integer bedrooms,
+        @NotNull @Min(0) @Max(PropertyLimits.MAX_BEDROOMS) Integer bedrooms,
 
-        @NotNull
-        @DecimalMin("0")
-        @DecimalMax(PropertyLimits.MAX_BATHROOMS_TEXT)
+        @NotNull @DecimalMin("0") @DecimalMax(PropertyLimits.MAX_BATHROOMS_TEXT)
         Double bathrooms,
 
-        @NotNull
-        @Min(PropertyLimits.MIN_YEAR_BUILT)
-        Integer yearBuilt,
+        @NotNull @Min(PropertyLimits.MIN_YEAR_BUILT) Integer yearBuilt,
 
-        @NotNull
-        @Positive
-        @DecimalMax(PropertyLimits.MAX_LOT_SIZE_TEXT)
+        @NotNull @Positive @DecimalMax(PropertyLimits.MAX_LOT_SIZE_TEXT)
         Double lotSize,
 
-        @NotNull
-        @DecimalMin("0")
-        @DecimalMax(PropertyLimits.MAX_DISTANCE_TO_CITY_CENTER_TEXT)
+        @NotNull @DecimalMin("0") @DecimalMax(PropertyLimits.MAX_DISTANCE_TO_CITY_CENTER_TEXT)
         Double distanceToCityCenter,
 
-        @NotNull
-        @DecimalMin("0")
-        @DecimalMax(PropertyLimits.MAX_SCHOOL_RATING_TEXT)
-        Double schoolRating
-) {
+        @NotNull @DecimalMin("0") @DecimalMax(PropertyLimits.MAX_SCHOOL_RATING_TEXT)
+        Double schoolRating) {
     public PropertyFeatures toFeatures() {
         return new PropertyFeatures(
-                squareFootage,
-                bedrooms,
-                bathrooms,
-                yearBuilt,
-                lotSize,
-                distanceToCityCenter,
-                schoolRating
-        );
+                squareFootage, bedrooms, bathrooms, yearBuilt, lotSize, distanceToCityCenter, schoolRating);
     }
 
     @JsonIgnore

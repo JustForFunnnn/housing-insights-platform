@@ -9,17 +9,9 @@ public record PropertyRecord(
         double lotSize,
         double distanceToCityCenter,
         double schoolRating,
-        long price
-) {
+        long price) {
     public PropertyFeatures features() {
         return new PropertyFeatures(
-                squareFootage,
-                bedrooms,
-                bathrooms,
-                yearBuilt,
-                lotSize,
-                distanceToCityCenter,
-                schoolRating
-        );
+                squareFootage, bedrooms, bathrooms, yearBuilt, lotSize, distanceToCityCenter, schoolRating);
     }
 }

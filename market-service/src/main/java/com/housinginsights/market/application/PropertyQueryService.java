@@ -19,16 +19,10 @@ public class PropertyQueryService {
     }
 
     public List<PropertyRecord> filter(MarketFilter filter) {
-        return dataset.properties().stream()
-                .filter(filter::matches)
-                .toList();
+        return dataset.properties().stream().filter(filter::matches).toList();
     }
 
-    public List<PropertyRecord> findAll(
-            MarketFilter filter,
-            SortField sortField,
-            SortDirection direction
-    ) {
+    public List<PropertyRecord> findAll(MarketFilter filter, SortField sortField, SortDirection direction) {
         return dataset.properties().stream()
                 .filter(filter::matches)
                 .sorted(comparator(sortField, direction))
@@ -36,34 +30,16 @@ public class PropertyQueryService {
     }
 
     public PropertyPage findPage(
-            MarketFilter filter,
-            SortField sortField,
-            SortDirection direction,
-            int limit,
-            int offset
-    ) {
+            MarketFilter filter, SortField sortField, SortDirection direction, int limit, int offset) {
         List<PropertyRecord> matched = findAll(filter, sortField, direction);
         long total = matched.size();
         List<PropertyRecord> records = offset >= total
                 ? List.of()
-                : matched.subList(
-                        offset,
-                        Math.toIntExact(Math.min((long) offset + limit, total))
-                );
-        return new PropertyPage(
-                records,
-                total,
-                limit,
-                offset,
-                sortField,
-                direction
-        );
+                : matched.subList(offset, Math.toIntExact(Math.min((long) offset + limit, total)));
+        return new PropertyPage(records, total, limit, offset, sortField, direction);
     }
 
-    private static Comparator<PropertyRecord> comparator(
-            SortField sortField,
-            SortDirection direction
-    ) {
+    private static Comparator<PropertyRecord> comparator(SortField sortField, SortDirection direction) {
         Comparator<PropertyRecord> primary = sortField.comparator();
         if (direction == SortDirection.DESC) {
             primary = primary.reversed();

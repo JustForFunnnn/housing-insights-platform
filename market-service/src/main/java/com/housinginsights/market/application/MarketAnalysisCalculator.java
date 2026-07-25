@@ -33,10 +33,7 @@ public class MarketAnalysisCalculator {
     private final PropertyQueryService propertyQueryService;
     private final FilterOptions filterOptions;
 
-    public MarketAnalysisCalculator(
-            PropertyQueryService propertyQueryService,
-            PropertyDataset dataset
-    ) {
+    public MarketAnalysisCalculator(PropertyQueryService propertyQueryService, PropertyDataset dataset) {
         this.propertyQueryService = propertyQueryService;
         this.filterOptions = filterOptions(dataset.properties());
     }
@@ -48,8 +45,7 @@ public class MarketAnalysisCalculator {
                     0,
                     new PriceSummary(null, null, null, null),
                     new Visualisations(List.of(), List.of(), List.of(), List.of()),
-                    filterOptions
-            );
+                    filterOptions);
         }
 
         return new MarketAnalysis(
@@ -59,77 +55,51 @@ public class MarketAnalysisCalculator {
                         priceDistribution(properties),
                         averagePriceByBedrooms(properties),
                         averagePriceByYearBuiltDecade(properties),
-                        averagePriceBySquareFootageBand(properties)
-                ),
-                filterOptions
-        );
+                        averagePriceBySquareFootageBand(properties)),
+                filterOptions);
     }
 
     private static PriceSummary priceSummary(List<PropertyRecord> properties) {
         double[] prices = prices(properties);
-        long minimum = properties.stream()
-                .mapToLong(PropertyRecord::price)
-                .min()
-                .orElseThrow();
-        long maximum = properties.stream()
-                .mapToLong(PropertyRecord::price)
-                .max()
-                .orElseThrow();
+        long minimum =
+                properties.stream().mapToLong(PropertyRecord::price).min().orElseThrow();
+        long maximum =
+                properties.stream().mapToLong(PropertyRecord::price).max().orElseThrow();
         return new PriceSummary(
                 minimum,
                 maximum,
                 decimal(Mean.of(prices).getAsDouble()),
-                decimal(Median.withDefaults().evaluate(prices))
-        );
+                decimal(Median.withDefaults().evaluate(prices)));
     }
 
-    private static List<PriceDistributionBucket> priceDistribution(
-            List<PropertyRecord> properties
-    ) {
+    private static List<PriceDistributionBucket> priceDistribution(List<PropertyRecord> properties) {
         Map<Long, Long> counts = properties.stream()
                 .collect(Collectors.groupingBy(
-                        property -> Math.floorDiv(
-                                property.price(),
-                                PRICE_BUCKET_WIDTH
-                        ) * PRICE_BUCKET_WIDTH,
+                        property -> Math.floorDiv(property.price(), PRICE_BUCKET_WIDTH) * PRICE_BUCKET_WIDTH,
                         TreeMap::new,
-                        Collectors.counting()
-                ));
+                        Collectors.counting()));
         return counts.entrySet().stream()
                 .map(entry -> {
                     long lower = entry.getKey();
                     long upper = lower > Long.MAX_VALUE - PRICE_BUCKET_WIDTH
                             ? Long.MAX_VALUE
                             : lower + PRICE_BUCKET_WIDTH - 1;
-                    return new PriceDistributionBucket(
-                            lower + "-" + upper,
-                            lower,
-                            upper,
-                            entry.getValue()
-                    );
+                    return new PriceDistributionBucket(lower + "-" + upper, lower, upper, entry.getValue());
                 })
                 .toList();
     }
 
-    private static List<BedroomPriceGroup> averagePriceByBedrooms(
-            List<PropertyRecord> properties
-    ) {
+    private static List<BedroomPriceGroup> averagePriceByBedrooms(List<PropertyRecord> properties) {
         return groupBy(properties, PropertyRecord::bedrooms).entrySet().stream()
                 .map(entry -> new BedroomPriceGroup(
                         entry.getKey(),
                         averagePrice(entry.getValue()),
-                        entry.getValue().size()
-                ))
+                        entry.getValue().size()))
                 .toList();
     }
 
-    private static List<YearDecadePriceGroup> averagePriceByYearBuiltDecade(
-            List<PropertyRecord> properties
-    ) {
-        return groupBy(
-                properties,
-                property -> Math.floorDiv(property.yearBuilt(), 10) * 10
-        ).entrySet().stream()
+    private static List<YearDecadePriceGroup> averagePriceByYearBuiltDecade(List<PropertyRecord> properties) {
+        return groupBy(properties, property -> Math.floorDiv(property.yearBuilt(), 10) * 10).entrySet().stream()
                 .map(entry -> {
                     int start = entry.getKey();
                     return new YearDecadePriceGroup(
@@ -137,21 +107,18 @@ public class MarketAnalysisCalculator {
                             start,
                             start + 9,
                             averagePrice(entry.getValue()),
-                            entry.getValue().size()
-                    );
+                            entry.getValue().size());
                 })
                 .toList();
     }
 
-    private static List<SquareFootagePriceGroup> averagePriceBySquareFootageBand(
-            List<PropertyRecord> properties
-    ) {
+    private static List<SquareFootagePriceGroup> averagePriceBySquareFootageBand(List<PropertyRecord> properties) {
         return groupBy(
-                properties,
-                property -> (long) Math.floor(
-                        property.squareFootage() / SQUARE_FOOTAGE_BUCKET_WIDTH
-                ) * SQUARE_FOOTAGE_BUCKET_WIDTH
-        ).entrySet().stream()
+                        properties,
+                        property -> (long) Math.floor(property.squareFootage() / SQUARE_FOOTAGE_BUCKET_WIDTH)
+                                * SQUARE_FOOTAGE_BUCKET_WIDTH)
+                .entrySet()
+                .stream()
                 .map(entry -> {
                     long lower = entry.getKey();
                     long upperExclusive = lower + SQUARE_FOOTAGE_BUCKET_WIDTH;
@@ -160,21 +127,14 @@ public class MarketAnalysisCalculator {
                             lower,
                             upperExclusive,
                             averagePrice(entry.getValue()),
-                            entry.getValue().size()
-                    );
+                            entry.getValue().size());
                 })
                 .toList();
     }
 
     private static <K extends Comparable<K>> Map<K, List<PropertyRecord>> groupBy(
-            List<PropertyRecord> properties,
-            Function<PropertyRecord, K> classifier
-    ) {
-        return properties.stream().collect(Collectors.groupingBy(
-                classifier,
-                TreeMap::new,
-                Collectors.toList()
-        ));
+            List<PropertyRecord> properties, Function<PropertyRecord, K> classifier) {
+        return properties.stream().collect(Collectors.groupingBy(classifier, TreeMap::new, Collectors.toList()));
     }
 
     private static BigDecimal averagePrice(List<PropertyRecord> properties) {
@@ -182,9 +142,7 @@ public class MarketAnalysisCalculator {
     }
 
     private static double[] prices(List<PropertyRecord> properties) {
-        return properties.stream()
-                .mapToDouble(PropertyRecord::price)
-                .toArray();
+        return properties.stream().mapToDouble(PropertyRecord::price).toArray();
     }
 
     private static BigDecimal decimal(double value) {
@@ -201,8 +159,7 @@ public class MarketAnalysisCalculator {
                         properties.stream()
                                 .mapToDouble(PropertyRecord::squareFootage)
                                 .max()
-                                .orElseThrow()
-                ),
+                                .orElseThrow()),
                 properties.stream()
                         .map(PropertyRecord::bedrooms)
                         .distinct()
@@ -221,8 +178,7 @@ public class MarketAnalysisCalculator {
                         properties.stream()
                                 .mapToInt(PropertyRecord::yearBuilt)
                                 .max()
-                                .orElseThrow()
-                ),
+                                .orElseThrow()),
                 doubleRange(properties, PropertyRecord::lotSize),
                 doubleRange(properties, PropertyRecord::distanceToCityCenter),
                 doubleRange(properties, PropertyRecord::schoolRating),
@@ -234,18 +190,13 @@ public class MarketAnalysisCalculator {
                         properties.stream()
                                 .mapToLong(PropertyRecord::price)
                                 .max()
-                                .orElseThrow()
-                )
-        );
+                                .orElseThrow()));
     }
 
     private static DoubleRange doubleRange(
-            List<PropertyRecord> properties,
-            java.util.function.ToDoubleFunction<PropertyRecord> value
-    ) {
+            List<PropertyRecord> properties, java.util.function.ToDoubleFunction<PropertyRecord> value) {
         return new DoubleRange(
                 properties.stream().mapToDouble(value).min().orElseThrow(),
-                properties.stream().mapToDouble(value).max().orElseThrow()
-        );
+                properties.stream().mapToDouble(value).max().orElseThrow());
     }
 }

@@ -14,6 +14,5 @@ public final class PropertyLimits {
     public static final double MAX_SCHOOL_RATING = Double.parseDouble(MAX_SCHOOL_RATING_TEXT);
     public static final int MIN_YEAR_BUILT = 1800;
 
-    private PropertyLimits() {
-    }
+    private PropertyLimits() {}
 }

@@ -29,8 +29,7 @@ public class MarketChartRenderer {
                             .toList(),
                     analysis.visualisations().priceDistribution().stream()
                             .map(MarketAnalysis.PriceDistributionBucket::count)
-                            .toList()
-            ));
+                            .toList()));
             charts.add(renderChart(
                     "Average Price by Bedrooms",
                     "Bedrooms",
@@ -40,34 +39,27 @@ public class MarketChartRenderer {
                             .toList(),
                     analysis.visualisations().averagePriceByBedrooms().stream()
                             .map(MarketAnalysis.BedroomPriceGroup::averagePrice)
-                            .toList()
-            ));
+                            .toList()));
             charts.add(renderChart(
                     "Average Price by Build Decade",
                     "Build decade",
                     "Average price",
-                    analysis.visualisations().averagePriceByYearBuiltDecade()
-                            .stream()
+                    analysis.visualisations().averagePriceByYearBuiltDecade().stream()
                             .map(MarketAnalysis.YearDecadePriceGroup::label)
                             .toList(),
-                    analysis.visualisations().averagePriceByYearBuiltDecade()
-                            .stream()
+                    analysis.visualisations().averagePriceByYearBuiltDecade().stream()
                             .map(MarketAnalysis.YearDecadePriceGroup::averagePrice)
-                            .toList()
-            ));
+                            .toList()));
             charts.add(renderChart(
                     "Average Price by Square Footage",
                     "Square footage band",
                     "Average price",
-                    analysis.visualisations().averagePriceBySquareFootageBand()
-                            .stream()
+                    analysis.visualisations().averagePriceBySquareFootageBand().stream()
                             .map(MarketAnalysis.SquareFootagePriceGroup::label)
                             .toList(),
-                    analysis.visualisations().averagePriceBySquareFootageBand()
-                            .stream()
+                    analysis.visualisations().averagePriceBySquareFootageBand().stream()
                             .map(MarketAnalysis.SquareFootagePriceGroup::averagePrice)
-                            .toList()
-            ));
+                            .toList()));
             return List.copyOf(charts);
         } catch (IOException exception) {
             throw new ExportGenerationException("chart rendering failed", exception);
@@ -75,12 +67,8 @@ public class MarketChartRenderer {
     }
 
     private static RenderedChart renderChart(
-            String title,
-            String xAxis,
-            String yAxis,
-            List<String> categories,
-            List<? extends Number> values
-    ) throws IOException {
+            String title, String xAxis, String yAxis, List<String> categories, List<? extends Number> values)
+            throws IOException {
         CategoryChart chart = new CategoryChartBuilder()
                 .width(900)
                 .height(500)
@@ -90,10 +78,7 @@ public class MarketChartRenderer {
                 .build();
         chart.getStyler().setLegendVisible(false);
         chart.addSeries(title, categories, values);
-        return new RenderedChart(
-                title,
-                BitmapEncoder.getBitmapBytes(chart, BitmapEncoder.BitmapFormat.PNG)
-        );
+        return new RenderedChart(title, BitmapEncoder.getBitmapBytes(chart, BitmapEncoder.BitmapFormat.PNG));
     }
 
     public record RenderedChart(String title, byte[] png) {

@@ -19,10 +19,7 @@ public class WhatIfService {
         this.predictionClient = predictionClient;
     }
 
-    public WhatIfResult compare(
-            PropertyFeatures baseline,
-            List<PropertyFeatures> scenarios
-    ) {
+    public WhatIfResult compare(PropertyFeatures baseline, List<PropertyFeatures> scenarios) {
         List<PropertyFeatures> batch = new ArrayList<>(scenarios.size() + 1);
         batch.add(baseline);
         batch.addAll(scenarios);
@@ -30,35 +27,23 @@ public class WhatIfService {
         List<Long> predictions = predictionClient.predict(batch);
         if (predictions.size() != batch.size()) {
             throw new PredictionServiceInvalidResponseException(
-                    "prediction service returned the wrong number of predictions"
-            );
+                    "prediction service returned the wrong number of predictions");
         }
 
         long baselinePrediction = predictions.getFirst();
-        List<ScenarioResult> results = predictions.subList(1, predictions.size())
-                .stream()
-                .map(prediction -> scenarioResult(
-                        baselinePrediction,
-                        prediction
-                ))
+        List<ScenarioResult> results = predictions.subList(1, predictions.size()).stream()
+                .map(prediction -> scenarioResult(baselinePrediction, prediction))
                 .toList();
         return new WhatIfResult(baselinePrediction, results);
     }
 
-    private static ScenarioResult scenarioResult(
-            long baseline,
-            long prediction
-    ) {
+    private static ScenarioResult scenarioResult(long baseline, long prediction) {
         long difference = prediction - baseline;
         BigDecimal percentage = baseline == 0
                 ? null
                 : BigDecimal.valueOf(difference)
-                .multiply(BigDecimal.valueOf(100))
-                .divide(
-                        BigDecimal.valueOf(baseline),
-                        2,
-                        RoundingMode.HALF_UP
-                );
+                        .multiply(BigDecimal.valueOf(100))
+                        .divide(BigDecimal.valueOf(baseline), 2, RoundingMode.HALF_UP);
         return new ScenarioResult(prediction, difference, percentage);
     }
 }

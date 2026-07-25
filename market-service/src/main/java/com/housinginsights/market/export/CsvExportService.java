@@ -13,13 +13,14 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class CsvExportService {
-    private static final CSVFormat EXPORT_FORMAT = CSVFormat.DEFAULT.builder()
+    private static final CSVFormat EXPORT_FORMAT = CSVFormat.DEFAULT
+            .builder()
             .setHeader(PropertyFieldNames.ALL.toArray(String[]::new))
             .get();
 
     public byte[] export(List<PropertyRecord> properties) {
         try (var writer = new StringWriter();
-             var printer = new CSVPrinter(writer, EXPORT_FORMAT)) {
+                var printer = new CSVPrinter(writer, EXPORT_FORMAT)) {
             for (PropertyRecord property : properties) {
                 printer.printRecord(
                         property.id(),
@@ -30,8 +31,7 @@ public class CsvExportService {
                         property.lotSize(),
                         property.distanceToCityCenter(),
                         property.schoolRating(),
-                        property.price()
-                );
+                        property.price());
             }
             printer.flush();
             return writer.toString().getBytes(StandardCharsets.UTF_8);

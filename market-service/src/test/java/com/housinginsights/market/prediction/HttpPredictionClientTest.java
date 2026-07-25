@@ -28,8 +28,7 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
 class HttpPredictionClientTest {
-    private static final String REQUEST_ID =
-            "123e4567-e89b-42d3-a456-426614174000";
+    private static final String REQUEST_ID = "123e4567-e89b-42d3-a456-426614174000";
 
     private MockRestServiceServer server;
     private HttpPredictionClient client;
@@ -45,16 +44,11 @@ class HttpPredictionClientTest {
         RestClient.Builder builder = RestClient.builder()
                 .baseUrl("http://prediction.test")
                 .messageConverters(converters -> {
-                    converters.removeIf(
-                            MappingJackson2HttpMessageConverter.class::isInstance
-                    );
+                    converters.removeIf(MappingJackson2HttpMessageConverter.class::isInstance);
                     converters.add(new MappingJackson2HttpMessageConverter(mapper));
                 })
                 .requestInterceptor((request, body, execution) -> {
-                    request.getHeaders().set(
-                            RequestCorrelation.HEADER_NAME,
-                            RequestCorrelation.currentOrCreate()
-                    );
+                    request.getHeaders().set(RequestCorrelation.HEADER_NAME, RequestCorrelation.currentOrCreate());
                     return execution.execute(request, body);
                 });
         server = MockRestServiceServer.bindTo(builder).build();
@@ -86,10 +80,7 @@ class HttpPredictionClientTest {
                           ]
                         }
                         """))
-                .andRespond(withSuccess(
-                        "{\"predictions\":[265000]}",
-                        MediaType.APPLICATION_JSON
-                ));
+                .andRespond(withSuccess("{\"predictions\":[265000]}", MediaType.APPLICATION_JSON));
 
         List<Long> predictions = client.predict(List.of(validFeatures()));
 
@@ -110,10 +101,7 @@ class HttpPredictionClientTest {
     @Test
     void rejectsRepresentativeInvalidResponses() {
         server.expect(requestTo("http://prediction.test/predict"))
-                .andRespond(withSuccess(
-                        "{\"predictions\":[]}",
-                        MediaType.APPLICATION_JSON
-                ));
+                .andRespond(withSuccess("{\"predictions\":[]}", MediaType.APPLICATION_JSON));
 
         assertThatThrownBy(() -> client.predict(List.of(validFeatures())))
                 .isInstanceOf(PredictionServiceInvalidResponseException.class);

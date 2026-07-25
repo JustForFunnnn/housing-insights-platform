@@ -23,9 +23,7 @@ public class MarketConfiguration {
     @Bean
     ModelResolver snakeCaseOpenApiModelResolver(ObjectMapper objectMapper) {
         ObjectMapper openApiMapper = objectMapper.copy();
-        openApiMapper.setPropertyNamingStrategy(
-                PropertyNamingStrategies.SNAKE_CASE
-        );
+        openApiMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
         return new ModelResolver(openApiMapper);
     }
 
@@ -36,43 +34,29 @@ public class MarketConfiguration {
                 .forEach(operation -> {
                     if (operation.getParameters() != null) {
                         operation.getParameters().stream()
-                                .filter(parameter ->
-                                        "query".equals(parameter.getIn()))
-                                .forEach(parameter -> parameter.setName(
-                                        PropertyNamingStrategies.SNAKE_CASE
-                                                .nameForField(
-                                                        null,
-                                                        null,
-                                                        parameter.getName()
-                                                )
-                                ));
+                                .filter(parameter -> "query".equals(parameter.getIn()))
+                                .forEach(
+                                        parameter -> parameter.setName(PropertyNamingStrategies.SNAKE_CASE.nameForField(
+                                                null, null, parameter.getName())));
                     }
                     operation.addParametersItem(new Parameter()
                             .in("header")
                             .name(RequestCorrelation.HEADER_NAME)
                             .required(false)
-                            .description(
-                                    "Optional UUID4 in hyphenated or 32-character hex form. "
-                                            + "Valid values are preserved exactly; missing or invalid values "
-                                            + "are replaced with a compact UUID4."
-                            )
+                            .description("Optional UUID4 in hyphenated or 32-character hex form. "
+                                    + "Valid values are preserved exactly; missing or invalid values "
+                                    + "are replaced with a compact UUID4.")
                             .schema(new StringSchema()));
                 });
     }
 
     @Bean
-    PropertyDataset propertyDataset(
-            MarketProperties properties,
-            CsvPropertyDataLoader loader
-    ) {
+    PropertyDataset propertyDataset(MarketProperties properties, CsvPropertyDataLoader loader) {
         return loader.load(properties.datasetPath());
     }
 
     @Bean
-    RestClient predictionRestClient(
-            MarketProperties properties,
-            RestClient.Builder builder
-    ) {
+    RestClient predictionRestClient(MarketProperties properties, RestClient.Builder builder) {
         var timeout = properties.prediction().timeout();
         var httpClient = HttpClient.newBuilder()
                 .connectTimeout(timeout)
@@ -81,14 +65,10 @@ public class MarketConfiguration {
         var requestFactory = new JdkClientHttpRequestFactory(httpClient);
         requestFactory.setReadTimeout(timeout);
 
-        return builder
-                .baseUrl(properties.prediction().baseUrl().toString())
+        return builder.baseUrl(properties.prediction().baseUrl().toString())
                 .requestFactory(requestFactory)
                 .requestInterceptor((request, body, execution) -> {
-                    request.getHeaders().set(
-                            RequestCorrelation.HEADER_NAME,
-                            RequestCorrelation.currentOrCreate()
-                    );
+                    request.getHeaders().set(RequestCorrelation.HEADER_NAME, RequestCorrelation.currentOrCreate());
                     return execution.execute(request, body);
                 })
                 .build();

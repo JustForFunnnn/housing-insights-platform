@@ -5,33 +5,18 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public record MarketAnalysisResponse(
-        long count,
-        PriceSummary priceSummary,
-        Visualisations visualisations,
-        FilterOptions filterOptions
-) {
+        long count, PriceSummary priceSummary, Visualisations visualisations, FilterOptions filterOptions) {
     public static MarketAnalysisResponse from(MarketAnalysis analysis) {
         return new MarketAnalysisResponse(
                 analysis.count(),
                 PriceSummary.from(analysis.priceSummary()),
                 Visualisations.from(analysis.visualisations()),
-                FilterOptions.from(analysis.filterOptions())
-        );
+                FilterOptions.from(analysis.filterOptions()));
     }
 
-    public record PriceSummary(
-            Long minimum,
-            Long maximum,
-            BigDecimal average,
-            BigDecimal median
-    ) {
+    public record PriceSummary(Long minimum, Long maximum, BigDecimal average, BigDecimal median) {
         private static PriceSummary from(MarketAnalysis.PriceSummary summary) {
-            return new PriceSummary(
-                    summary.minimum(),
-                    summary.maximum(),
-                    summary.average(),
-                    summary.median()
-            );
+            return new PriceSummary(summary.minimum(), summary.maximum(), summary.average(), summary.median());
         }
     }
 
@@ -39,8 +24,7 @@ public record MarketAnalysisResponse(
             List<PriceDistributionBucket> priceDistribution,
             List<BedroomPriceGroup> averagePriceByBedrooms,
             List<YearDecadePriceGroup> averagePriceByYearBuiltDecade,
-            List<SquareFootagePriceGroup> averagePriceBySquareFootageBand
-    ) {
+            List<SquareFootagePriceGroup> averagePriceBySquareFootageBand) {
         public Visualisations {
             priceDistribution = List.copyOf(priceDistribution);
             averagePriceByBedrooms = List.copyOf(averagePriceByBedrooms);
@@ -61,74 +45,39 @@ public record MarketAnalysisResponse(
                             .toList(),
                     visualisations.averagePriceBySquareFootageBand().stream()
                             .map(SquareFootagePriceGroup::from)
-                            .toList()
-            );
+                            .toList());
         }
     }
 
-    public record PriceDistributionBucket(
-            String label,
-            long lowerBound,
-            long upperBound,
-            long count
-    ) {
+    public record PriceDistributionBucket(String label, long lowerBound, long upperBound, long count) {
         private static PriceDistributionBucket from(MarketAnalysis.PriceDistributionBucket bucket) {
             return new PriceDistributionBucket(
-                    bucket.label(),
-                    bucket.lowerBound(),
-                    bucket.upperBound(),
-                    bucket.count()
-            );
+                    bucket.label(), bucket.lowerBound(), bucket.upperBound(), bucket.count());
         }
     }
 
-    public record BedroomPriceGroup(
-            int bedrooms,
-            BigDecimal averagePrice,
-            long count
-    ) {
+    public record BedroomPriceGroup(int bedrooms, BigDecimal averagePrice, long count) {
         private static BedroomPriceGroup from(MarketAnalysis.BedroomPriceGroup group) {
-            return new BedroomPriceGroup(
-                    group.bedrooms(),
-                    group.averagePrice(),
-                    group.count()
-            );
+            return new BedroomPriceGroup(group.bedrooms(), group.averagePrice(), group.count());
         }
     }
 
-    public record YearDecadePriceGroup(
-            String label,
-            int startYear,
-            int endYear,
-            BigDecimal averagePrice,
-            long count
-    ) {
+    public record YearDecadePriceGroup(String label, int startYear, int endYear, BigDecimal averagePrice, long count) {
         private static YearDecadePriceGroup from(MarketAnalysis.YearDecadePriceGroup group) {
             return new YearDecadePriceGroup(
-                    group.label(),
-                    group.startYear(),
-                    group.endYear(),
-                    group.averagePrice(),
-                    group.count()
-            );
+                    group.label(), group.startYear(), group.endYear(), group.averagePrice(), group.count());
         }
     }
 
     public record SquareFootagePriceGroup(
-            String label,
-            long lowerBound,
-            long upperBoundExclusive,
-            BigDecimal averagePrice,
-            long count
-    ) {
+            String label, long lowerBound, long upperBoundExclusive, BigDecimal averagePrice, long count) {
         private static SquareFootagePriceGroup from(MarketAnalysis.SquareFootagePriceGroup group) {
             return new SquareFootagePriceGroup(
                     group.label(),
                     group.lowerBound(),
                     group.upperBoundExclusive(),
                     group.averagePrice(),
-                    group.count()
-            );
+                    group.count());
         }
     }
 
@@ -140,8 +89,7 @@ public record MarketAnalysisResponse(
             DoubleRange lotSize,
             DoubleRange distanceToCityCenter,
             DoubleRange schoolRating,
-            LongRange price
-    ) {
+            LongRange price) {
         public FilterOptions {
             bedrooms = List.copyOf(bedrooms);
             bathrooms = List.copyOf(bathrooms);
@@ -156,8 +104,7 @@ public record MarketAnalysisResponse(
                     DoubleRange.from(options.lotSize()),
                     DoubleRange.from(options.distanceToCityCenter()),
                     DoubleRange.from(options.schoolRating()),
-                    LongRange.from(options.price())
-            );
+                    LongRange.from(options.price()));
         }
     }
 

@@ -26,15 +26,13 @@ public class HttpPredictionClient implements PredictionClient {
         var response = request(
                 HttpMethod.POST,
                 "/predict",
-                new PredictionRequest(properties.stream().map(PredictionInstance::from).toList()),
-                PredictionResponse.class
-        );
+                new PredictionRequest(
+                        properties.stream().map(PredictionInstance::from).toList()),
+                PredictionResponse.class);
 
         if (response.getStatusCode() != HttpStatus.OK) {
-            throw new PredictionServiceInvalidResponseException(
-                    "prediction service returned unexpected status "
-                            + response.getStatusCode().value()
-            );
+            throw new PredictionServiceInvalidResponseException("prediction service returned unexpected status "
+                    + response.getStatusCode().value());
         }
         var responseBody = response.getBody();
         validatePredictionResponse(responseBody, properties.size());
@@ -50,16 +48,13 @@ public class HttpPredictionClient implements PredictionClient {
             return requestSpec
                     .retrieve()
                     .onStatus(status -> status.is5xxServerError(), (request, downstream) -> {
-                        throw new PredictionServiceUnavailableException(
-                                "prediction service returned status "
-                                        + downstream.getStatusCode().value()
-                        );
+                        throw new PredictionServiceUnavailableException("prediction service returned status "
+                                + downstream.getStatusCode().value());
                     })
                     .onStatus(status -> status.is4xxClientError(), (request, downstream) -> {
                         throw new PredictionServiceInvalidResponseException(
                                 "prediction service rejected request with status "
-                                        + downstream.getStatusCode().value()
-                        );
+                                        + downstream.getStatusCode().value());
                     })
                     .toEntity(responseType);
         } catch (ResourceAccessException exception) {
@@ -93,8 +88,7 @@ public class HttpPredictionClient implements PredictionClient {
             int yearBuilt,
             double lotSize,
             double distanceToCityCenter,
-            double schoolRating
-    ) {
+            double schoolRating) {
         private static PredictionInstance from(PropertyFeatures features) {
             return new PredictionInstance(
                     features.squareFootage(),
@@ -103,11 +97,9 @@ public class HttpPredictionClient implements PredictionClient {
                     features.yearBuilt(),
                     features.lotSize(),
                     features.distanceToCityCenter(),
-                    features.schoolRating()
-            );
+                    features.schoolRating());
         }
     }
 
-    private record PredictionResponse(List<Long> predictions) {
-    }
+    private record PredictionResponse(List<Long> predictions) {}
 }

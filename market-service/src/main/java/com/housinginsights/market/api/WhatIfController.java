@@ -1,9 +1,9 @@
 package com.housinginsights.market.api;
 
-import com.housinginsights.market.application.WhatIfService;
 import com.housinginsights.market.api.schema.PropertyFeaturesRequest;
 import com.housinginsights.market.api.schema.WhatIfRequest;
 import com.housinginsights.market.api.schema.WhatIfResponse;
+import com.housinginsights.market.application.WhatIfService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,8 +23,7 @@ public class WhatIfController {
                 request.baseline().toFeatures(),
                 request.scenarios().stream()
                         .map(PropertyFeaturesRequest::toFeatures)
-                        .toList()
-        );
+                        .toList());
         return WhatIfResponse.from(result);
     }
 }

@@ -9,8 +9,7 @@ public final class RequestCorrelation {
     private static final int COMPACT_UUID_LENGTH = 32;
     private static final int HYPHENATED_UUID_LENGTH = 36;
 
-    private RequestCorrelation() {
-    }
+    private RequestCorrelation() {}
 
     public static String currentOrCreate() {
         String requestId = MDC.get(MDC_KEY);

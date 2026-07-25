@@ -23,13 +23,9 @@ import org.springframework.context.annotation.Configuration;
 class MarketAnalysisCacheTest {
     @Test
     void identicalCanonicalFilterIsCalculatedOnce() {
-        try (var context = new AnnotationConfigApplicationContext(
-                TestConfiguration.class
-        )) {
-            MarketAnalysisCalculator calculator =
-                    context.getBean(MarketAnalysisCalculator.class);
-            MarketAnalysisService service =
-                    context.getBean(MarketAnalysisService.class);
+        try (var context = new AnnotationConfigApplicationContext(TestConfiguration.class)) {
+            MarketAnalysisCalculator calculator = context.getBean(MarketAnalysisCalculator.class);
+            MarketAnalysisService service = context.getBean(MarketAnalysisService.class);
             MarketFilter filter = MarketFilter.empty();
             MarketAnalysis analysis = emptyAnalysis();
             when(calculator.calculate(filter)).thenReturn(analysis);
@@ -54,9 +50,7 @@ class MarketAnalysisCacheTest {
                         new MarketAnalysis.DoubleRange(1, 1),
                         new MarketAnalysis.DoubleRange(1, 1),
                         new MarketAnalysis.DoubleRange(1, 1),
-                        new MarketAnalysis.LongRange(1, 1)
-                )
-        );
+                        new MarketAnalysis.LongRange(1, 1)));
     }
 
     @Configuration
@@ -68,19 +62,14 @@ class MarketAnalysisCacheTest {
         }
 
         @Bean
-        MarketAnalysisService marketAnalysisService(
-                MarketAnalysisCalculator calculator
-        ) {
+        MarketAnalysisService marketAnalysisService(MarketAnalysisCalculator calculator) {
             return new MarketAnalysisService(calculator);
         }
 
         @Bean
         CacheManager cacheManager() {
-            CaffeineCacheManager manager =
-                    new CaffeineCacheManager("marketAnalysis");
-            manager.setCaffeine(Caffeine.newBuilder()
-                    .maximumSize(10)
-                    .expireAfterAccess(1, TimeUnit.MINUTES));
+            CaffeineCacheManager manager = new CaffeineCacheManager("marketAnalysis");
+            manager.setCaffeine(Caffeine.newBuilder().maximumSize(10).expireAfterAccess(1, TimeUnit.MINUTES));
             return manager;
         }
     }

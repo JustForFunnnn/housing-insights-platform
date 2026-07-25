@@ -8,7 +8,6 @@ import com.housinginsights.market.application.PropertyQueryService;
 import com.housinginsights.market.data.PropertyDataset;
 import com.housinginsights.market.domain.MarketAnalysis;
 import com.housinginsights.market.domain.MarketFilter;
-import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -22,17 +21,14 @@ import org.junit.jupiter.api.Test;
 class ExportServicesTest {
     @Test
     void csvContainsAllProvidedRecordsInOrder() throws Exception {
-        byte[] bytes = new CsvExportService().export(
-                List.of(RECORDS.get(3), RECORDS.get(1))
-        );
+        byte[] bytes = new CsvExportService().export(List.of(RECORDS.get(3), RECORDS.get(1)));
 
-        try (var parser = CSVFormat.DEFAULT.builder()
+        try (var parser = CSVFormat.DEFAULT
+                .builder()
                 .setHeader()
                 .setSkipHeaderRecord(true)
                 .get()
-                .parse(new StringReader(
-                        new String(bytes, StandardCharsets.UTF_8)
-                ))) {
+                .parse(new StringReader(new String(bytes, StandardCharsets.UTF_8)))) {
             assertThat(parser.getRecords())
                     .extracting(record -> record.get("id"))
                     .containsExactly("4", "2");
@@ -42,12 +38,9 @@ class ExportServicesTest {
     @Test
     void pdfContainsSummaryAndFourRenderedCharts() throws Exception {
         PropertyDataset dataset = new PropertyDataset(RECORDS);
-        MarketAnalysis analysis = new MarketAnalysisCalculator(
-                new PropertyQueryService(dataset),
-                dataset
-        ).calculate(MarketFilter.empty());
-        byte[] bytes = new PdfExportService(new MarketChartRenderer())
-                .export(MarketFilter.empty(), analysis);
+        MarketAnalysis analysis = new MarketAnalysisCalculator(new PropertyQueryService(dataset), dataset)
+                .calculate(MarketFilter.empty());
+        byte[] bytes = new PdfExportService(new MarketChartRenderer()).export(MarketFilter.empty(), analysis);
 
         try (PDDocument document = Loader.loadPDF(bytes)) {
             assertThat(document.getNumberOfPages()).isEqualTo(5);

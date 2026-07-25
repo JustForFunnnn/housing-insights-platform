@@ -8,8 +8,7 @@ public record PropertyPage(
         int limit,
         int offset,
         SortField sortBy,
-        SortDirection sortDirection
-) {
+        SortDirection sortDirection) {
     public PropertyPage {
         records = List.copyOf(records);
     }

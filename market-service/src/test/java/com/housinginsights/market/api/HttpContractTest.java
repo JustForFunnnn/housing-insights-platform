@@ -1,7 +1,7 @@
 package com.housinginsights.market.api;
 
-import static org.hamcrest.Matchers.matchesPattern;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -11,9 +11,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.housinginsights.market.prediction.PredictionClient;
 import com.housinginsights.market.error.PredictionServiceUnavailableException;
 import com.housinginsights.market.observability.RequestCorrelation;
+import com.housinginsights.market.prediction.PredictionClient;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,18 +26,17 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest(properties = {
-        "market.dataset-path=src/test/resources/test-dataset.csv",
-        "market.prediction.base-url=http://prediction.test",
-        "market.prediction.timeout=1s"
-})
+@SpringBootTest(
+        properties = {
+            "market.dataset-path=src/test/resources/test-dataset.csv",
+            "market.prediction.base-url=http://prediction.test",
+            "market.prediction.timeout=1s"
+        })
 @AutoConfigureMockMvc
 @ExtendWith(OutputCaptureExtension.class)
 class HttpContractTest {
-    private static final String HYPHENATED_REQUEST_ID =
-            "123E4567-E89B-42D3-A456-426614174000";
-    private static final String COMPACT_REQUEST_ID =
-            "123e4567e89b42d3a456426614174000";
+    private static final String HYPHENATED_REQUEST_ID = "123E4567-E89B-42D3-A456-426614174000";
+    private static final String COMPACT_REQUEST_ID = "123e4567e89b42d3a456426614174000";
 
     @Autowired
     private MockMvc mockMvc;
@@ -47,35 +46,20 @@ class HttpContractTest {
 
     @Test
     void healthPreservesValidRequestIdsOrGeneratesCompactRequestIds() throws Exception {
-        mockMvc.perform(get("/health")
-                        .header(
-                                RequestCorrelation.HEADER_NAME,
-                                HYPHENATED_REQUEST_ID
-                        ))
+        mockMvc.perform(get("/health").header(RequestCorrelation.HEADER_NAME, HYPHENATED_REQUEST_ID))
                 .andExpect(status().isOk())
-                .andExpect(header().string(
-                        RequestCorrelation.HEADER_NAME,
-                        HYPHENATED_REQUEST_ID
-                ))
+                .andExpect(header().string(RequestCorrelation.HEADER_NAME, HYPHENATED_REQUEST_ID))
                 .andExpect(jsonPath("$.status").value("ok"));
 
-        mockMvc.perform(get("/health")
-                        .header(
-                                RequestCorrelation.HEADER_NAME,
-                                COMPACT_REQUEST_ID
-                        ))
+        mockMvc.perform(get("/health").header(RequestCorrelation.HEADER_NAME, COMPACT_REQUEST_ID))
                 .andExpect(status().isOk())
-                .andExpect(header().string(
-                        RequestCorrelation.HEADER_NAME,
-                        COMPACT_REQUEST_ID
-                ));
+                .andExpect(header().string(RequestCorrelation.HEADER_NAME, COMPACT_REQUEST_ID));
 
         mockMvc.perform(get("/health"))
                 .andExpect(status().isOk())
                 .andExpect(header().string(
-                        RequestCorrelation.HEADER_NAME,
-                        matchesPattern("^[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15}$")
-                ));
+                                RequestCorrelation.HEADER_NAME,
+                                matchesPattern("^[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15}$")));
     }
 
     @Test
@@ -87,8 +71,7 @@ class HttpContractTest {
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.error_code").value("validation_error"))
-                .andExpect(jsonPath("$.message")
-                        .value("Request validation failed."))
+                .andExpect(jsonPath("$.message").value("Request validation failed."))
                 .andExpect(header().exists(RequestCorrelation.HEADER_NAME));
 
         mockMvc.perform(get("/exports/properties.csv")
@@ -97,8 +80,7 @@ class HttpContractTest {
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.error_code").value("validation_error"))
-                .andExpect(jsonPath("$.message")
-                        .value("Request validation failed."))
+                .andExpect(jsonPath("$.message").value("Request validation failed."))
                 .andExpect(header().exists(RequestCorrelation.HEADER_NAME));
     }
 
@@ -107,15 +89,13 @@ class HttpContractTest {
         mockMvc.perform(get("/properties").param("limit", "0"))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.error_code").value("validation_error"))
-                .andExpect(jsonPath("$.message")
-                        .value("Request validation failed."))
+                .andExpect(jsonPath("$.message").value("Request validation failed."))
                 .andExpect(header().exists(RequestCorrelation.HEADER_NAME));
 
         mockMvc.perform(get("/missing"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error_code").value("http_error"))
-                .andExpect(jsonPath("$.message")
-                        .value("The request could not be completed."));
+                .andExpect(jsonPath("$.message").value("The request could not be completed."));
 
         assertThat(output)
                 .contains("request_validation_failed method=GET path=/properties error=")
@@ -157,70 +137,56 @@ class HttpContractTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath(featureProperties + ".square_footage").exists())
                 .andExpect(jsonPath(featureProperties + ".squareFootage").doesNotExist())
-                .andExpect(jsonPath("$.components.schemas.MarketAnalysisResponse").exists())
+                .andExpect(
+                        jsonPath("$.components.schemas.MarketAnalysisResponse").exists())
                 .andExpect(jsonPath("$.components.schemas.PropertyPageResponse").exists())
                 .andExpect(jsonPath("$.components.schemas.WhatIfResponse").exists())
-                .andExpect(jsonPath("$.paths['/properties'].get.parameters[?(@.name == 'limit')]").isNotEmpty())
-                .andExpect(jsonPath("$.paths['/properties'].get.parameters[?(@.name == 'offset')]").isNotEmpty())
-                .andExpect(jsonPath(
-                        "$.paths['/analysis'].get.parameters[?(@.name == 'min_square_footage')]"
-                ).isNotEmpty())
-                .andExpect(jsonPath("$.paths['/analysis'].get.parameters[?(@.name == 'minSquareFootage')]").isEmpty());
+                .andExpect(jsonPath("$.paths['/properties'].get.parameters[?(@.name == 'limit')]")
+                        .isNotEmpty())
+                .andExpect(jsonPath("$.paths['/properties'].get.parameters[?(@.name == 'offset')]")
+                        .isNotEmpty())
+                .andExpect(jsonPath("$.paths['/analysis'].get.parameters[?(@.name == 'min_square_footage')]")
+                        .isNotEmpty())
+                .andExpect(jsonPath("$.paths['/analysis'].get.parameters[?(@.name == 'minSquareFootage')]")
+                        .isEmpty());
     }
 
     @Test
     void whatIfRejectsJsonCoercionAndPropagatesRequestId() throws Exception {
         mockMvc.perform(post("/what-if")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(validWhatIfJson().replace(
-                                "\"square_footage\": 1850",
-                                "\"square_footage\": \"1850\""
-                        )))
+                        .content(validWhatIfJson().replace("\"square_footage\": 1850", "\"square_footage\": \"1850\"")))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.error_code").value("validation_error"))
-                .andExpect(jsonPath("$.message")
-                        .value("Request validation failed."));
+                .andExpect(jsonPath("$.message").value("Request validation failed."));
 
         when(predictionClient.predict(anyList())).thenAnswer(invocation -> {
-            org.assertj.core.api.Assertions.assertThat(
-                    RequestCorrelation.currentOrCreate()
-            ).isEqualTo(HYPHENATED_REQUEST_ID);
+            org.assertj.core.api.Assertions.assertThat(RequestCorrelation.currentOrCreate())
+                    .isEqualTo(HYPHENATED_REQUEST_ID);
             return List.of(200000L, 220000L);
         });
 
         mockMvc.perform(post("/what-if")
-                        .header(
-                                RequestCorrelation.HEADER_NAME,
-                                HYPHENATED_REQUEST_ID
-                        )
+                        .header(RequestCorrelation.HEADER_NAME, HYPHENATED_REQUEST_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validWhatIfJson()))
                 .andExpect(status().isOk())
-                .andExpect(header().string(
-                        RequestCorrelation.HEADER_NAME,
-                        HYPHENATED_REQUEST_ID
-                ))
+                .andExpect(header().string(RequestCorrelation.HEADER_NAME, HYPHENATED_REQUEST_ID))
                 .andExpect(jsonPath("$.baseline_prediction").value(200000))
-                .andExpect(jsonPath("$.scenarios[0].price_difference")
-                        .value(20000))
+                .andExpect(jsonPath("$.scenarios[0].price_difference").value(20000))
                 .andExpect(jsonPath("$.scenarios").isArray());
     }
 
     @Test
     void predictionFailureLogsRootCause(CapturedOutput output) throws Exception {
         var rootCause = new IllegalStateException("connection refused");
-        var error = new PredictionServiceUnavailableException(
-                "prediction service request failed", rootCause
-        );
+        var error = new PredictionServiceUnavailableException("prediction service request failed", rootCause);
         when(predictionClient.predict(anyList())).thenThrow(error);
 
-        mockMvc.perform(post("/what-if")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(validWhatIfJson()))
+        mockMvc.perform(post("/what-if").contentType(MediaType.APPLICATION_JSON).content(validWhatIfJson()))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.error_code").value("prediction_service_unavailable"))
-                .andExpect(jsonPath("$.message")
-                        .value("Price estimation is temporarily unavailable."));
+                .andExpect(jsonPath("$.message").value("Price estimation is temporarily unavailable."));
 
         assertThat(output)
                 .contains("prediction_unavailable error=prediction service request failed")

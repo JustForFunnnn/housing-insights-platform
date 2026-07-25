@@ -22,9 +22,7 @@ public final class PropertyFieldNames {
             LOT_SIZE,
             DISTANCE_TO_CITY_CENTER,
             SCHOOL_RATING,
-            PRICE
-    );
+            PRICE);
 
-    private PropertyFieldNames() {
-    }
+    private PropertyFieldNames() {}
 }

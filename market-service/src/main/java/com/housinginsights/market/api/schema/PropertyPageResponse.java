@@ -5,28 +5,19 @@ import com.housinginsights.market.domain.PropertyRecord;
 import java.util.List;
 
 public record PropertyPageResponse(
-        List<PropertyResponse> records,
-        long total,
-        int limit,
-        int offset,
-        String sortBy,
-        String sortDirection
-) {
+        List<PropertyResponse> records, long total, int limit, int offset, String sortBy, String sortDirection) {
     public PropertyPageResponse {
         records = List.copyOf(records);
     }
 
     public static PropertyPageResponse from(PropertyPage page) {
         return new PropertyPageResponse(
-                page.records().stream()
-                        .map(PropertyResponse::from)
-                        .toList(),
+                page.records().stream().map(PropertyResponse::from).toList(),
                 page.total(),
                 page.limit(),
                 page.offset(),
                 page.sortBy().value(),
-                page.sortDirection().value()
-        );
+                page.sortDirection().value());
     }
 
     public record PropertyResponse(
@@ -38,8 +29,7 @@ public record PropertyPageResponse(
             double lotSize,
             double distanceToCityCenter,
             double schoolRating,
-            long price
-    ) {
+            long price) {
         private static PropertyResponse from(PropertyRecord property) {
             return new PropertyResponse(
                     property.id(),
@@ -50,8 +40,7 @@ public record PropertyPageResponse(
                     property.lotSize(),
                     property.distanceToCityCenter(),
                     property.schoolRating(),
-                    property.price()
-            );
+                    property.price());
         }
     }
 }

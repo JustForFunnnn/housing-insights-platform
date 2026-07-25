@@ -15,23 +15,23 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.csv.DuplicateHeaderMode;
+import org.apache.commons.io.input.BOMInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CsvPropertyDataLoader {
-    private static final Logger logger =
-            LoggerFactory.getLogger(CsvPropertyDataLoader.class);
+    private static final Logger logger = LoggerFactory.getLogger(CsvPropertyDataLoader.class);
 
     private static final List<String> REQUIRED_COLUMNS = PropertyFieldNames.ALL;
 
-    private static final CSVFormat CSV_FORMAT = CSVFormat.DEFAULT.builder()
+    private static final CSVFormat CSV_FORMAT = CSVFormat.DEFAULT
+            .builder()
             .setHeader()
             .setSkipHeaderRecord(true)
             .setIgnoreEmptyLines(false)
@@ -45,18 +45,13 @@ public class CsvPropertyDataLoader {
         }
 
         try (Reader reader = new InputStreamReader(
-                BOMInputStream.builder().setPath(path).get(),
-                StandardCharsets.UTF_8
-        );
-             CSVParser parser = CSV_FORMAT.parse(reader)) {
+                        BOMInputStream.builder().setPath(path).get(), StandardCharsets.UTF_8);
+                CSVParser parser = CSV_FORMAT.parse(reader)) {
             validateHeaders(parser);
             var properties = parseRecords(parser);
             var dataset = new PropertyDataset(properties);
             logger.info(
-                    "dataset_loaded records={} path={}",
-                    dataset.properties().size(),
-                    path
-            );
+                    "dataset_loaded records={} path={}", dataset.properties().size(), path);
             return dataset;
         } catch (DatasetLoadingException exception) {
             throw exception;
@@ -72,14 +67,11 @@ public class CsvPropertyDataLoader {
                 .toList();
         if (!missing.isEmpty()) {
             throw new DatasetLoadingException(
-                    "market dataset is missing required columns: "
-                            + String.join(", ", missing)
-            );
+                    "market dataset is missing required columns: " + String.join(", ", missing));
         }
     }
 
-    private static List<PropertyRecord> parseRecords(CSVParser parser)
-            throws IOException {
+    private static List<PropertyRecord> parseRecords(CSVParser parser) throws IOException {
         List<PropertyRecord> properties = new ArrayList<>();
         Set<Long> identifiers = new HashSet<>();
 
@@ -107,71 +99,48 @@ public class CsvPropertyDataLoader {
 
         require(id > 0, lineNumber, PropertyFieldNames.ID, "must be positive");
         require(
-                squareFootage > 0
-                        && squareFootage <= PropertyLimits.MAX_SQUARE_FOOTAGE,
+                squareFootage > 0 && squareFootage <= PropertyLimits.MAX_SQUARE_FOOTAGE,
                 lineNumber,
                 PropertyFieldNames.SQUARE_FOOTAGE,
-                "is outside the supported range"
-        );
+                "is outside the supported range");
         require(
                 bedrooms >= 0 && bedrooms <= PropertyLimits.MAX_BEDROOMS,
                 lineNumber,
                 PropertyFieldNames.BEDROOMS,
-                "is outside the supported range"
-        );
+                "is outside the supported range");
         require(
                 bathrooms >= 0 && bathrooms <= PropertyLimits.MAX_BATHROOMS,
                 lineNumber,
                 PropertyFieldNames.BATHROOMS,
-                "is outside the supported range"
-        );
+                "is outside the supported range");
         require(
                 yearBuilt >= PropertyLimits.MIN_YEAR_BUILT
                         && yearBuilt <= Year.now().getValue(),
                 lineNumber,
                 PropertyFieldNames.YEAR_BUILT,
-                "is outside the supported range"
-        );
+                "is outside the supported range");
         require(
                 lotSize > 0 && lotSize <= PropertyLimits.MAX_LOT_SIZE,
                 lineNumber,
                 PropertyFieldNames.LOT_SIZE,
-                "is outside the supported range"
-        );
+                "is outside the supported range");
         require(
-                distance >= 0
-                        && distance <= PropertyLimits.MAX_DISTANCE_TO_CITY_CENTER,
+                distance >= 0 && distance <= PropertyLimits.MAX_DISTANCE_TO_CITY_CENTER,
                 lineNumber,
                 PropertyFieldNames.DISTANCE_TO_CITY_CENTER,
-                "is outside the supported range"
-        );
+                "is outside the supported range");
         require(
-                schoolRating >= 0
-                        && schoolRating <= PropertyLimits.MAX_SCHOOL_RATING,
+                schoolRating >= 0 && schoolRating <= PropertyLimits.MAX_SCHOOL_RATING,
                 lineNumber,
                 PropertyFieldNames.SCHOOL_RATING,
-                "is outside the supported range"
-        );
+                "is outside the supported range");
         require(price > 0, lineNumber, PropertyFieldNames.PRICE, "must be positive");
 
         return new PropertyRecord(
-                id,
-                squareFootage,
-                bedrooms,
-                bathrooms,
-                yearBuilt,
-                lotSize,
-                distance,
-                schoolRating,
-                price
-        );
+                id, squareFootage, bedrooms, bathrooms, yearBuilt, lotSize, distance, schoolRating, price);
     }
 
-    private static long parseLong(
-            CSVRecord row,
-            long lineNumber,
-            String column
-    ) {
+    private static long parseLong(CSVRecord row, long lineNumber, String column) {
         String value = value(row, lineNumber, column);
         try {
             return Long.parseLong(value);
@@ -180,11 +149,7 @@ public class CsvPropertyDataLoader {
         }
     }
 
-    private static int parseInteger(
-            CSVRecord row,
-            long lineNumber,
-            String column
-    ) {
+    private static int parseInteger(CSVRecord row, long lineNumber, String column) {
         String value = value(row, lineNumber, column);
         try {
             return Integer.parseInt(value);
@@ -193,11 +158,7 @@ public class CsvPropertyDataLoader {
         }
     }
 
-    private static double parseDouble(
-            CSVRecord row,
-            long lineNumber,
-            String column
-    ) {
+    private static double parseDouble(CSVRecord row, long lineNumber, String column) {
         String value = value(row, lineNumber, column);
         try {
             double number = Double.parseDouble(value);
@@ -210,11 +171,7 @@ public class CsvPropertyDataLoader {
         }
     }
 
-    private static String value(
-            CSVRecord row,
-            long lineNumber,
-            String column
-    ) {
+    private static String value(CSVRecord row, long lineNumber, String column) {
         try {
             String value = row.get(column);
             if (value == null || value.isBlank()) {
@@ -226,36 +183,17 @@ public class CsvPropertyDataLoader {
         }
     }
 
-    private static void require(
-            boolean condition,
-            long lineNumber,
-            String column,
-            String message
-    ) {
+    private static void require(boolean condition, long lineNumber, String column, String message) {
         if (!condition) {
             throw rowError(lineNumber, column, message);
         }
     }
 
-    private static DatasetLoadingException rowError(
-            long lineNumber,
-            String column,
-            String message
-    ) {
-        return new DatasetLoadingException(
-                "CSV row " + lineNumber + " column '" + column + "' " + message
-        );
+    private static DatasetLoadingException rowError(long lineNumber, String column, String message) {
+        return new DatasetLoadingException("CSV row " + lineNumber + " column '" + column + "' " + message);
     }
 
-    private static DatasetLoadingException rowError(
-            long lineNumber,
-            String column,
-            String message,
-            Throwable cause
-    ) {
-        return new DatasetLoadingException(
-                "CSV row " + lineNumber + " column '" + column + "' " + message,
-                cause
-        );
+    private static DatasetLoadingException rowError(long lineNumber, String column, String message, Throwable cause) {
+        return new DatasetLoadingException("CSV row " + lineNumber + " column '" + column + "' " + message, cause);
     }
 }

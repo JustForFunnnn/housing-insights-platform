@@ -19,9 +19,9 @@ class CsvPropertyDataLoaderTest {
 
     @Test
     void loadsValidDataset(@TempDir Path directory) throws IOException {
-        Path dataset = write(directory, "\uFEFF" + HEADER
-                + "1,1200,2,1,1990,5000,2.5,7.0,180000\n"
-                + "2,1800,3,2,2000,7500,5.0,8.0,280000\n");
+        Path dataset = write(
+                directory,
+                "\uFEFF" + HEADER + "1,1200,2,1,1990,5000,2.5,7.0,180000\n" + "2,1800,3,2,2000,7500,5.0,8.0,280000\n");
 
         PropertyDataset loaded = loader.load(dataset);
 
@@ -30,17 +30,12 @@ class CsvPropertyDataLoaderTest {
     }
 
     @Test
-    void rejectsMissingFileAndRequiredColumn(@TempDir Path directory)
-            throws IOException {
+    void rejectsMissingFileAndRequiredColumn(@TempDir Path directory) throws IOException {
         assertThatThrownBy(() -> loader.load(directory.resolve("missing.csv")))
                 .isInstanceOf(DatasetLoadingException.class)
                 .hasMessageContaining("missing or unreadable");
 
-        Path dataset = write(
-                directory,
-                HEADER.replace(",school_rating", "")
-                        + "1,1200,2,1,1990,5000,2.5,180000\n"
-        );
+        Path dataset = write(directory, HEADER.replace(",school_rating", "") + "1,1200,2,1,1990,5000,2.5,180000\n");
         assertThatThrownBy(() -> loader.load(dataset))
                 .isInstanceOf(DatasetLoadingException.class)
                 .hasMessageContaining("school_rating");
@@ -48,9 +43,8 @@ class CsvPropertyDataLoaderTest {
 
     @Test
     void rejectsDuplicateIdentifier(@TempDir Path directory) throws IOException {
-        Path dataset = write(directory, HEADER
-                + "1,1200,2,1,1990,5000,2.5,7.0,180000\n"
-                + "1,1800,3,2,2000,7500,5.0,8.0,280000\n");
+        Path dataset = write(
+                directory, HEADER + "1,1200,2,1,1990,5000,2.5,7.0,180000\n" + "1,1800,3,2,2000,7500,5.0,8.0,280000\n");
 
         assertThatThrownBy(() -> loader.load(dataset))
                 .isInstanceOf(DatasetLoadingException.class)
@@ -58,16 +52,13 @@ class CsvPropertyDataLoaderTest {
     }
 
     @Test
-    void rejectsMalformedAndInvalidRows(@TempDir Path directory)
-            throws IOException {
-        Path malformed = write(directory, HEADER
-                + "1,not-a-number,2,1,1990,5000,2.5,7.0,180000\n");
+    void rejectsMalformedAndInvalidRows(@TempDir Path directory) throws IOException {
+        Path malformed = write(directory, HEADER + "1,not-a-number,2,1,1990,5000,2.5,7.0,180000\n");
         assertThatThrownBy(() -> loader.load(malformed))
                 .isInstanceOf(DatasetLoadingException.class)
                 .hasMessageContaining("square_footage");
 
-        Path invalid = write(directory, HEADER
-                + "1,1200,2,1,1990,5000,2.5,11,180000\n");
+        Path invalid = write(directory, HEADER + "1,1200,2,1,1990,5000,2.5,11,180000\n");
         assertThatThrownBy(() -> loader.load(invalid))
                 .isInstanceOf(DatasetLoadingException.class)
                 .hasMessageContaining("school_rating");

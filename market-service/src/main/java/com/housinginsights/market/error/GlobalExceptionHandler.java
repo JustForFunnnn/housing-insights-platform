@@ -23,53 +23,43 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    private static final Logger logger =
-            LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler({
-            MethodArgumentNotValidException.class,
-            HandlerMethodValidationException.class,
-            ConstraintViolationException.class,
-            MethodArgumentTypeMismatchException.class,
-            HttpMessageNotReadableException.class,
-            MissingServletRequestParameterException.class,
-            InvalidRequestException.class,
-            BindException.class
+        MethodArgumentNotValidException.class,
+        HandlerMethodValidationException.class,
+        ConstraintViolationException.class,
+        MethodArgumentTypeMismatchException.class,
+        HttpMessageNotReadableException.class,
+        MissingServletRequestParameterException.class,
+        InvalidRequestException.class,
+        BindException.class
     })
     public ResponseEntity<ApiErrorResponse> validationError(HttpServletRequest request, Exception exception) {
         logger.info(
                 "request_validation_failed method={} path={} error={}",
-                request.getMethod(), request.getRequestURI(), exception.toString()
-        );
-        return response(
-                HttpStatus.UNPROCESSABLE_ENTITY,
-                ErrorCode.VALIDATION_ERROR,
-                "Request validation failed."
-        );
+                request.getMethod(),
+                request.getRequestURI(),
+                exception.toString());
+        return response(HttpStatus.UNPROCESSABLE_ENTITY, ErrorCode.VALIDATION_ERROR, "Request validation failed.");
     }
 
     @ExceptionHandler(PredictionServiceUnavailableException.class)
-    public ResponseEntity<ApiErrorResponse> predictionUnavailable(
-            PredictionServiceUnavailableException exception
-    ) {
+    public ResponseEntity<ApiErrorResponse> predictionUnavailable(PredictionServiceUnavailableException exception) {
         logger.error("prediction_unavailable error={}", exception.getMessage(), exception);
         return response(
                 HttpStatus.SERVICE_UNAVAILABLE,
                 ErrorCode.PREDICTION_SERVICE_UNAVAILABLE,
-                "Price estimation is temporarily unavailable."
-        );
+                "Price estimation is temporarily unavailable.");
     }
 
     @ExceptionHandler(PredictionServiceInvalidResponseException.class)
-    public ResponseEntity<ApiErrorResponse> predictionInvalid(
-            PredictionServiceInvalidResponseException exception
-    ) {
+    public ResponseEntity<ApiErrorResponse> predictionInvalid(PredictionServiceInvalidResponseException exception) {
         logger.error("prediction_invalid_response error={}", exception.getMessage(), exception);
         return response(
                 HttpStatus.BAD_GATEWAY,
                 ErrorCode.PREDICTION_SERVICE_INVALID_RESPONSE,
-                "The prediction service returned an invalid response."
-        );
+                "The prediction service returned an invalid response.");
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
@@ -78,16 +68,11 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ApiErrorResponse> methodNotAllowed(
-            HttpRequestMethodNotSupportedException exception
-    ) {
+    public ResponseEntity<ApiErrorResponse> methodNotAllowed(HttpRequestMethodNotSupportedException exception) {
         return httpError(exception.getStatusCode().value());
     }
 
-    @ExceptionHandler({
-            HttpMediaTypeNotSupportedException.class,
-            HttpMediaTypeNotAcceptableException.class
-    })
+    @ExceptionHandler({HttpMediaTypeNotSupportedException.class, HttpMediaTypeNotAcceptableException.class})
     public ResponseEntity<ApiErrorResponse> mediaTypeError(Exception exception) {
         if (exception instanceof HttpMediaTypeNotSupportedException unsupported) {
             return httpError(unsupported.getStatusCode().value());
@@ -96,38 +81,24 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiErrorResponse> unexpectedError(
-            HttpServletRequest request,
-            Exception exception
-    ) {
+    public ResponseEntity<ApiErrorResponse> unexpectedError(HttpServletRequest request, Exception exception) {
         logger.error(
                 "request_failed method={} path={} status=500 error_type={}",
                 request.getMethod(),
                 request.getRequestURI(),
                 exception.getClass().getSimpleName(),
-                exception
-        );
+                exception);
         return response(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                ErrorCode.INTERNAL_ERROR,
-                "An unexpected server error occurred."
-        );
+                HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_ERROR, "An unexpected server error occurred.");
     }
 
     private static ResponseEntity<ApiErrorResponse> httpError(int status) {
         return ResponseEntity.status(status)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new ApiErrorResponse(
-                        ErrorCode.HTTP_ERROR.value(),
-                        "The request could not be completed."
-                ));
+                .body(new ApiErrorResponse(ErrorCode.HTTP_ERROR.value(), "The request could not be completed."));
     }
 
-    private static ResponseEntity<ApiErrorResponse> response(
-            HttpStatus status,
-            ErrorCode errorCode,
-            String message
-    ) {
+    private static ResponseEntity<ApiErrorResponse> response(HttpStatus status, ErrorCode errorCode, String message) {
         return ResponseEntity.status(status)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new ApiErrorResponse(errorCode.value(), message));

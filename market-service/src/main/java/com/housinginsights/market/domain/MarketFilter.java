@@ -18,18 +18,14 @@ public record MarketFilter(
         Double minSchoolRating,
         Double maxSchoolRating,
         Long minPrice,
-        Long maxPrice
-) {
+        Long maxPrice) {
     public MarketFilter {
         bedrooms = immutableSortedSet(bedrooms);
         bathrooms = immutableSortedSet(bathrooms);
     }
 
     public static MarketFilter empty() {
-        return new MarketFilter(
-                null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null
-        );
+        return new MarketFilter(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     public boolean matches(PropertyRecord property) {
@@ -38,27 +34,16 @@ public record MarketFilter(
                 && (bathrooms.isEmpty() || bathrooms.contains(property.bathrooms()))
                 && within(property.yearBuilt(), minYearBuilt, maxYearBuilt)
                 && within(property.lotSize(), minLotSize, maxLotSize)
-                && within(
-                        property.distanceToCityCenter(),
-                        minDistanceToCityCenter,
-                        maxDistanceToCityCenter
-                )
+                && within(property.distanceToCityCenter(), minDistanceToCityCenter, maxDistanceToCityCenter)
                 && within(property.schoolRating(), minSchoolRating, maxSchoolRating)
                 && within(property.price(), minPrice, maxPrice);
     }
 
-    private static <T extends Comparable<T>> boolean within(
-            T value,
-            T minimum,
-            T maximum
-    ) {
-        return (minimum == null || value.compareTo(minimum) >= 0)
-                && (maximum == null || value.compareTo(maximum) <= 0);
+    private static <T extends Comparable<T>> boolean within(T value, T minimum, T maximum) {
+        return (minimum == null || value.compareTo(minimum) >= 0) && (maximum == null || value.compareTo(maximum) <= 0);
     }
 
-    private static <T extends Comparable<? super T>> SortedSet<T> immutableSortedSet(
-            SortedSet<T> values
-    ) {
+    private static <T extends Comparable<? super T>> SortedSet<T> immutableSortedSet(SortedSet<T> values) {
         if (values == null || values.isEmpty()) {
             return Collections.emptySortedSet();
         }

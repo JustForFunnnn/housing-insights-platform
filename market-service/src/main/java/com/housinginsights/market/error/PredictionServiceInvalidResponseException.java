@@ -5,10 +5,7 @@ public class PredictionServiceInvalidResponseException extends RuntimeException 
         super(message);
     }
 
-    public PredictionServiceInvalidResponseException(
-            String message,
-            Throwable cause
-    ) {
+    public PredictionServiceInvalidResponseException(String message, Throwable cause) {
         super(message, cause);
     }
 }

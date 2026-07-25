@@ -7,6 +7,4 @@ public record PropertyFeatures(
         int yearBuilt,
         double lotSize,
         double distanceToCityCenter,
-        double schoolRating
-) {
-}
+        double schoolRating) {}

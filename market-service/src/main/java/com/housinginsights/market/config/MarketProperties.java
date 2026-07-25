@@ -12,20 +12,14 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties(prefix = "market")
 public record MarketProperties(
-        @NotNull Path datasetPath,
-        @NotNull @Valid Prediction prediction
-) {
-    public record Prediction(
-            @NotNull URI baseUrl,
-            @NotNull Duration timeout
-    ) {
+        @NotNull Path datasetPath, @NotNull @Valid Prediction prediction) {
+    public record Prediction(@NotNull URI baseUrl, @NotNull Duration timeout) {
         @AssertTrue(message = "prediction base URL must use HTTP or HTTPS")
         public boolean isHttpUrl() {
             return baseUrl != null
                     && baseUrl.isAbsolute()
                     && baseUrl.getHost() != null
-                    && ("http".equalsIgnoreCase(baseUrl.getScheme())
-                    || "https".equalsIgnoreCase(baseUrl.getScheme()));
+                    && ("http".equalsIgnoreCase(baseUrl.getScheme()) || "https".equalsIgnoreCase(baseUrl.getScheme()));
         }
 
         @AssertTrue(message = "prediction timeout must be positive")

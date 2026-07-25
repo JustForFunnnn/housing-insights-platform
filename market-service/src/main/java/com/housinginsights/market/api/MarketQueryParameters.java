@@ -30,6 +30,5 @@ public final class MarketQueryParameters {
     public static final String DEFAULT_PAGE_LIMIT = "20";
     public static final String DEFAULT_PAGE_OFFSET = "0";
 
-    private MarketQueryParameters() {
-    }
+    private MarketQueryParameters() {}
 }
