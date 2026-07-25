@@ -30,7 +30,7 @@ services:
       PREDICTION_SERVICE_URL: http://prediction-service:9000
       PREDICTION_SERVICE_TIMEOUT_SECONDS: "5"
       ESTIMATOR_DATABASE_URL: >-
-        postgresql+asyncpg://estimator:estimator@estimator-database:5432/estimator
+        postgresql+asyncpg://${POSTGRES_USER:-estimator}:${POSTGRES_PASSWORD:-estimator}@estimator-database:5432/${POSTGRES_DB:-estimator}
     depends_on:
       prediction-service:
         condition: service_healthy
@@ -54,15 +54,15 @@ services:
     ports:
       - "15432:5432"
     environment:
-      POSTGRES_DB: estimator
-      POSTGRES_USER: estimator
-      POSTGRES_PASSWORD: estimator
+      POSTGRES_DB: ${POSTGRES_DB:-estimator}
+      POSTGRES_USER: ${POSTGRES_USER:-estimator}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-estimator}
     volumes:
       - estimator-database-data:/var/lib/postgresql/data
     healthcheck:
       test:
         - CMD-SHELL
-        - pg_isready -U estimator -d estimator
+        - pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"
       interval: 5s
       timeout: 3s
       retries: 10

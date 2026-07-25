@@ -10,6 +10,10 @@ A monorepo for the housing model API and the applications that consume it.
 - `market-service/` — property market analysis backend
 - `insights-portal/` — shared web portal
 
+Docker Compose automatically reads an optional `.env` file from the repository root.
+Copy `.env.example` to `.env` to override the PostgreSQL settings; without it, the
+defaults in `docker-compose.yml` are used.
+
 ## Prediction service
 
 For local Python development, run commands from `prediction-service/`. The training
