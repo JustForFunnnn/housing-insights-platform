@@ -27,7 +27,7 @@ from prediction_service.prediction import PredictionService, SklearnPredictionSe
 from prediction_service.schemas import ErrorResponse
 from prediction_service.settings import Settings
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def create_app(
@@ -51,7 +51,7 @@ def create_app(
                 )
             except ArtifactError as exc:
                 # Uvicorn records the propagated traceback once during startup.
-                LOGGER.error(
+                logger.error(
                     "model_load_failed artifact=%s error=%s",
                     artifact_path,
                     exc,
@@ -60,7 +60,7 @@ def create_app(
                     f"could not start without model: {artifact_path}"
                 ) from exc
 
-            LOGGER.info("model_loaded artifact=%s", artifact_path)
+            logger.info("model_loaded artifact=%s", artifact_path)
 
         application.state.prediction_service = service
         yield
@@ -103,7 +103,7 @@ def _register_error_handlers(application: FastAPI) -> None:
         request: Request,
         exc: RequestValidationError,
     ) -> JSONResponse:
-        LOGGER.info(
+        logger.info(
             "request_validation_failed method=%s path=%s error=%s",
             request.method,
             request.url.path,
@@ -129,7 +129,7 @@ def _register_error_handlers(application: FastAPI) -> None:
 
     @application.exception_handler(Exception)
     async def unexpected_error(request: Request, exc: Exception) -> JSONResponse:
-        LOGGER.exception(
+        logger.exception(
             "request_failed method=%s path=%s status=500 error=%s",
             request.method,
             request.url.path,

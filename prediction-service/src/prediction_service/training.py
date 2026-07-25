@@ -36,7 +36,7 @@ from prediction_service.models import (
 from prediction_service.schemas import TrainingRow
 from prediction_service.settings import Settings
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def _build_model() -> TransformedTargetRegressor:
@@ -189,7 +189,7 @@ def train(
     except ArtifactError as exc:
         raise TrainingError(str(exc)) from exc
 
-    LOGGER.info(
+    logger.info(
         "model_trained rows=%d r2=%.3f rmse=%.2f artifact=%s",
         len(features),
         cross_validation.metrics.r2.mean,
@@ -225,7 +225,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         train(arguments.dataset, arguments.output)
     except TrainingError as exc:
-        LOGGER.error("training_failed error=%s", exc)
+        logger.error("training_failed error=%s", exc)
         return 1
     return 0
 

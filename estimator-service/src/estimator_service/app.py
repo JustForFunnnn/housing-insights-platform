@@ -35,7 +35,7 @@ from estimator_service.prediction_client import (
 from estimator_service.schemas import ErrorResponse
 from estimator_service.settings import Settings
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def create_app(
@@ -74,7 +74,7 @@ def create_app(
                 prediction_client,
                 store,
             )
-            LOGGER.info("database_ready")
+            logger.info("database_ready")
             yield
         finally:
             if should_close_prediction_client:
@@ -120,7 +120,7 @@ def _register_error_handlers(application: FastAPI) -> None:
         request: Request,
         exc: RequestValidationError,
     ) -> JSONResponse:
-        LOGGER.info("request_validation_failed method=%s path=%s error=%s", request.method, request.url.path, exc)
+        logger.info("request_validation_failed method=%s path=%s error=%s", request.method, request.url.path, exc)
         return _error_response(
             status_code=422,
             error_code=ErrorCode.VALIDATION_ERROR,
@@ -132,7 +132,7 @@ def _register_error_handlers(application: FastAPI) -> None:
         _request: Request,
         exc: PredictionServiceUnavailableError,
     ) -> JSONResponse:
-        LOGGER.error("prediction_unavailable error=%s", exc, exc_info=exc)
+        logger.error("prediction_unavailable error=%s", exc, exc_info=exc)
         return _error_response(
             status_code=503,
             error_code=ErrorCode.PREDICTION_SERVICE_UNAVAILABLE,
@@ -144,7 +144,7 @@ def _register_error_handlers(application: FastAPI) -> None:
         _request: Request,
         exc: PredictionServiceInvalidResponseError,
     ) -> JSONResponse:
-        LOGGER.error("prediction_invalid_response error=%s", exc, exc_info=exc)
+        logger.error("prediction_invalid_response error=%s", exc, exc_info=exc)
         return _error_response(
             status_code=502,
             error_code=ErrorCode.PREDICTION_SERVICE_INVALID_RESPONSE,
@@ -156,7 +156,7 @@ def _register_error_handlers(application: FastAPI) -> None:
         _request: Request,
         exc: StorageUnavailableError,
     ) -> JSONResponse:
-        LOGGER.error("database_unavailable error=%s", exc, exc_info=exc)
+        logger.error("database_unavailable error=%s", exc, exc_info=exc)
         return _error_response(
             status_code=503,
             error_code=ErrorCode.DATABASE_UNAVAILABLE,
@@ -168,7 +168,7 @@ def _register_error_handlers(application: FastAPI) -> None:
         _request: Request,
         exc: StorageError,
     ) -> JSONResponse:
-        LOGGER.error("database_operation_failed error=%s", exc, exc_info=exc)
+        logger.error("database_operation_failed error=%s", exc, exc_info=exc)
         return _error_response(
             status_code=500,
             error_code=ErrorCode.INTERNAL_ERROR,
@@ -189,7 +189,7 @@ def _register_error_handlers(application: FastAPI) -> None:
 
     @application.exception_handler(Exception)
     async def unexpected_error(request: Request, exc: Exception) -> JSONResponse:
-        LOGGER.exception(
+        logger.exception(
             "request_failed method=%s path=%s status=500 error=%s",
             request.method,
             request.url.path,

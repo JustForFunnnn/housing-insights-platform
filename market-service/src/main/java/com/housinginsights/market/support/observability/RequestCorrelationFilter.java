@@ -16,7 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class RequestCorrelationFilter extends OncePerRequestFilter {
-    private static final Logger LOGGER =
+    private static final Logger logger =
             LoggerFactory.getLogger(RequestCorrelationFilter.class);
 
     @Override
@@ -35,7 +35,7 @@ public class RequestCorrelationFilter extends OncePerRequestFilter {
         try {
             filterChain.doFilter(request, response);
         } finally {
-            LOGGER.info(
+            logger.info(
                     "request_completed method={} path={} status={}",
                     request.getMethod(),
                     request.getRequestURI(),

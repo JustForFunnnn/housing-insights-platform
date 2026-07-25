@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class CsvPropertyDataLoader {
-    private static final Logger LOGGER =
+    private static final Logger logger =
             LoggerFactory.getLogger(CsvPropertyDataLoader.class);
 
     private static final List<String> REQUIRED_COLUMNS = PropertyFieldNames.ALL;
@@ -51,7 +51,7 @@ public class CsvPropertyDataLoader {
             validateHeaders(parser);
             var properties = parseRecords(parser);
             var dataset = new PropertyDataset(properties);
-            LOGGER.info(
+            logger.info(
                     "dataset_loaded records={} path={}",
                     dataset.properties().size(),
                     path

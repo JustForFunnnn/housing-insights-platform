@@ -7,7 +7,7 @@ from asgi_correlation_id import CorrelationIdFilter, correlation_id
 from fastapi import Request, Response
 from starlette.middleware.base import RequestResponseEndpoint
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def configure_logging() -> None:
@@ -41,7 +41,7 @@ async def log_request(
     call_next: RequestResponseEndpoint,
 ) -> Response:
     response = await call_next(request)
-    LOGGER.info(
+    logger.info(
         "request_completed method=%s path=%s status=%d",
         request.method,
         request.url.path,

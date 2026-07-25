@@ -22,7 +22,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    private static final Logger LOGGER =
+    private static final Logger logger =
             LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler({
@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
             BindException.class
     })
     public ResponseEntity<ApiError> validationError(HttpServletRequest request, Exception exception) {
-        LOGGER.info(
+        logger.info(
                 "request_validation_failed method={} path={} error={}",
                 request.getMethod(), request.getRequestURI(), exception.toString()
         );
@@ -51,7 +51,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> predictionUnavailable(
             PredictionServiceUnavailableException exception
     ) {
-        LOGGER.error("prediction_unavailable error={}", exception.getMessage(), exception);
+        logger.error("prediction_unavailable error={}", exception.getMessage(), exception);
         return response(
                 HttpStatus.SERVICE_UNAVAILABLE,
                 ErrorCode.PREDICTION_SERVICE_UNAVAILABLE,
@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> predictionInvalid(
             PredictionServiceInvalidResponseException exception
     ) {
-        LOGGER.error("prediction_invalid_response error={}", exception.getMessage(), exception);
+        logger.error("prediction_invalid_response error={}", exception.getMessage(), exception);
         return response(
                 HttpStatus.BAD_GATEWAY,
                 ErrorCode.PREDICTION_SERVICE_INVALID_RESPONSE,
@@ -99,7 +99,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request,
             Exception exception
     ) {
-        LOGGER.error(
+        logger.error(
                 "request_failed method={} path={} status=500 error_type={}",
                 request.getMethod(),
                 request.getRequestURI(),
