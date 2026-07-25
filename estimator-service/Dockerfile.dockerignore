@@ -1,8 +1,9 @@
-.venv/
-.pytest_cache/
-__pycache__/
-tests/
-data/
-*.db
-*.sqlite
-*.sqlite3
+**
+!estimator-service/
+!estimator-service/Dockerfile
+!estimator-service/pyproject.toml
+!estimator-service/uv.lock
+!estimator-service/src/
+!estimator-service/src/**
+!contracts/
+!contracts/property-field-metadata.json

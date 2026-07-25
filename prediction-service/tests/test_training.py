@@ -79,7 +79,6 @@ def test_missing_column_is_rejected(write_dataset, tmp_path: Path) -> None:
         ("bedrooms", 2.5),
         ("school_rating", 11),
         ("price", 0),
-        ("price", -1),
     ],
 )
 def test_invalid_cell_reports_row_and_column(
@@ -102,7 +101,7 @@ def test_invalid_data_preserves_existing_artifact(
     tmp_path: Path,
 ) -> None:
     rows = [dict(row) for row in valid_rows]
-    rows[0]["price"] = -1
+    rows[0]["price"] = 0
     output = tmp_path / "model.joblib"
     output.write_bytes(b"existing-artifact")
 

@@ -2,23 +2,27 @@
 
 Spring Boot backend for read-only property market analysis. It loads the supplied
 housing CSV once at startup, serves filtered aggregate analysis and property records,
-exports CSV/PDF reports, and calls `prediction-service` only for what-if analysis.
+exports filtered CSV records, and calls `prediction-service` only for what-if analysis.
+The Next.js portal renders PDF from the analysis response and the same frontend charts
+shown on screen.
 
 ## Design
 
 - `api` owns HTTP endpoints; `api.schema` owns request and response contracts.
-- `application` owns querying, analysis orchestration and caching, and what-if use cases.
+- `application` owns querying, analysis orchestration, filtered-result caching, and what-if use cases.
 - `domain` owns property, filtering, sorting, paging, analysis, and what-if models and rules.
 - `data` loads and validates the fixed read-only CSV.
 - `prediction` is the external prediction-service boundary.
-- `export` creates CSV and PDF output from shared query/analysis results.
+- `export` serializes filtered property records as CSV.
+- `metadata` loads the shared property field contract and validates dataset,
+  filters, and what-if features.
 - `config` wires validated configuration, HTTP, and cache support.
 - `error` owns custom exceptions and exception mapping.
 - `observability` owns logging and request correlation.
 
-The dataset is loaded into an immutable in-memory list. Missing, unreadable, empty, or
-invalid data prevents startup. Prediction-service availability is deliberately not
-checked at startup or by `/health`.
+The dataset and property metadata are loaded once into immutable memory. Missing,
+unreadable, empty, or invalid data prevents startup. Prediction-service availability
+is deliberately not checked at startup or by `/api/v1/health`.
 
 ## Local development
 
@@ -40,10 +44,13 @@ Defaults assume commands run from this directory:
 | Environment variable | Default | Purpose |
 | --- | --- | --- |
 | `MARKET_DATASET_PATH` | `../data/House Price Dataset.csv` | Fixed read-only dataset |
+| `PROPERTY_METADATA_PATH` | `../contracts/property-field-metadata.json` | Shared field contract |
 | `PREDICTION_SERVICE_URL` | `http://localhost:9000` | Prediction API base URL |
 | `PREDICTION_SERVICE_TIMEOUT_SECONDS` | `5` | Connect and response timeout |
 
 Spring Boot's standard `SERVER_PORT` can override port 9002.
+Metadata changes take effect after restarting the service; the file is not polled
+while the process is running.
 
 ## API
 
@@ -52,7 +59,7 @@ All JSON uses `snake_case`.
 ### Analysis
 
 ```http
-GET /analysis?bedrooms=3&min_price=200000&max_price=300000
+GET /api/v1/market/analysis?bedrooms=3&min_price=200000&max_price=300000
 ```
 
 Returns the matching count, minimum/maximum/average/median price, price distribution,
@@ -74,7 +81,7 @@ Shared filters are inclusive:
 ### Property records
 
 ```http
-GET /properties?bedrooms=3&sort_by=price&sort_direction=desc&limit=20&offset=0
+GET /api/v1/market/properties?bedrooms=3&sort_by=price&sort_direction=desc&limit=20&offset=0
 ```
 
 The sort whitelist is `id`, `square_footage`, `bedrooms`, `bathrooms`,
@@ -84,7 +91,7 @@ The default `limit` is 20, the maximum is 100, and the default `offset` is 0.
 ### What-if
 
 ```http
-POST /what-if
+POST /api/v1/market/what-if
 Content-Type: application/json
 
 {
@@ -115,13 +122,17 @@ Baseline and scenarios are sent in one ordered `/predict` batch. The response in
 the baseline prediction and signed absolute/percentage differences for every scenario.
 What-if data and downstream predictions are not persisted.
 
-### Exports and health
+### Metadata, export, and health
 
-- `GET /exports/properties.csv` accepts the shared filters plus sorting and exports all
+- `GET /api/v1/market/metadata` returns the shared property fields plus
+  `filter_options` calculated from the complete CSV. Price range and actual
+  bedroom/bathroom options therefore remain dataset-derived.
+- `GET /api/v1/market/exports/csv` accepts the shared filters plus sorting and exports all
   matching records, regardless of table pagination.
-- `GET /exports/market-analysis.pdf` accepts the shared filters and exports the same
-  aggregate analysis and four visualisations returned by `/analysis`.
-- `GET /health` returns exactly `{"status":"ok"}` when the application and local
+- PDF remains a portal requirement: Next.js calls
+  `GET /api/v1/market/analysis` and exports the corresponding aggregate analysis
+  and the same visualisations rendered in the browser. Java has no PDF endpoint.
+- `GET /api/v1/health` returns exactly `{"status":"ok"}` when the application and local
   dataset are ready.
 
 ## Request correlation and errors
@@ -143,20 +154,19 @@ Logs contain the request ID, method, path, and response status.
 
 ## Caching
 
-Spring Cache with Caffeine caches successful aggregate analysis results by canonical
-filter value. The cache is bounded to 256 entries and expires entries 30 minutes after
-last access. PDF generation reuses the cached analysis, but PDF and CSV bytes are not
-cached.
+Spring Cache with Caffeine caches the complete immutable matching-property list by
+canonical `MarketFilter`. Properties pagination, aggregate analysis, and CSV sorting
+all reuse that one filtering operation. The cache is bounded to 256 entries and
+expires entries 30 minutes after last access. Analysis objects, pages, CSV bytes,
+what-if results, and failures are not cached.
 
 ## Main libraries
 
 - Apache Commons CSV: CSV loading and export
 - Apache Commons IO: safe UTF-8 BOM handling for the fixed dataset
 - Apache Commons Statistics: mean and median calculations
-- Spring Cache with Caffeine: bounded in-memory analysis cache
+- Spring Cache with Caffeine: bounded in-memory filtered-result cache
 - Spring RestClient: synchronous prediction-service integration
-- Apache PDFBox: PDF creation
-- XChart: chart rendering
 - Jackson and Jakarta Validation: JSON and input validation
 - springdoc-openapi: Swagger UI and OpenAPI
 

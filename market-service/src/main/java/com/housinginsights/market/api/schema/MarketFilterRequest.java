@@ -1,79 +1,35 @@
 package com.housinginsights.market.api.schema;
 
-import com.housinginsights.market.api.MarketQueryParameters;
 import com.housinginsights.market.domain.MarketFilter;
-import com.housinginsights.market.domain.PropertyLimits;
+import com.housinginsights.market.metadata.PropertyMetadata;
 import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import java.time.Year;
 import java.util.List;
 import java.util.TreeSet;
-import org.springframework.web.bind.annotation.BindParam;
 
 public record MarketFilterRequest(
-        @BindParam(MarketQueryParameters.MIN_SQUARE_FOOTAGE)
-        @Positive
-        @DecimalMax(PropertyLimits.MAX_SQUARE_FOOTAGE_TEXT)
-        Double minSquareFootage,
-
-        @BindParam(MarketQueryParameters.MAX_SQUARE_FOOTAGE)
-        @Positive
-        @DecimalMax(PropertyLimits.MAX_SQUARE_FOOTAGE_TEXT)
-        Double maxSquareFootage,
-
-        @BindParam(MarketQueryParameters.BEDROOMS) List<@Min(0) @Max(PropertyLimits.MAX_BEDROOMS) Integer> bedrooms,
-
-        @BindParam(MarketQueryParameters.BATHROOMS)
-        List<@DecimalMin("0") @DecimalMax(PropertyLimits.MAX_BATHROOMS_TEXT) Double> bathrooms,
-
-        @BindParam(MarketQueryParameters.MIN_YEAR_BUILT) @Min(PropertyLimits.MIN_YEAR_BUILT)
+        @Positive Double minSquareFootage,
+        @Positive Double maxSquareFootage,
+        List<@NotNull Integer> bedrooms,
+        List<@NotNull Double> bathrooms,
         Integer minYearBuilt,
-
-        @BindParam(MarketQueryParameters.MAX_YEAR_BUILT) @Min(PropertyLimits.MIN_YEAR_BUILT)
         Integer maxYearBuilt,
-
-        @BindParam(MarketQueryParameters.MIN_LOT_SIZE) @Positive @DecimalMax(PropertyLimits.MAX_LOT_SIZE_TEXT)
-        Double minLotSize,
-
-        @BindParam(MarketQueryParameters.MAX_LOT_SIZE) @Positive @DecimalMax(PropertyLimits.MAX_LOT_SIZE_TEXT)
-        Double maxLotSize,
-
-        @BindParam(MarketQueryParameters.MIN_DISTANCE_TO_CITY_CENTER)
-        @DecimalMin("0")
-        @DecimalMax(PropertyLimits.MAX_DISTANCE_TO_CITY_CENTER_TEXT)
+        @Positive Double minLotSize,
+        @Positive Double maxLotSize,
         Double minDistanceToCityCenter,
-
-        @BindParam(MarketQueryParameters.MAX_DISTANCE_TO_CITY_CENTER)
-        @DecimalMin("0")
-        @DecimalMax(PropertyLimits.MAX_DISTANCE_TO_CITY_CENTER_TEXT)
         Double maxDistanceToCityCenter,
-
-        @BindParam(MarketQueryParameters.MIN_SCHOOL_RATING)
-        @DecimalMin("0")
-        @DecimalMax(PropertyLimits.MAX_SCHOOL_RATING_TEXT)
         Double minSchoolRating,
-
-        @BindParam(MarketQueryParameters.MAX_SCHOOL_RATING)
-        @DecimalMin("0")
-        @DecimalMax(PropertyLimits.MAX_SCHOOL_RATING_TEXT)
         Double maxSchoolRating,
-
-        @BindParam(MarketQueryParameters.MIN_PRICE) @Positive
-        Long minPrice,
-
-        @BindParam(MarketQueryParameters.MAX_PRICE) @Positive
-        Long maxPrice) {
+        @Positive Long minPrice,
+        @Positive Long maxPrice) {
     public MarketFilterRequest {
         bedrooms = bedrooms == null ? List.of() : List.copyOf(bedrooms);
         bathrooms = bathrooms == null ? List.of() : List.copyOf(bathrooms);
     }
 
-    public MarketFilter toFilter() {
-        return new MarketFilter(
+    public MarketFilter toFilter(PropertyMetadata propertyMetadata) {
+        var filter = new MarketFilter(
                 minSquareFootage,
                 maxSquareFootage,
                 new TreeSet<>(bedrooms),
@@ -88,6 +44,8 @@ public record MarketFilterRequest(
                 maxSchoolRating,
                 minPrice,
                 maxPrice);
+        propertyMetadata.validate(filter);
+        return filter;
     }
 
     @AssertTrue(message = "filter ranges must be valid")
@@ -107,8 +65,8 @@ public record MarketFilterRequest(
                 && ordered(minDistanceToCityCenter, maxDistanceToCityCenter)
                 && ordered(minSchoolRating, maxSchoolRating)
                 && ordered(minPrice, maxPrice)
-                && (minYearBuilt == null || minYearBuilt <= Year.now().getValue())
-                && (maxYearBuilt == null || maxYearBuilt <= Year.now().getValue());
+                && positiveOrNull(minPrice)
+                && positiveOrNull(maxPrice);
     }
 
     private static boolean finite(Double value) {
@@ -117,5 +75,9 @@ public record MarketFilterRequest(
 
     private static <T extends Comparable<T>> boolean ordered(T minimum, T maximum) {
         return minimum == null || maximum == null || minimum.compareTo(maximum) <= 0;
+    }
+
+    private static boolean positiveOrNull(Long value) {
+        return value == null || value > 0;
     }
 }

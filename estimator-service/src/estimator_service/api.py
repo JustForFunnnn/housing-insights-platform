@@ -9,12 +9,14 @@ from estimator_service.constants import (
     REQUEST_ID_HEADER,
 )
 from estimator_service.data_access import Database
+from estimator_service.property_metadata import PROPERTY_METADATA
 from estimator_service.schemas import (
     ErrorResponse,
     EstimateBatchResponse,
     EstimatePageResponse,
     EstimateRequest,
     HealthResponse,
+    PropertyMetadataResponse,
 )
 from estimator_service.estimator import EstimatorService
 
@@ -104,6 +106,21 @@ async def list_estimates(
 ) -> EstimatePageResponse:
     page = await service.list_estimates(limit=limit, offset=offset)
     return EstimatePageResponse.from_page(page)
+
+
+@router.get(
+    "/estimates/metadata",
+    response_model=PropertyMetadataResponse,
+    responses={
+        200: RESPONSE_WITH_REQUEST_ID,
+        422: ERROR_RESPONSE_WITH_REQUEST_ID,
+        503: ERROR_RESPONSE_WITH_REQUEST_ID,
+    },
+)
+async def estimate_metadata() -> PropertyMetadataResponse:
+    return PropertyMetadataResponse.model_validate(
+        {"fields": PROPERTY_METADATA.model_dump()}
+    )
 
 
 @router.get(

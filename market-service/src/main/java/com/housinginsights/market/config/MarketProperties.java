@@ -12,7 +12,9 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties(prefix = "market")
 public record MarketProperties(
-        @NotNull Path datasetPath, @NotNull @Valid Prediction prediction) {
+        @NotNull Path datasetPath,
+        @NotNull Path propertyMetadataPath,
+        @NotNull @Valid Prediction prediction) {
     public record Prediction(@NotNull URI baseUrl, @NotNull Duration timeout) {
         @AssertTrue(message = "prediction base URL must use HTTP or HTTPS")
         public boolean isHttpUrl() {

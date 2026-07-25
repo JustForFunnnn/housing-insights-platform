@@ -6,7 +6,7 @@ spring:
     name: market-service
   cache:
     type: caffeine
-    cache-names: marketAnalysis
+    cache-names: filteredProperties
     caffeine:
       spec: maximumSize=256,expireAfterAccess=30m
   jackson:
@@ -23,6 +23,7 @@ springdoc:
 
 market:
   dataset-path: "${MARKET_DATASET_PATH:../data/House Price Dataset.csv}"
+  property-metadata-path: "${PROPERTY_METADATA_PATH:../contracts/property-field-metadata.json}"
   prediction:
     base-url: "${PREDICTION_SERVICE_URL:http://localhost:9000}"
     timeout: "${PREDICTION_SERVICE_TIMEOUT_SECONDS:5}s"

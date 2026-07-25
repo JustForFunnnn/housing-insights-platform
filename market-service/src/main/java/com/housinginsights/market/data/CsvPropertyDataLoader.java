@@ -1,16 +1,15 @@
 package com.housinginsights.market.data;
 
 import com.housinginsights.market.domain.PropertyFieldNames;
-import com.housinginsights.market.domain.PropertyLimits;
 import com.housinginsights.market.domain.PropertyRecord;
 import com.housinginsights.market.error.DatasetLoadingException;
+import com.housinginsights.market.metadata.PropertyMetadata;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Year;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -28,7 +27,8 @@ import org.springframework.stereotype.Component;
 public class CsvPropertyDataLoader {
     private static final Logger logger = LoggerFactory.getLogger(CsvPropertyDataLoader.class);
 
-    private static final List<String> REQUIRED_COLUMNS = PropertyFieldNames.ALL;
+    private static final List<String> REQUIRED_COLUMNS =
+            PropertyFieldNames.CSV_COLUMNS;
 
     private static final CSVFormat CSV_FORMAT = CSVFormat.DEFAULT
             .builder()
@@ -38,6 +38,12 @@ public class CsvPropertyDataLoader {
             .setTrim(true)
             .setDuplicateHeaderMode(DuplicateHeaderMode.DISALLOW)
             .get();
+
+    private final PropertyMetadata propertyMetadata;
+
+    public CsvPropertyDataLoader(PropertyMetadata propertyMetadata) {
+        this.propertyMetadata = propertyMetadata;
+    }
 
     public PropertyDataset load(Path path) {
         if (path == null || !Files.isRegularFile(path) || !Files.isReadable(path)) {
@@ -71,7 +77,7 @@ public class CsvPropertyDataLoader {
         }
     }
 
-    private static List<PropertyRecord> parseRecords(CSVParser parser) throws IOException {
+    private List<PropertyRecord> parseRecords(CSVParser parser) throws IOException {
         List<PropertyRecord> properties = new ArrayList<>();
         Set<Long> identifiers = new HashSet<>();
 
@@ -86,7 +92,7 @@ public class CsvPropertyDataLoader {
         return properties;
     }
 
-    private static PropertyRecord parseRecord(CSVRecord row, long lineNumber) {
+    private PropertyRecord parseRecord(CSVRecord row, long lineNumber) {
         long id = parseLong(row, lineNumber, PropertyFieldNames.ID);
         double squareFootage = parseDouble(row, lineNumber, PropertyFieldNames.SQUARE_FOOTAGE);
         int bedrooms = parseInteger(row, lineNumber, PropertyFieldNames.BEDROOMS);
@@ -98,46 +104,21 @@ public class CsvPropertyDataLoader {
         long price = parseLong(row, lineNumber, PropertyFieldNames.PRICE);
 
         require(id > 0, lineNumber, PropertyFieldNames.ID, "must be positive");
-        require(
-                squareFootage > 0 && squareFootage <= PropertyLimits.MAX_SQUARE_FOOTAGE,
-                lineNumber,
-                PropertyFieldNames.SQUARE_FOOTAGE,
-                "is outside the supported range");
-        require(
-                bedrooms >= 0 && bedrooms <= PropertyLimits.MAX_BEDROOMS,
-                lineNumber,
-                PropertyFieldNames.BEDROOMS,
-                "is outside the supported range");
-        require(
-                bathrooms >= 0 && bathrooms <= PropertyLimits.MAX_BATHROOMS,
-                lineNumber,
-                PropertyFieldNames.BATHROOMS,
-                "is outside the supported range");
-        require(
-                yearBuilt >= PropertyLimits.MIN_YEAR_BUILT
-                        && yearBuilt <= Year.now().getValue(),
-                lineNumber,
-                PropertyFieldNames.YEAR_BUILT,
-                "is outside the supported range");
-        require(
-                lotSize > 0 && lotSize <= PropertyLimits.MAX_LOT_SIZE,
-                lineNumber,
-                PropertyFieldNames.LOT_SIZE,
-                "is outside the supported range");
-        require(
-                distance >= 0 && distance <= PropertyLimits.MAX_DISTANCE_TO_CITY_CENTER,
-                lineNumber,
-                PropertyFieldNames.DISTANCE_TO_CITY_CENTER,
-                "is outside the supported range");
-        require(
-                schoolRating >= 0 && schoolRating <= PropertyLimits.MAX_SCHOOL_RATING,
-                lineNumber,
-                PropertyFieldNames.SCHOOL_RATING,
-                "is outside the supported range");
         require(price > 0, lineNumber, PropertyFieldNames.PRICE, "must be positive");
 
-        return new PropertyRecord(
+        var property = new PropertyRecord(
                 id, squareFootage, bedrooms, bathrooms, yearBuilt, lotSize, distance, schoolRating, price);
+        try {
+            propertyMetadata.validate(property.features());
+        } catch (RuntimeException exception) {
+            throw new DatasetLoadingException(
+                    "CSV row "
+                            + lineNumber
+                            + " contains invalid property features: "
+                            + exception.getMessage(),
+                    exception);
+        }
+        return property;
     }
 
     private static long parseLong(CSVRecord row, long lineNumber, String column) {

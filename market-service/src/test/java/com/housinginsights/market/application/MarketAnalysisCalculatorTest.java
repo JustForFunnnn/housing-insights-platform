@@ -14,7 +14,9 @@ import org.junit.jupiter.api.Test;
 class MarketAnalysisCalculatorTest {
     private final PropertyDataset dataset = new PropertyDataset(RECORDS);
     private final MarketAnalysisCalculator calculator =
-            new MarketAnalysisCalculator(new PropertyQueryService(dataset), dataset);
+            new MarketAnalysisCalculator(
+                    new PropertyQueryService(new CachedPropertyFilter(dataset)),
+                    dataset);
 
     @Test
     void calculatesFilteredSummaryVisualisationsAndGlobalOptions() {

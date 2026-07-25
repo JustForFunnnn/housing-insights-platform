@@ -1,8 +1,8 @@
 package com.housinginsights.market.application;
 
 import com.housinginsights.market.domain.MarketAnalysis;
+import com.housinginsights.market.domain.MarketAnalysis.FilterOptions;
 import com.housinginsights.market.domain.MarketFilter;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,8 +13,11 @@ public class MarketAnalysisService {
         this.calculator = calculator;
     }
 
-    @Cacheable(cacheNames = "marketAnalysis", key = "#filter", sync = true)
     public MarketAnalysis analyse(MarketFilter filter) {
         return calculator.calculate(filter);
+    }
+
+    public FilterOptions filterOptions() {
+        return calculator.filterOptions();
     }
 }

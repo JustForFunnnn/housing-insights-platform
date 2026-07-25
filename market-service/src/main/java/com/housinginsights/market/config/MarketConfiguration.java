@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.housinginsights.market.data.CsvPropertyDataLoader;
 import com.housinginsights.market.data.PropertyDataset;
+import com.housinginsights.market.metadata.PropertyMetadata;
 import com.housinginsights.market.observability.RequestCorrelation;
 import io.swagger.v3.core.jackson.ModelResolver;
 import io.swagger.v3.oas.models.media.StringSchema;
@@ -22,9 +23,7 @@ public class MarketConfiguration {
 
     @Bean
     ModelResolver snakeCaseOpenApiModelResolver(ObjectMapper objectMapper) {
-        ObjectMapper openApiMapper = objectMapper.copy();
-        openApiMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
-        return new ModelResolver(openApiMapper);
+        return new ModelResolver(objectMapper.copy());
     }
 
     @Bean
@@ -53,6 +52,13 @@ public class MarketConfiguration {
     @Bean
     PropertyDataset propertyDataset(MarketProperties properties, CsvPropertyDataLoader loader) {
         return loader.load(properties.datasetPath());
+    }
+
+    @Bean
+    PropertyMetadata propertyMetadata(
+            MarketProperties properties, ObjectMapper objectMapper) {
+        return PropertyMetadata.load(
+                properties.propertyMetadataPath(), objectMapper);
     }
 
     @Bean

@@ -11,13 +11,11 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from estimator_service.api import router
-from estimator_service.constants import (
-    ErrorCode,
-    REQUEST_ID_HEADER,
-)
+from estimator_service.constants import REQUEST_ID_HEADER
 from estimator_service.data_access import Database, EstimateStore, PostgresDatabase, PostgresEstimateStore
 from estimator_service.estimator import EstimatorService
 from estimator_service.errors import (
+    ErrorCode,
     PredictionServiceInvalidResponseError,
     PredictionServiceUnavailableError,
     StorageError,
@@ -88,7 +86,7 @@ def create_app(
         version="0.1.0",
         lifespan=lifespan,
     )
-    application.include_router(router)
+    application.include_router(router, prefix="/api/v1")
     application.middleware("http")(log_request)
     application.add_middleware(
         CorrelationIdMiddleware,

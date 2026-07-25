@@ -1,10 +1,18 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from pydantic import AnyHttpUrl, Field, PostgresDsn, field_validator
 from pydantic_settings import BaseSettings
 
+DEFAULT_PROPERTY_METADATA_PATH = Path("../contracts/property-field-metadata.json")
+
 
 class Settings(BaseSettings):
+    property_metadata_path: Path = Field(
+        default=DEFAULT_PROPERTY_METADATA_PATH,
+        validation_alias="PROPERTY_METADATA_PATH",
+    )
     prediction_service_url: AnyHttpUrl = Field(
         default=AnyHttpUrl("http://localhost:9000"),
         validation_alias="PREDICTION_SERVICE_URL",

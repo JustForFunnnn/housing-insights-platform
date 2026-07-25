@@ -5,3 +5,5 @@
 !market-service/src/**
 !data/
 !data/House Price Dataset.csv
+!contracts/
+!contracts/property-field-metadata.json

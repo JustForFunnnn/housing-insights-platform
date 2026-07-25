@@ -69,7 +69,7 @@ public class HttpPredictionClient implements PredictionClient {
         if (response == null
                 || response.predictions() == null
                 || response.predictions().size() != expectedCount
-                || response.predictions().stream().anyMatch(value -> value == null || value < 0)) {
+                || response.predictions().stream().anyMatch(value -> value == null || value <= 0)) {
             throw new PredictionServiceInvalidResponseException(
                     "prediction service returned an invalid prediction batch");
         }

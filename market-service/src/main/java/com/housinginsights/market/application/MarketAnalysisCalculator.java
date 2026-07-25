@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class MarketAnalysisCalculator {
-    static final long PRICE_BUCKET_WIDTH = 50_000;
+    static final long PRICE_BUCKET_WIDTH = 50000;
     static final long SQUARE_FOOTAGE_BUCKET_WIDTH = 500;
 
     private final PropertyQueryService propertyQueryService;
@@ -57,6 +57,10 @@ public class MarketAnalysisCalculator {
                         averagePriceByYearBuiltDecade(properties),
                         averagePriceBySquareFootageBand(properties)),
                 filterOptions);
+    }
+
+    public FilterOptions filterOptions() {
+        return filterOptions;
     }
 
     private static PriceSummary priceSummary(List<PropertyRecord> properties) {

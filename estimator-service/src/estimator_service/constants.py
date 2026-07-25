@@ -1,23 +1,5 @@
-from enum import StrEnum
-
-
-class ErrorCode(StrEnum):
-    VALIDATION_ERROR = "validation_error"
-    PREDICTION_SERVICE_UNAVAILABLE = "prediction_service_unavailable"
-    PREDICTION_SERVICE_INVALID_RESPONSE = "prediction_service_invalid_response"
-    DATABASE_UNAVAILABLE = "database_unavailable"
-    HTTP_ERROR = "http_error"
-    INTERNAL_ERROR = "internal_error"
-
-
 REQUEST_ID_HEADER = "X-Request-ID"
 MAX_ESTIMATE_PROPERTIES = 20
-MAX_SQUARE_FOOTAGE = 100000.0
-MAX_BEDROOMS = 10000
-MAX_BATHROOMS = 10000.0
-MAX_LOT_SIZE = 100000.0
-MAX_DISTANCE_TO_CITY_CENTER = 400.0
-MAX_SCHOOL_RATING = 10.0
 MAX_SIGNED_INT64 = 2**63 - 1
 DEFAULT_PAGE_LIMIT = 20
 MAX_PAGE_LIMIT = 100

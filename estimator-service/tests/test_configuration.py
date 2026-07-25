@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
@@ -6,6 +8,7 @@ from estimator_service.settings import Settings
 
 def test_settings_read_environment(
     monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ) -> None:
     monkeypatch.setenv("PREDICTION_SERVICE_URL", "https://prediction.example")
     monkeypatch.setenv("PREDICTION_SERVICE_TIMEOUT_SECONDS", "2.5")
@@ -13,6 +16,8 @@ def test_settings_read_environment(
         "ESTIMATOR_DATABASE_URL",
         "postgresql+asyncpg://user:pass@database.example:5432/estimator",
     )
+    metadata_path = tmp_path / "property-field-metadata.json"
+    monkeypatch.setenv("PROPERTY_METADATA_PATH", str(metadata_path))
 
     settings = Settings()
 
@@ -21,6 +26,7 @@ def test_settings_read_environment(
     assert str(settings.estimator_database_url) == (
         "postgresql+asyncpg://user:pass@database.example:5432/estimator"
     )
+    assert settings.property_metadata_path == metadata_path
 
 
 @pytest.mark.parametrize(

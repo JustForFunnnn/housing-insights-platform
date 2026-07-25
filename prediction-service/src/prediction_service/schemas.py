@@ -2,20 +2,15 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, field_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
-from prediction_service.constants import (
-    ErrorCode,
-    MAX_BATHROOMS,
-    MAX_BEDROOMS,
-    MAX_DISTANCE_TO_CITY_CENTER,
-    MAX_LOT_SIZE,
-    MAX_PREDICTION_INSTANCES,
-    MAX_SCHOOL_RATING,
-    MAX_SIGNED_INT64,
-    MAX_SQUARE_FOOTAGE,
+from prediction_service.constants import MAX_PREDICTION_INSTANCES, MAX_SIGNED_INT64
+from prediction_service.errors import ErrorCode
+from prediction_service.models import HousingFeatures
+from prediction_service.property_metadata import (
+    PROPERTY_METADATA,
+    PropertyFieldMetadata,
 )
-from prediction_service.models import HousingFeatures, validate_year_built
 
 
 def _validate_signed_int64(value: int) -> int:
@@ -24,12 +19,6 @@ def _validate_signed_int64(value: int) -> int:
     return value
 
 
-NonNegativeInt64Price = Annotated[
-    int,
-    Field(ge=0, json_schema_extra={"format": "int64"}),
-    AfterValidator(_validate_signed_int64),
-]
-
 PositiveInt64Price = Annotated[
     int,
     Field(gt=0, json_schema_extra={"format": "int64"}),
@@ -37,48 +26,34 @@ PositiveInt64Price = Annotated[
 ]
 
 
+def _feature_field(
+    metadata: PropertyFieldMetadata,
+    example: int | float,
+):
+    return Field(
+        ge=metadata.min,
+        le=metadata.max,
+        allow_inf_nan=False,
+        examples=[example],
+    )
+
+
 class HousingFields(BaseModel):
     """Shared feature shape; concrete input models choose their own parsing policy."""
 
-    square_footage: float = Field(
-        gt=0,
-        le=MAX_SQUARE_FOOTAGE,
-        allow_inf_nan=False,
-        examples=[1850],
+    square_footage: float = _feature_field(
+        PROPERTY_METADATA.square_footage, 1850
     )
-    bedrooms: int = Field(
-        ge=0,
-        le=MAX_BEDROOMS,
-        allow_inf_nan=False,
-        examples=[3],
+    bedrooms: int = _feature_field(PROPERTY_METADATA.bedrooms, 3)
+    bathrooms: float = _feature_field(PROPERTY_METADATA.bathrooms, 2.5)
+    year_built: int = _feature_field(PROPERTY_METADATA.year_built, 1998)
+    lot_size: float = _feature_field(PROPERTY_METADATA.lot_size, 7500)
+    distance_to_city_center: float = _feature_field(
+        PROPERTY_METADATA.distance_to_city_center, 5.6
     )
-    bathrooms: float = Field(
-        ge=0,
-        le=MAX_BATHROOMS,
-        allow_inf_nan=False,
-        examples=[2.5],
+    school_rating: float = _feature_field(
+        PROPERTY_METADATA.school_rating, 8.2
     )
-    year_built: int = Field(ge=1800, allow_inf_nan=False, examples=[1998])
-    lot_size: float = Field(
-        gt=0,
-        le=MAX_LOT_SIZE,
-        allow_inf_nan=False,
-        examples=[7500],
-    )
-    distance_to_city_center: float = Field(
-        ge=0,
-        le=MAX_DISTANCE_TO_CITY_CENTER,
-        allow_inf_nan=False,
-        examples=[5.6],
-    )
-    school_rating: float = Field(
-        ge=0,
-        le=MAX_SCHOOL_RATING,
-        allow_inf_nan=False,
-        examples=[8.2],
-    )
-
-    _year_is_not_in_future = field_validator("year_built")(validate_year_built)
 
     def to_features(self) -> HousingFeatures:
         return HousingFeatures(**self.model_dump())
@@ -116,7 +91,7 @@ class ResponseModel(BaseModel):
 
 
 class PredictionResponse(ResponseModel):
-    predictions: list[NonNegativeInt64Price]
+    predictions: list[PositiveInt64Price]
 
 
 class ErrorResponse(ResponseModel):

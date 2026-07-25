@@ -1,5 +1,6 @@
 package com.housinginsights.market.data;
 
+import static com.housinginsights.market.TestProperties.propertyMetadata;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -15,7 +16,8 @@ class CsvPropertyDataLoaderTest {
             id,square_footage,bedrooms,bathrooms,year_built,lot_size,distance_to_city_center,school_rating,price
             """;
 
-    private final CsvPropertyDataLoader loader = new CsvPropertyDataLoader();
+    private final CsvPropertyDataLoader loader =
+            new CsvPropertyDataLoader(propertyMetadata());
 
     @Test
     void loadsValidDataset(@TempDir Path directory) throws IOException {
@@ -62,6 +64,11 @@ class CsvPropertyDataLoaderTest {
         assertThatThrownBy(() -> loader.load(invalid))
                 .isInstanceOf(DatasetLoadingException.class)
                 .hasMessageContaining("school_rating");
+
+        Path invalidPrice = write(directory, HEADER + "1,1200,2,1,1990,5000,2.5,7,0\n");
+        assertThatThrownBy(() -> loader.load(invalidPrice))
+                .isInstanceOf(DatasetLoadingException.class)
+                .hasMessageContaining("price");
     }
 
     private static Path write(Path directory, String content) throws IOException {

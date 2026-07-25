@@ -13,7 +13,6 @@ from prediction_service.artifact import save_artifact
 from prediction_service.constants import (
     ALGORITHM_NAME,
     FEATURE_NAMES,
-    MAX_SQUARE_FOOTAGE,
     REQUEST_ID_HEADER,
 )
 from prediction_service.errors import ArtifactError
@@ -82,6 +81,20 @@ def test_health_and_model_info_contract() -> None:
     assert info.json()["training_timestamp"] == "2026-07-21T12:00:00+00:00"
     assert info.json()["algorithm"] == ALGORITHM_NAME
     assert info.json()["cross_validation"]["folds"] == 5
+
+
+def test_openapi_exposes_shared_metadata_constraints() -> None:
+    with TestClient(
+        create_app(prediction_service=StubPredictionService())
+    ) as client:
+        schema = client.get("/openapi.json").json()["components"]["schemas"][
+            "PredictionInstance"
+        ]["properties"]
+
+    assert schema["square_footage"]["minimum"] == 1
+    assert schema["square_footage"]["maximum"] == 100000
+    assert "multipleOf" not in schema["bathrooms"]
+    assert "multipleOf" not in schema["school_rating"]
 
 
 def test_request_ids_are_preserved_generated_replaced_and_logged(
@@ -169,28 +182,21 @@ def test_validation_error_uses_standard_response_and_request_id() -> None:
     }
 
 
-def test_feature_above_static_limit_logs_validation_error(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    caplog.set_level(logging.INFO, logger="prediction_service.app")
+def test_shared_metadata_constraint_rejects_request() -> None:
+    service = StubPredictionService()
     payload = {
         "instances": [
             {
                 **VALID_INSTANCE,
-                "square_footage": MAX_SQUARE_FOOTAGE + 1,
+                "square_footage": 100001,
             }
         ]
     }
-    with TestClient(create_app(prediction_service=StubPredictionService())) as client:
+    with TestClient(create_app(prediction_service=service)) as client:
         response = client.post("/predict", json=payload)
 
     assert response.status_code == 422
-    assert response.json() == {
-        "error_code": "validation_error",
-        "message": "Request validation failed.",
-    }
-    assert "request_validation_failed method=POST path=/predict" in caplog.text
-    assert "less_than_equal" in caplog.text
+    assert service.seen == []
 
 
 def test_non_finite_request_returns_serializable_422() -> None:

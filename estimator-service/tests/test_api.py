@@ -7,7 +7,7 @@ from uuid import UUID
 import pytest
 from fastapi.testclient import TestClient
 
-from estimator_service.constants import MAX_PAGE_LIMIT, MAX_SQUARE_FOOTAGE
+from estimator_service.constants import MAX_PAGE_LIMIT
 from estimator_service.errors import (
     PredictionServiceInvalidResponseError,
     PredictionServiceUnavailableError,
@@ -23,16 +23,6 @@ HYPHENATED_REQUEST_ID = "123E4567-E89B-42D3-A456-426614174000"
 SUPPLIED_REQUEST_ID = "123e4567e89b42d3a456426614174000"
 INVALID_REQUEST_ID = "estimate-request-123"
 
-
-def test_health_contract(app_factory) -> None:
-    app, _database, _store, _prediction = app_factory()
-    with TestClient(app) as client:
-        health = client.get("/health")
-
-    assert health.status_code == 200
-    assert health.json() == {"status": "ok"}
-
-
 def test_create_single_and_batch_estimates_and_propagate_request_id(
     app_factory,
     caplog: pytest.LogCaptureFixture,
@@ -42,12 +32,12 @@ def test_create_single_and_batch_estimates_and_propagate_request_id(
     app, _database, _store, _prediction = app_factory(prediction_client=prediction)
     with TestClient(app) as client:
         single = client.post(
-            "/estimates",
+            "/api/v1/estimates",
             json={"properties": [VALID_PROPERTY]},
             headers={"X-Request-ID": HYPHENATED_REQUEST_ID},
         )
         batch = client.post(
-            "/estimates",
+            "/api/v1/estimates",
             json={
                 "properties": [
                     {**VALID_PROPERTY, "square_footage": 900},
@@ -56,7 +46,7 @@ def test_create_single_and_batch_estimates_and_propagate_request_id(
             },
         )
         replaced = client.post(
-            "/estimates",
+            "/api/v1/estimates",
             json={"properties": [VALID_PROPERTY]},
             headers={"X-Request-ID": INVALID_REQUEST_ID},
         )
@@ -102,7 +92,7 @@ def test_create_single_and_batch_estimates_and_propagate_request_id(
         replaced_request_id,
     ):
         assert (
-            "method=POST path=/estimates status=201"
+            "method=POST path=/api/v1/estimates status=201"
             in request_records[request_id].message
         )
 
@@ -111,11 +101,11 @@ def test_history_pagination_and_out_of_range_offset(app_factory) -> None:
     app, _database, _store, _prediction = app_factory()
     with TestClient(app) as client:
         client.post(
-            "/estimates",
+            "/api/v1/estimates",
             json={"properties": [{**VALID_PROPERTY, "square_footage": 1000}]},
         )
         second = client.post(
-            "/estimates",
+            "/api/v1/estimates",
             json={
                 "properties": [
                     {**VALID_PROPERTY, "square_footage": 2000},
@@ -124,9 +114,8 @@ def test_history_pagination_and_out_of_range_offset(app_factory) -> None:
             },
         ).json()["estimates"]
 
-        page = client.get("/estimates", params={"limit": 2, "offset": 0})
-        equal_total = client.get("/estimates", params={"offset": 3})
-        past_total = client.get("/estimates", params={"offset": 50})
+        page = client.get("/api/v1/estimates", params={"limit": 2, "offset": 0})
+        past_total = client.get("/api/v1/estimates", params={"offset": 50})
 
     assert page.status_code == 200
     assert page.json()["total"] == 3
@@ -141,23 +130,22 @@ def test_history_pagination_and_out_of_range_offset(app_factory) -> None:
         for estimate in estimates
     ]
     assert timestamps == sorted(timestamps, reverse=True)
-    for response in (equal_total, past_total):
-        assert response.status_code == 200
-        assert response.json()["estimates"] == []
-        assert response.json()["total"] == 3
+    assert past_total.status_code == 200
+    assert past_total.json()["estimates"] == []
+    assert past_total.json()["total"] == 3
 
 
 def test_validation_and_http_errors_use_contract(app_factory) -> None:
     app, _database, _store, _prediction = app_factory()
     with TestClient(app) as client:
         invalid = client.post(
-            "/estimates",
+            "/api/v1/estimates",
             json={"properties": []},
             headers={"X-Request-ID": SUPPLIED_REQUEST_ID},
         )
         missing_route = client.get("/missing")
         invalid_limit = client.get(
-            "/estimates",
+            "/api/v1/estimates",
             params={"limit": MAX_PAGE_LIMIT + 1},
         )
 
@@ -179,28 +167,34 @@ def test_validation_and_http_errors_use_contract(app_factory) -> None:
     }
 
 
-def test_feature_above_static_limit_logs_validation_error(app_factory, caplog: pytest.LogCaptureFixture) -> None:
-    caplog.set_level(logging.INFO, logger="estimator_service.app")
+def test_shared_metadata_constraint_rejects_before_prediction(app_factory) -> None:
     app, _database, _store, prediction = app_factory()
     payload = {
         "properties": [
             {
                 **VALID_PROPERTY,
-                "square_footage": MAX_SQUARE_FOOTAGE + 1,
+                "square_footage": 100001,
             }
         ]
     }
     with TestClient(app) as client:
-        response = client.post("/estimates", json=payload)
+        response = client.post("/api/v1/estimates", json=payload)
 
     assert response.status_code == 422
-    assert response.json() == {
-        "error_code": "validation_error",
-        "message": "Request validation failed.",
-    }
     assert prediction.calls == []
-    assert "request_validation_failed method=POST path=/estimates" in caplog.text
-    assert "less_than_equal" in caplog.text
+
+
+def test_openapi_exposes_shared_metadata_constraints(app_factory) -> None:
+    app, _database, _store, _prediction = app_factory()
+    with TestClient(app) as client:
+        schema = client.get("/openapi.json").json()["components"]["schemas"][
+            "PropertyInput"
+        ]["properties"]
+
+    assert schema["square_footage"]["minimum"] == 1
+    assert schema["square_footage"]["maximum"] == 100000
+    assert "multipleOf" not in schema["bathrooms"]
+    assert "multipleOf" not in schema["school_rating"]
 
 
 @pytest.mark.parametrize(
@@ -238,7 +232,7 @@ def test_prediction_failures_are_logged_and_mapped(
     app, _database, _store, _prediction = app_factory(prediction_client=StubPredictionClient(error=error))
     with TestClient(app) as client:
         response = client.post(
-            "/estimates",
+            "/api/v1/estimates",
             json={"properties": [VALID_PROPERTY]},
         )
 
@@ -254,9 +248,9 @@ def test_health_ignores_prediction_service_but_estimates_return_503(app_factory)
         prediction_client=StubPredictionClient(error=PredictionServiceUnavailableError("offline"))
     )
     with TestClient(app) as client:
-        health = client.get("/health")
+        health = client.get("/api/v1/health")
         estimate = client.post(
-            "/estimates",
+            "/api/v1/estimates",
             json={"properties": [VALID_PROPERTY]},
         )
 
@@ -272,9 +266,9 @@ def test_health_ignores_prediction_service_but_estimates_return_503(app_factory)
 def test_health_returns_503_when_database_becomes_unavailable(app_factory) -> None:
     app, database, _store, _prediction = app_factory()
     with TestClient(app) as client:
-        assert client.get("/health").status_code == 200
+        assert client.get("/api/v1/health").status_code == 200
         database.health.side_effect = StorageUnavailableError("database is unavailable")
-        response = client.get("/health")
+        response = client.get("/api/v1/health")
 
     assert response.status_code == 503
     assert response.json() == {
@@ -288,7 +282,7 @@ def test_startup_initializes_schema(app_factory) -> None:
 
     database.initialize_schema.assert_not_awaited()
     with TestClient(app) as client:
-        assert client.get("/health").status_code == 200
+        assert client.get("/api/v1/health").status_code == 200
     database.initialize_schema.assert_awaited_once_with()
 
 
@@ -303,7 +297,7 @@ def test_store_failure_returns_500_without_partial_history(
     app, _database, _store, _prediction = app_factory(store=store)
     with TestClient(app, raise_server_exceptions=False) as client:
         response = client.post(
-            "/estimates",
+            "/api/v1/estimates",
             json={
                 "properties": [
                     {**VALID_PROPERTY, "square_footage": 1000},

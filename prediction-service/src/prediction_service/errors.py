@@ -1,3 +1,12 @@
+from enum import StrEnum
+
+
+class ErrorCode(StrEnum):
+    VALIDATION_ERROR = "validation_error"
+    HTTP_ERROR = "http_error"
+    INTERNAL_ERROR = "internal_error"
+
+
 class ArtifactError(RuntimeError):
     """Raised when a model artifact cannot be read, validated, or written."""
 
@@ -8,3 +17,7 @@ class PredictionError(RuntimeError):
 
 class TrainingError(ValueError):
     """Raised when the training data cannot produce a useful model."""
+
+
+class PropertyMetadataError(RuntimeError):
+    """Raised when property field metadata cannot be loaded safely."""

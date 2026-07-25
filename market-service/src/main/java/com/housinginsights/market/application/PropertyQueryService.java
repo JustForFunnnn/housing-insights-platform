@@ -1,6 +1,5 @@
 package com.housinginsights.market.application;
 
-import com.housinginsights.market.data.PropertyDataset;
 import com.housinginsights.market.domain.MarketFilter;
 import com.housinginsights.market.domain.PropertyPage;
 import com.housinginsights.market.domain.PropertyRecord;
@@ -12,19 +11,18 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class PropertyQueryService {
-    private final PropertyDataset dataset;
+    private final CachedPropertyFilter cachedPropertyFilter;
 
-    public PropertyQueryService(PropertyDataset dataset) {
-        this.dataset = dataset;
+    public PropertyQueryService(CachedPropertyFilter cachedPropertyFilter) {
+        this.cachedPropertyFilter = cachedPropertyFilter;
     }
 
     public List<PropertyRecord> filter(MarketFilter filter) {
-        return dataset.properties().stream().filter(filter::matches).toList();
+        return cachedPropertyFilter.filter(filter);
     }
 
     public List<PropertyRecord> findAll(MarketFilter filter, SortField sortField, SortDirection direction) {
-        return dataset.properties().stream()
-                .filter(filter::matches)
+        return filter(filter).stream()
                 .sorted(comparator(sortField, direction))
                 .toList();
     }

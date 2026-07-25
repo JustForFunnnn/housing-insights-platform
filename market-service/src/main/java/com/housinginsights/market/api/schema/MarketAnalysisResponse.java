@@ -95,7 +95,7 @@ public record MarketAnalysisResponse(
             bathrooms = List.copyOf(bathrooms);
         }
 
-        private static FilterOptions from(MarketAnalysis.FilterOptions options) {
+        public static FilterOptions from(MarketAnalysis.FilterOptions options) {
             return new FilterOptions(
                     DoubleRange.from(options.squareFootage()),
                     options.bedrooms(),

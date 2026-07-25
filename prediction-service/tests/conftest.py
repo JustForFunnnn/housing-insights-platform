@@ -28,13 +28,13 @@ def valid_rows() -> list[dict[str, object]]:
         distance = 1.0 + index * 0.4
         school_rating = 6.0 + (index % 5) * 0.6
         price = (
-            40_000
+            40000
             + square_footage * 120
-            + bedrooms * 15_000
-            + bathrooms * 9_000
+            + bedrooms * 15000
+            + bathrooms * 9000
             + lot_size * 2
-            - distance * 1_500
-            + school_rating * 4_000
+            - distance * 1500
+            + school_rating * 4000
         )
         rows.append(
             {
@@ -97,8 +97,8 @@ def artifact_factory(
                 "random_state": 42,
                 "metrics": {
                     "r2": {"mean": 0.95, "std": 0.02},
-                    "rmse": {"mean": 12_000.0, "std": 1_000.0},
-                    "mae": {"mean": 9_000.0, "std": 750.0},
+                    "rmse": {"mean": 12000.0, "std": 1000.0},
+                    "mae": {"mean": 9000.0, "std": 750.0},
                 },
             },
         }

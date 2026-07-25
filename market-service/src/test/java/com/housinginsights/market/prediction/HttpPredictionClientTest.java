@@ -101,7 +101,7 @@ class HttpPredictionClientTest {
     @Test
     void rejectsRepresentativeInvalidResponses() {
         server.expect(requestTo("http://prediction.test/predict"))
-                .andRespond(withSuccess("{\"predictions\":[]}", MediaType.APPLICATION_JSON));
+                .andRespond(withSuccess("{\"predictions\":[0]}", MediaType.APPLICATION_JSON));
 
         assertThatThrownBy(() -> client.predict(List.of(validFeatures())))
                 .isInstanceOf(PredictionServiceInvalidResponseException.class);

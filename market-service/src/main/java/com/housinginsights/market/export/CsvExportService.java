@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 public class CsvExportService {
     private static final CSVFormat EXPORT_FORMAT = CSVFormat.DEFAULT
             .builder()
-            .setHeader(PropertyFieldNames.ALL.toArray(String[]::new))
+            .setHeader(PropertyFieldNames.CSV_COLUMNS.toArray(String[]::new))
             .get();
 
     public byte[] export(List<PropertyRecord> properties) {

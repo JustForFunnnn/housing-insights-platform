@@ -15,9 +15,14 @@ The service follows the same application structure as `prediction-service`:
 - `data_access.py` owns SQLAlchemy ORM initialization, transactions, and queries.
 - `tables.py` is the single source for table, constraint, and index metadata.
 - `settings.py` validates environment-backed configuration.
+- `errors.py` contains public error codes and service-specific exception types.
+- `property_metadata.py` loads the shared field metadata.
 - `observability.py` owns request correlation and request logging.
 
 Estimate history is global and batch inserts are atomic.
+Property metadata is validated and loaded once at startup. Set
+`PROPERTY_METADATA_PATH` to override the repository contract. Restart the service
+after changing the file.
 
 ## Local development
 
@@ -47,7 +52,7 @@ service.
 
 ### Create estimates
 
-`POST /estimates` accepts 1 to 20 properties:
+`POST /api/v1/estimates` accepts 1 to 20 properties:
 
 ```json
 {
@@ -65,20 +70,20 @@ service.
 }
 ```
 
-See the prediction service's
-[housing feature input contract](../prediction-service/README.md#housing-feature-inputs)
-for accepted ranges and validation behavior.
+Use `GET /api/v1/estimates/metadata` for the current form constraints and units.
 
 ### Query history
 
-- `GET /estimates?limit=20&offset=0` returns newest records first and includes the
+- `GET /api/v1/estimates?limit=20&offset=0` returns newest records first and includes the
   total record count.
+- `GET /api/v1/estimates/metadata` returns `{"fields": {...}}` for form
+  generation and client-side validation.
 
 An offset at or beyond the total returns `200` with an empty list.
 
 ### Health
 
-`GET /health` verifies that PostgreSQL is reachable and queryable. It does not call
+`GET /api/v1/health` verifies that PostgreSQL is reachable and queryable. It does not call
 the prediction service, so a prediction-service outage does not make this endpoint
 fail.
 

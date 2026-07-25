@@ -22,8 +22,8 @@ class EstimateRow(Base):
     __tablename__ = "estimates"
     __table_args__ = (
         CheckConstraint(
-            "estimated_price >= 0",
-            name="ck_estimates_estimated_price_nonnegative",
+            "estimated_price > 0",
+            name="ck_estimates_estimated_price_positive",
         ),
     )
 

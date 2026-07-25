@@ -45,19 +45,22 @@ def test_empty_prediction_batch_is_rejected(artifact_factory) -> None:
         SklearnPredictionService(artifact_factory()).predict([])
 
 
-def test_predictions_are_rounded_to_integers(artifact_factory, monkeypatch) -> None:
+def test_predictions_are_rounded_to_positive_integers(
+    artifact_factory,
+    monkeypatch,
+) -> None:
     artifact = artifact_factory()
     monkeypatch.setattr(
         artifact["model"],
         "predict",
-        lambda rows: [1000.4, 2000.6],
+        lambda rows: [0.1, 1000.4, 2000.6],
     )
 
     predictions = SklearnPredictionService(artifact).predict(
-        [features(1000, 2), features(2000, 3)]
+        [features(500, 1), features(1000, 2), features(2000, 3)]
     )
 
-    assert predictions == [1000, 2001]
+    assert predictions == [1, 1000, 2001]
     assert all(isinstance(value, int) for value in predictions)
 
 
@@ -67,7 +70,7 @@ def test_predictions_are_rounded_to_integers(artifact_factory, monkeypatch) -> N
         ([math.inf], "non-finite"),
         (["not-a-number"], "prediction failed"),
         ([1.0, 2.0], "wrong number"),
-        ([-1.0], "outside the supported price range"),
+        ([0.0], "outside the supported price range"),
         ([float(2**63)], "outside the supported price range"),
     ],
 )
@@ -95,5 +98,5 @@ def test_model_information_uses_artifact_metadata(artifact_factory) -> None:
     assert set(info.coefficients) == set(FEATURE_NAMES)
     assert math.isfinite(info.intercept)
     assert info.cross_validation.folds == 5
-    assert info.cross_validation.metrics.rmse.mean == 12_000
-    assert info.cross_validation.metrics.rmse.std == 1_000
+    assert info.cross_validation.metrics.rmse.mean == 12000
+    assert info.cross_validation.metrics.rmse.std == 1000

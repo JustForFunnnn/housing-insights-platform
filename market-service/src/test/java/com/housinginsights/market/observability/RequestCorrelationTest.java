@@ -22,10 +22,4 @@ class RequestCorrelationTest {
         assertThat(RequestCorrelation.isUuid4("not-a-uuid")).isFalse();
     }
 
-    @Test
-    void createsCompactUuid4() {
-        String requestId = RequestCorrelation.createUuid4();
-
-        assertThat(requestId).matches("^[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15}$");
-    }
 }

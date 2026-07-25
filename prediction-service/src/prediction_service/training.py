@@ -47,7 +47,9 @@ def _build_model() -> TransformedTargetRegressor:
     )
 
 
-def load_training_data(dataset_path: Path) -> tuple[np.ndarray, np.ndarray]:
+def load_training_data(
+    dataset_path: Path,
+) -> tuple[np.ndarray, np.ndarray]:
     try:
         stream = dataset_path.open("r", newline="", encoding="utf-8-sig")
     except OSError as exc:
@@ -167,8 +169,9 @@ def train(
     dataset_path: Path,
     artifact_path: Path | None = None,
 ) -> ModelArtifact:
+    settings = Settings()
     if artifact_path is None:
-        artifact_path = Settings().model_artifact_path
+        artifact_path = settings.model_artifact_path
     features, prices = load_training_data(dataset_path)
     model = _build_model()
     cross_validation = evaluate_model(features, prices, model)

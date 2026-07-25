@@ -16,20 +16,19 @@ FROM eclipse-temurin:21-jre-noble
 
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
-        curl \
-        fontconfig \
-        fonts-dejavu-core && \
+        curl && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-ENV JAVA_TOOL_OPTIONS=-Djava.awt.headless=true \
-    MARKET_DATASET_PATH="/app/data/House Price Dataset.csv" \
+ENV MARKET_DATASET_PATH="/app/data/House Price Dataset.csv" \
+    PROPERTY_METADATA_PATH=/app/contracts/property-field-metadata.json \
     PREDICTION_SERVICE_URL=http://prediction-service:9000 \
     PREDICTION_SERVICE_TIMEOUT_SECONDS=5
 
 COPY --from=build /workspace/target/market-service-0.1.0.jar app.jar
 COPY ["data/House Price Dataset.csv", "data/House Price Dataset.csv"]
+COPY contracts/property-field-metadata.json contracts/property-field-metadata.json
 RUN chmod 0444 "data/House Price Dataset.csv"
 
 EXPOSE 9002

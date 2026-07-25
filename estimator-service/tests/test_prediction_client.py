@@ -71,7 +71,7 @@ async def test_prediction_client_maps_server_failures_to_unavailable(
         httpx2.Response(422, json={"error_code": "validation_error"}),
         httpx2.Response(200, content=b"not-json"),
         httpx2.Response(200, json={"predictions": [1.5]}),
-        httpx2.Response(200, json={"predictions": [-1]}),
+        httpx2.Response(200, json={"predictions": [0]}),
         httpx2.Response(200, json={"predictions": [2**63]}),
         httpx2.Response(200, json={"predictions": []}),
         httpx2.Response(200, json={"predictions": [1, 2]}),

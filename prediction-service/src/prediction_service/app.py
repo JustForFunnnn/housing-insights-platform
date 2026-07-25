@@ -13,11 +13,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from prediction_service.api import router
 from prediction_service.artifact import load_artifact
-from prediction_service.constants import (
-    ErrorCode,
-    REQUEST_ID_HEADER,
-)
-from prediction_service.errors import ArtifactError
+from prediction_service.constants import REQUEST_ID_HEADER
+from prediction_service.errors import ArtifactError, ErrorCode
 from prediction_service.observability import (
     configure_logging,
     current_request_id,
