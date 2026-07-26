@@ -108,7 +108,7 @@ def test_openapi_exposes_shared_metadata_constraints() -> None:
 def test_request_ids_are_preserved_generated_replaced_and_logged(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    caplog.set_level(logging.INFO, logger="prediction_service.observability")
+    caplog.set_level(logging.INFO, logger="prediction_service.app")
     with TestClient(create_app(prediction_service=StubPredictionService())) as client:
         response = client.get(
             "/api/health",

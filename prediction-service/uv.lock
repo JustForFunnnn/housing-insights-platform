@@ -93,6 +93,25 @@ wheels = [
 ]
 
 [[package]]
+name = "housing-common"
+version = "0.1.0"
+source = { directory = "../packages/python/housing-common" }
+dependencies = [
+    { name = "asgi-correlation-id" },
+    { name = "pydantic" },
+    { name = "starlette" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "asgi-correlation-id", specifier = ">=4.3,<5" },
+    { name = "pydantic", specifier = ">=2.10,<3" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3,<9" },
+    { name = "starlette", specifier = ">=0.40,<2" },
+]
+provides-extras = ["dev"]
+
+[[package]]
 name = "httpcore2"
 version = "2.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -279,6 +298,7 @@ source = { editable = "." }
 dependencies = [
     { name = "asgi-correlation-id" },
     { name = "fastapi" },
+    { name = "housing-common" },
     { name = "joblib" },
     { name = "numpy" },
     { name = "pydantic" },
@@ -297,6 +317,7 @@ dev = [
 requires-dist = [
     { name = "asgi-correlation-id", specifier = ">=4.3,<5" },
     { name = "fastapi", specifier = ">=0.115,<1" },
+    { name = "housing-common", directory = "../packages/python/housing-common" },
     { name = "httpx2", marker = "extra == 'dev'", specifier = ">=2.7,<3" },
     { name = "joblib", specifier = ">=1.4,<2" },
     { name = "numpy", specifier = ">=2,<2.5" },

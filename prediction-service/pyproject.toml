@@ -10,6 +10,7 @@ requires-python = ">=3.12"
 dependencies = [
     "asgi-correlation-id>=4.3,<5",
     "fastapi>=0.115,<1",
+    "housing-common",
     "joblib>=1.4,<2",
     "numpy>=2,<2.5",
     "pydantic>=2.10,<3",
@@ -29,6 +30,9 @@ housing-train = "prediction_service.training:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.uv.sources]
+housing-common = { path = "../packages/python/housing-common" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

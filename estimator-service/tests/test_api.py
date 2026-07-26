@@ -28,7 +28,7 @@ def test_create_single_and_batch_estimates_and_propagate_request_id(
     app_factory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    caplog.set_level(logging.INFO, logger="estimator_service.observability")
+    caplog.set_level(logging.INFO, logger="estimator_service.app")
     prediction = StubPredictionClient()
     app, _database, _store, _prediction = app_factory(prediction_client=prediction)
     with TestClient(app) as client:

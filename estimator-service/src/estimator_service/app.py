@@ -9,6 +9,11 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from housing_common.observability import (
+    configure_logging,
+    create_request_logging_middleware,
+    current_request_id,
+)
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from estimator_service.api import router
@@ -22,11 +27,6 @@ from estimator_service.errors import (
     StorageError,
     StorageUnavailableError,
 )
-from estimator_service.observability import (
-    configure_logging,
-    current_request_id,
-    log_request,
-)
 from estimator_service.prediction_client import (
     HttpPredictionClient,
     PredictionClient,
@@ -35,6 +35,7 @@ from estimator_service.schemas import ErrorResponse
 from estimator_service.settings import Settings
 
 logger = logging.getLogger(__name__)
+log_request = create_request_logging_middleware(__name__)
 
 
 def create_app(
@@ -64,7 +65,7 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(application: FastAPI):
-        configure_logging()
+        configure_logging("estimator_service")
         try:
             await database.initialize_schema()
             await database.health()

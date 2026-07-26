@@ -10,14 +10,16 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     MODEL_ARTIFACT_PATH=/app/artifacts/model_pipeline.joblib \
     PROPERTY_METADATA_PATH=/app/contracts/property-metadata.json \
+    UV_PROJECT_ENVIRONMENT=/app/.venv \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never
 
-COPY prediction-service/pyproject.toml prediction-service/uv.lock ./
-COPY prediction-service/src/ src/
+COPY prediction-service/pyproject.toml prediction-service/uv.lock /workspace/prediction-service/
+COPY prediction-service/src/ /workspace/prediction-service/src/
+COPY packages/python/housing-common/ /workspace/packages/python/housing-common/
 COPY contracts/property-metadata.json contracts/property-metadata.json
 RUN --mount=type=cache,target=/root/.cache/uv,sharing=locked \
-    uv sync --locked --no-dev --no-editable
+    uv sync --project /workspace/prediction-service --locked --no-dev --no-editable
 
 COPY ["data/House Price Dataset.csv", "data/House Price Dataset.csv"]
 RUN .venv/bin/python -m prediction_service.training \

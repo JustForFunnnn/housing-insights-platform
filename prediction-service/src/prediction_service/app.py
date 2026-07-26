@@ -9,22 +9,23 @@ from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from housing_common.observability import (
+    configure_logging,
+    create_request_logging_middleware,
+    current_request_id,
+)
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from prediction_service.api import router
 from prediction_service.artifact import load_artifact
 from prediction_service.constants import REQUEST_ID_HEADER
 from prediction_service.errors import ArtifactError, ErrorCode
-from prediction_service.observability import (
-    configure_logging,
-    current_request_id,
-    log_request,
-)
 from prediction_service.prediction import PredictionService, SklearnPredictionService
 from prediction_service.schemas import ErrorResponse
 from prediction_service.settings import Settings
 
 logger = logging.getLogger(__name__)
+log_request = create_request_logging_middleware(__name__)
 
 
 def create_app(
@@ -39,7 +40,7 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(application: FastAPI):
-        configure_logging()
+        configure_logging("prediction_service")
         service = prediction_service
         if service is None:
             try:

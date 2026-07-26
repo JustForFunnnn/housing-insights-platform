@@ -5,5 +5,11 @@
 !estimator-service/uv.lock
 !estimator-service/src/
 !estimator-service/src/**
+!packages/
+!packages/python/
+!packages/python/housing-common/
+!packages/python/housing-common/pyproject.toml
+!packages/python/housing-common/src/
+!packages/python/housing-common/src/**
 !contracts/
 !contracts/property-metadata.json

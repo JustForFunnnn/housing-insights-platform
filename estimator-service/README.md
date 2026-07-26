@@ -7,7 +7,8 @@ in PostgreSQL.
 
 The service follows the same application structure as `prediction-service`:
 
-- `app.py` assembles the application, lifecycle, and exception handlers.
+- `app.py` assembles the application, lifecycle, shared observability, and exception
+  handlers.
 - `api.py` owns the public HTTP endpoints.
 - `schemas.py` defines the strict public and downstream contracts.
 - `prediction_client.py` integrates with the prediction service.
@@ -16,8 +17,7 @@ The service follows the same application structure as `prediction-service`:
 - `tables.py` is the single source for table, constraint, and index metadata.
 - `settings.py` validates environment-backed configuration.
 - `errors.py` contains public error codes and service-specific exception types.
-- `property_metadata.py` loads the shared field metadata.
-- `observability.py` owns request correlation and request logging.
+- `property_metadata.py` loads the configured snapshot with the shared metadata model.
 
 Estimate history is global and batch inserts are atomic.
 Property metadata is validated and loaded once at startup. Set

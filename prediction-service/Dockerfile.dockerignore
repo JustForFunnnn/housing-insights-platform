@@ -5,6 +5,12 @@
 !prediction-service/uv.lock
 !prediction-service/src/
 !prediction-service/src/**
+!packages/
+!packages/python/
+!packages/python/housing-common/
+!packages/python/housing-common/pyproject.toml
+!packages/python/housing-common/src/
+!packages/python/housing-common/src/**
 !data/
 !data/House Price Dataset.csv
 !contracts/

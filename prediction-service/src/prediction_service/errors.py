@@ -17,7 +17,3 @@ class PredictionError(RuntimeError):
 
 class TrainingError(ValueError):
     """Raised when the training data cannot produce a useful model."""
-
-
-class PropertyMetadataError(RuntimeError):
-    """Raised when property field metadata cannot be loaded safely."""

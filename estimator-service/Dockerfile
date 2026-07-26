@@ -12,14 +12,16 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PREDICTION_SERVICE_TIMEOUT_SECONDS=5 \
     ESTIMATOR_DATABASE_URL=postgresql+asyncpg://estimator:estimator@estimator-database:5432/estimator \
     PROPERTY_METADATA_PATH=/app/contracts/property-metadata.json \
+    UV_PROJECT_ENVIRONMENT=/app/.venv \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never
 
-COPY estimator-service/pyproject.toml estimator-service/uv.lock ./
-COPY estimator-service/src/ src/
+COPY estimator-service/pyproject.toml estimator-service/uv.lock /workspace/estimator-service/
+COPY estimator-service/src/ /workspace/estimator-service/src/
+COPY packages/python/housing-common/ /workspace/packages/python/housing-common/
 COPY contracts/property-metadata.json contracts/property-metadata.json
 RUN --mount=type=cache,target=/root/.cache/uv,sharing=locked \
-    uv sync --locked --no-dev --no-editable
+    uv sync --project /workspace/estimator-service --locked --no-dev --no-editable
 
 EXPOSE 9001
 

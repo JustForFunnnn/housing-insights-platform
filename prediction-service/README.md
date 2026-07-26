@@ -15,11 +15,11 @@ The modules follow the service's actual boundaries:
 - `prediction.py` defines the prediction port and its Scikit-learn implementation.
 - `schemas.py` contains independent HTTP request, response, and CSV contracts that
   preserve strict structural and finite-number validation.
-- `property_metadata.py` loads and validates the shared field metadata.
+- `property_metadata.py` loads the configured snapshot with the shared metadata model.
 - `training.py` handles CSV ingestion, cross-validation, and fitting.
 - `api.py` translates between HTTP schemas and the prediction port.
-- `observability.py` owns logging and request correlation.
-- `app.py` wires the implementation to FastAPI and owns application-level errors.
+- `app.py` wires the implementation, shared observability, and application-level
+  errors to FastAPI.
 
 API requests use strict type validation, while CSV training rows allow numeric
 strings to be converted to numbers.

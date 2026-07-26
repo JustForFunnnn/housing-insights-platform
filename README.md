@@ -6,6 +6,7 @@ A monorepo for the housing model API and the applications that consume it.
 
 - `data/` — shared training and prediction CSV files
 - `contracts/` — shared property metadata loaded by all three backends
+- `packages/python/housing-common/` — shared Python metadata and observability infrastructure
 - `prediction-service/` — scikit-learn housing price prediction API
 - `estimator-service/` — property value estimator backend
 - `market-service/` — property market analysis backend

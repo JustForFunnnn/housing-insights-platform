@@ -4,6 +4,7 @@ from collections.abc import Sequence
 from typing import Protocol
 
 import httpx2
+from housing_common.observability import current_request_id
 
 from estimator_service.constants import REQUEST_ID_HEADER
 from estimator_service.errors import (
@@ -11,7 +12,6 @@ from estimator_service.errors import (
     PredictionServiceUnavailableError,
 )
 from estimator_service.models import PropertyFeatures
-from estimator_service.observability import current_request_id
 from estimator_service.schemas import PredictionResponse
 from estimator_service.settings import Settings
 

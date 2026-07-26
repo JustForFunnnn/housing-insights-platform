@@ -24,7 +24,3 @@ class StorageError(RuntimeError):
 
 class StorageUnavailableError(StorageError):
     """Raised when the database cannot currently be used."""
-
-
-class PropertyMetadataError(RuntimeError):
-    """Raised when property field metadata cannot be loaded safely."""

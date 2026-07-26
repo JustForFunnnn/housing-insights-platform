@@ -4,12 +4,12 @@ from collections.abc import Sequence
 from unittest.mock import AsyncMock
 
 import pytest
+from housing_common.observability import current_request_id
 
 from estimator_service.app import create_app
 from estimator_service.data_access import Database, EstimateStore
 from estimator_service.errors import StorageError
 from estimator_service.models import EstimateRecord, PropertyFeatures
-from estimator_service.observability import current_request_id
 
 VALID_PROPERTY = {
     "square_footage": 1850,
