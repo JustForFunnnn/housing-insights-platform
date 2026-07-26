@@ -36,7 +36,7 @@ test("runs a property estimate", async ({ page }) => {
   await page.goto("/estimator");
   await page.getByRole("button", { name: /Estimate value/ }).click();
   await expect(page.getByText("Estimated value")).toBeVisible();
-  await expect(page.getByText("Saved")).toBeVisible();
+  await expect(page.getByText("Time")).toBeVisible();
 });
 
 test("compares properties and exposes the saved history", async ({

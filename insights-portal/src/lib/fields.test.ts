@@ -8,6 +8,7 @@ import {
   exampleProperty,
   fieldStep,
   fieldUnit,
+  propertyFromSearchParams,
 } from "@/lib/fields";
 
 const metadata: PropertyMetadata = {
@@ -64,6 +65,33 @@ describe("metadata-driven property validation", () => {
         bedrooms: 2.5,
       }).success,
     ).toBe(false);
+  });
+
+  it("accepts only a complete metadata-valid URL baseline", () => {
+    const property = exampleProperty(metadata);
+    const validParams = Object.fromEntries(
+      Object.entries(property).map(([key, value]) => [key, String(value)]),
+    );
+
+    expect(propertyFromSearchParams(validParams, metadata)).toEqual(property);
+    expect(
+      propertyFromSearchParams(
+        { ...validParams, bedrooms: "2.5" },
+        metadata,
+      ),
+    ).toBeUndefined();
+    expect(
+      propertyFromSearchParams(
+        { ...validParams, square_footage: undefined },
+        metadata,
+      ),
+    ).toBeUndefined();
+    expect(
+      propertyFromSearchParams(
+        { ...validParams, bedrooms: "" },
+        metadata,
+      ),
+    ).toBeUndefined();
   });
 
   it("enforces the portal comparison and what-if limits", () => {

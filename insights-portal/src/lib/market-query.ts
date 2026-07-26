@@ -1,4 +1,9 @@
-import type { SortDirection, SortField } from "@/api/types";
+import {
+  FEATURE_KEYS,
+  type PropertyInput,
+  type SortDirection,
+  type SortField,
+} from "@/api/types";
 
 export const FILTER_KEYS = [
   "min_square_footage",
@@ -18,6 +23,14 @@ export const FILTER_KEYS = [
 ] as const;
 
 export type MarketFilterKey = (typeof FILTER_KEYS)[number];
+
+export function whatIfHref(property: PropertyInput) {
+  const query = new URLSearchParams();
+  for (const key of FEATURE_KEYS) {
+    query.set(key, String(property[key]));
+  }
+  return `/market/what-if?${query.toString()}`;
+}
 
 export function withMarketDefaults(source: URLSearchParams) {
   const next = new URLSearchParams(source);

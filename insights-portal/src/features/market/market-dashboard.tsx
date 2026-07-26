@@ -37,8 +37,6 @@ export function MarketDashboard({
     analysis,
     properties,
     current,
-    filterQuery,
-    exportQuery,
     applyFilters,
     resetFilters,
     sort,
@@ -62,20 +60,28 @@ export function MarketDashboard({
             <h2>Define the market parcel</h2>
           </div>
           <div className="button-row">
-            <a
+            <button
               className="button button-secondary"
-              href={marketCsvExportUrl(exportQuery)}
+              type="submit"
+              form="market-filters"
+              formAction={marketCsvExportUrl(new URLSearchParams())}
+              formMethod="get"
+              data-export="true"
             >
               <Download size={16} aria-hidden="true" />
               Export CSV
-            </a>
-            <a
+            </button>
+            <button
               className="button button-secondary"
-              href={marketPdfExportUrl(filterQuery)}
+              type="submit"
+              form="market-filters"
+              formAction={marketPdfExportUrl(new URLSearchParams())}
+              formMethod="get"
+              data-export="true"
             >
               <FileText size={16} aria-hidden="true" />
               Export PDF
-            </a>
+            </button>
           </div>
         </div>
         <MarketFilters

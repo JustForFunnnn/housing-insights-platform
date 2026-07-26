@@ -79,9 +79,6 @@ export function EstimateChart({
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <p className="chart-description">
-        Exact values are also available in the adjacent table.
-      </p>
     </>
   );
 }

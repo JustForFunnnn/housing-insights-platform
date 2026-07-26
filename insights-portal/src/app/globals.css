@@ -373,8 +373,14 @@ a {
 
 .range-pair {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
   gap: 9px;
+}
+
+.range-separator {
+  color: var(--muted-ink);
+  font-family: var(--font-mono), ui-monospace, monospace;
 }
 
 .checkbox-grid {
@@ -491,6 +497,32 @@ a {
   color: inherit;
   background: transparent;
   cursor: pointer;
+}
+
+.table-action {
+  gap: 5px;
+  min-height: 30px;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.estimate-time {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 22px 0 0;
+  border-top: 1px solid var(--line);
+  padding-top: 13px;
+  color: var(--muted-ink);
+  font-size: 0.86rem;
+}
+
+.estimate-time time {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
 }
 
 .data-table tr:last-child td {

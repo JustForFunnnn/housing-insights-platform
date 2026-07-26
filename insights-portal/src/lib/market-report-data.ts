@@ -44,6 +44,6 @@ export function buildMarketReportData(
         ),
       },
     ],
-    priceDistribution: charts.priceDistribution,
+    charts,
   };
 }

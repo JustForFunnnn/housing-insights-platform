@@ -67,14 +67,16 @@ function marketExample(
 
 export function WhatIfForm({
   initialMetadata,
+  initialBaseline,
 }: {
   initialMetadata: MarketMetadata;
+  initialBaseline?: PropertyInput;
 }) {
   const metadata = initialMetadata;
   const form = useForm<WhatIfRequest>({
     resolver: zodResolver(createWhatIfSchema(metadata)),
     defaultValues: {
-      baseline: marketExample(metadata),
+      baseline: initialBaseline ?? marketExample(metadata),
       scenarios: [marketExample(metadata, 1)],
     },
   });

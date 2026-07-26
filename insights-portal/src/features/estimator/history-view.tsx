@@ -6,16 +6,33 @@ import { useState } from "react";
 
 import { ErrorNotice } from "@/components/error-notice";
 import type {
+  FeatureKey,
   EstimatePage,
   PropertyMetadata,
 } from "@/api/types";
 import { formatDate, formatNumber, formatPrice } from "@/lib/format";
+import {
+  fieldUnit,
+  PROPERTY_TABLE_COLUMNS,
+} from "@/lib/fields";
 import {
   getEstimateHistory,
   toApiError,
 } from "@/api/browser";
 
 const PAGE_SIZE = 20;
+
+function propertyValue(
+  property: EstimatePage["estimates"][number]["property"],
+  key: FeatureKey,
+  metadata: PropertyMetadata,
+) {
+  if (key === "year_built") {
+    return String(property[key]);
+  }
+  const unit = fieldUnit(metadata, key);
+  return `${formatNumber(property[key])}${unit ? ` ${unit}` : ""}`;
+}
 
 export function HistoryView({
   metadata,
@@ -64,13 +81,13 @@ export function HistoryView({
             </caption>
             <thead>
               <tr>
-                <th scope="col">Saved</th>
+                <th scope="col">Time</th>
+                {PROPERTY_TABLE_COLUMNS.map((column) => (
+                  <th scope="col" key={column.key}>
+                    {column.label}
+                  </th>
+                ))}
                 <th scope="col">Estimate</th>
-                <th scope="col">Area</th>
-                <th scope="col">Beds</th>
-                <th scope="col">Baths</th>
-                <th scope="col">Year</th>
-                <th scope="col">School</th>
               </tr>
             </thead>
             <tbody>
@@ -79,22 +96,21 @@ export function HistoryView({
                   key={`${record.created_at}-${record.estimated_price}`}
                 >
                   <td>{formatDate(record.created_at)}</td>
+                  {PROPERTY_TABLE_COLUMNS.map((column) => (
+                    <td key={column.key} className="mono">
+                      {propertyValue(
+                        record.property,
+                        column.key,
+                        metadata,
+                      )}
+                    </td>
+                  ))}
                   <td className="mono">
                     {formatPrice(
                       record.estimated_price,
                       metadata.price_currency,
                     )}
                   </td>
-                  <td className="mono">
-                    {formatNumber(record.property.square_footage)}{" "}
-                    {metadata.features.square_footage.unit === "sq_ft"
-                      ? "sq ft"
-                      : metadata.features.square_footage.unit}
-                  </td>
-                  <td>{record.property.bedrooms}</td>
-                  <td>{record.property.bathrooms}</td>
-                  <td>{record.property.year_built}</td>
-                  <td>{record.property.school_rating}</td>
                 </tr>
               ))}
             </tbody>

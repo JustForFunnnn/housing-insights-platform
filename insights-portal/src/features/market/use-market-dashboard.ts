@@ -76,10 +76,6 @@ export function useMarketDashboard(initial: InitialMarketData) {
     analysis,
     properties,
     current,
-    filterQuery,
-    exportQuery: allowedMarketQuery(current, {
-      includeSort: true,
-    }),
     applyFilters(filters: URLSearchParams) {
       navigate(applyMarketFilters(current, filters));
     },

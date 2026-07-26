@@ -64,7 +64,7 @@ const metadata = {
 } as unknown as MarketMetadata;
 
 describe("PDF report data", () => {
-  it("contains the active filters, currency statistics, and price distribution", () => {
+  it("contains the active filters, currency statistics, and all chart series", () => {
     const report = buildMarketReportData(
       analysis,
       metadata,
@@ -77,8 +77,17 @@ describe("PDF report data", () => {
         { label: "Median", value: "$200,000" },
       ]),
     );
-    expect(report.priceDistribution).toEqual([
+    expect(report.charts.priceDistribution).toEqual([
       { label: "200k", value: 1, count: 1 },
+    ]);
+    expect(report.charts.bedrooms).toEqual([
+      { label: "3 bed", value: 200000, count: 1 },
+    ]);
+    expect(report.charts.decades).toEqual([
+      { label: "2000s", value: 200000, count: 1 },
+    ]);
+    expect(report.charts.squareFootage).toEqual([
+      { label: "1500–1999", value: 200000, count: 1 },
     ]);
   });
 
@@ -106,6 +115,8 @@ describe("PDF report data", () => {
     expect(report.metrics.slice(1).every((item) => item.value === "Not available")).toBe(
       true,
     );
-    expect(report.priceDistribution).toEqual([]);
+    expect(
+      Object.values(report.charts).every((series) => series.length === 0),
+    ).toBe(true);
   });
 });

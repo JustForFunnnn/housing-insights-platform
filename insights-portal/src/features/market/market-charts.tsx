@@ -14,6 +14,7 @@ import {
 
 import type { MarketAnalysis } from "@/api/types";
 import {
+  MARKET_CHART_DEFINITIONS,
   marketChartSeries,
   type ChartDatum,
 } from "@/lib/chart-data";
@@ -119,39 +120,18 @@ export function MarketCharts({
   const series = marketChartSeries(analysis);
   return (
     <div className="parcel-grid" style={{ marginTop: 28 }}>
-      <ChartPanel
-        coordinate="CHART / A-21"
-        title="Price distribution"
-        description="Property count across equal price bands."
-        data={series.priceDistribution}
-        unit={unit}
-        priceValues={false}
-      />
-      <ChartPanel
-        coordinate="CHART / B-21"
-        title="Average by bedrooms"
-        description="Mean price for each bedroom count in the active segment."
-        data={series.bedrooms}
-        unit={unit}
-        priceValues
-      />
-      <ChartPanel
-        coordinate="CHART / A-22"
-        title="Average by build decade"
-        description="How mean price changes across construction eras."
-        data={series.decades}
-        unit={unit}
-        priceValues
-        line
-      />
-      <ChartPanel
-        coordinate="CHART / B-22"
-        title="Average by interior area"
-        description="Mean price across square-footage bands."
-        data={series.squareFootage}
-        unit={unit}
-        priceValues
-      />
+      {MARKET_CHART_DEFINITIONS.map((chart) => (
+        <ChartPanel
+          key={chart.key}
+          coordinate={chart.coordinate}
+          title={chart.title}
+          description={chart.description}
+          data={series[chart.key]}
+          unit={unit}
+          priceValues={chart.priceValues}
+          line={chart.type === "line"}
+        />
+      ))}
     </div>
   );
 }

@@ -17,7 +17,7 @@ import {
   exampleProperty,
   fieldErrorMessages,
 } from "@/lib/fields";
-import { formatPrice } from "@/lib/format";
+import { formatDate, formatPrice } from "@/lib/format";
 import {
   createEstimates,
   toApiError,
@@ -114,26 +114,12 @@ export function EstimatorForm({
               ]}
               unit={metadata.price_currency}
             />
-            <div className="data-table-wrap" style={{ marginTop: 22 }}>
-              <table className="data-table">
-                <caption className="sr-only">Estimate result</caption>
-                <tbody>
-                  <tr>
-                    <th scope="row">Estimated price</th>
-                    <td className="mono">
-                      {formatPrice(
-                        result.estimated_price,
-                        metadata.price_currency,
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <th scope="row">Saved</th>
-                    <td>{new Date(result.created_at).toLocaleString()}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <p className="estimate-time">
+              <span className="measure-label">Time</span>
+              <time dateTime={result.created_at}>
+                {formatDate(result.created_at)}
+              </time>
+            </p>
           </>
         ) : (
           <div className="empty-state">

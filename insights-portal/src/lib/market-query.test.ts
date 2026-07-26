@@ -5,6 +5,7 @@ import {
   applyMarketPage,
   applyMarketSort,
   allowedMarketQuery,
+  whatIfHref,
   withMarketDefaults,
 } from "@/lib/market-query";
 
@@ -39,6 +40,22 @@ describe("API query allowlists", () => {
 });
 
 describe("market URL state", () => {
+  it("serializes a property as a what-if baseline", () => {
+    expect(
+      whatIfHref({
+        square_footage: 1850,
+        bedrooms: 3,
+        bathrooms: 2.5,
+        year_built: 1998,
+        lot_size: 7500,
+        distance_to_city_center: 5.6,
+        school_rating: 8.2,
+      }),
+    ).toBe(
+      "/market/what-if?square_footage=1850&bedrooms=3&bathrooms=2.5&year_built=1998&lot_size=7500&distance_to_city_center=5.6&school_rating=8.2",
+    );
+  });
+
   it("adds stable defaults without discarding repeated filters", () => {
     const result = withMarketDefaults(
       new URLSearchParams("bedrooms=2&bedrooms=3"),

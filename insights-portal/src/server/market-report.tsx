@@ -1,9 +1,14 @@
 import "server-only";
 
 import {
+  Circle,
   Document,
+  Line,
   Page,
+  Polyline,
+  Rect,
   StyleSheet,
+  Svg,
   Text,
   View,
   renderToBuffer,
@@ -13,43 +18,48 @@ import type {
   MarketAnalysis,
   MarketMetadata,
 } from "@/api/types";
-import type { ChartDatum } from "@/lib/chart-data";
+import {
+  MARKET_CHART_DEFINITIONS,
+  type ChartDatum,
+} from "@/lib/chart-data";
 import { buildMarketReportData } from "@/lib/market-report-data";
 
 const styles = StyleSheet.create({
   page: {
-    padding: 34,
+    padding: 28,
     fontFamily: "Helvetica",
     color: "#13233A",
-    fontSize: 9,
+    fontSize: 8,
+    backgroundColor: "#F4F7FA",
   },
   header: {
     borderBottomWidth: 1,
     borderBottomColor: "#91A2B8",
-    paddingBottom: 14,
-    marginBottom: 18,
+    paddingBottom: 9,
+    marginBottom: 11,
   },
   eyebrow: {
     color: "#52647C",
-    fontSize: 8,
+    fontSize: 7,
     letterSpacing: 1.2,
     textTransform: "uppercase",
   },
   title: {
-    fontSize: 24,
+    fontSize: 21,
     fontWeight: 700,
-    marginTop: 6,
+    marginTop: 4,
   },
   summary: {
     flexDirection: "row",
     borderTopWidth: 1,
     borderLeftWidth: 1,
     borderColor: "#C9D4E2",
-    marginBottom: 18,
+    marginBottom: 11,
+    backgroundColor: "#FFFFFF",
   },
   metric: {
     flexGrow: 1,
-    padding: 10,
+    padding: 8,
     borderRightWidth: 1,
     borderBottomWidth: 1,
     borderColor: "#C9D4E2",
@@ -60,88 +70,255 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   metricValue: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 700,
-    marginTop: 5,
+    marginTop: 3,
+  },
+  chartGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
   chart: {
-    minHeight: 210,
-    padding: 12,
+    width: "49.2%",
+    height: 174,
+    marginBottom: 9,
+    padding: 9,
     borderWidth: 1,
     borderColor: "#C9D4E2",
+    backgroundColor: "#FFFFFF",
+  },
+  chartHeading: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 3,
+  },
+  chartCoordinate: {
+    color: "#91A2B8",
+    fontSize: 5.5,
+    letterSpacing: 0.9,
+    textTransform: "uppercase",
   },
   chartTitle: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 700,
-    marginBottom: 10,
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 7,
-  },
-  label: {
-    width: "31%",
+  chartDescription: {
     color: "#52647C",
-    fontSize: 7,
+    fontSize: 6,
+    marginTop: 2,
+    marginBottom: 5,
   },
-  track: {
-    width: "54%",
-    height: 8,
-    backgroundColor: "#E8EEF5",
+  plotRow: {
+    flexDirection: "row",
+    height: 91,
   },
-  bar: {
-    height: 8,
-    backgroundColor: "#1D5FD1",
+  yLabels: {
+    width: 34,
+    justifyContent: "space-between",
+    paddingTop: 2,
+    paddingBottom: 12,
+    paddingRight: 4,
   },
-  value: {
-    width: "15%",
+  yLabel: {
+    color: "#52647C",
+    fontSize: 5.5,
     textAlign: "right",
-    fontSize: 7,
+  },
+  plotColumn: {
+    flexGrow: 1,
+  },
+  svg: {
+    width: "100%",
+    height: 72,
+  },
+  axisLabels: {
+    flexDirection: "row",
+    height: 17,
+  },
+  axisLabel: {
+    color: "#52647C",
+    fontSize: 5,
+    textAlign: "center",
+    paddingHorizontal: 1,
+  },
+  chartNote: {
+    color: "#52647C",
+    fontSize: 5.5,
+    marginTop: 2,
   },
   footer: {
     position: "absolute",
-    bottom: 20,
-    left: 34,
-    right: 34,
+    bottom: 15,
+    left: 28,
+    right: 28,
     borderTopWidth: 1,
     borderTopColor: "#C9D4E2",
-    paddingTop: 7,
+    paddingTop: 5,
     color: "#52647C",
-    fontSize: 7,
+    fontSize: 6,
   },
 });
 
+const PLOT_WIDTH = 300;
+const PLOT_HEIGHT = 68;
+const PLOT_TOP = 2;
+
+function axisValue(value: number, priceValues: boolean, unit: string) {
+  if (!priceValues) return String(Math.round(value));
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: unit,
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(value);
+  } catch {
+    return `${new Intl.NumberFormat("en-US", {
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(value)} ${unit}`;
+  }
+}
+
 function PdfChart({
+  coordinate,
+  title,
+  description,
   data,
+  unit,
+  priceValues,
+  line,
 }: {
+  coordinate: string;
+  title: string;
+  description: string;
   data: ChartDatum[];
+  unit: string;
+  priceValues: boolean;
+  line: boolean;
 }) {
   const maximum = Math.max(...data.map((item) => item.value), 1);
+  const step = PLOT_WIDTH / Math.max(data.length, 1);
+  const barWidth = Math.max(8, Math.min(34, step * 0.58));
+  const points = data
+    .map((item, index) => {
+      const x = index * step + step / 2;
+      const y =
+        PLOT_TOP + PLOT_HEIGHT - (item.value / maximum) * PLOT_HEIGHT;
+      return `${x},${y}`;
+    })
+    .join(" ");
+
   return (
     <View style={styles.chart}>
-      <Text style={styles.chartTitle}>Price distribution</Text>
+      <View style={styles.chartHeading}>
+        <Text style={styles.eyebrow}>Visual reading</Text>
+        <Text style={styles.chartCoordinate}>{coordinate}</Text>
+      </View>
+      <Text style={styles.chartTitle}>{title}</Text>
+      <Text style={styles.chartDescription}>{description}</Text>
       {data.length === 0 ? (
         <Text style={{ color: "#52647C" }}>
-          No distribution data is available for this segment.
+          No chart data is available for this segment.
         </Text>
       ) : (
-        data.map((item) => (
-          <View style={styles.row} key={item.label}>
-            <Text style={styles.label}>{item.label}</Text>
-            <View style={styles.track}>
-              <View
-                style={[
-                  styles.bar,
-                  {
-                    width: `${Math.max(2, (item.value / maximum) * 100)}%`,
-                  },
-                ]}
-              />
+        <>
+          <View style={styles.plotRow}>
+            <View style={styles.yLabels}>
+              <Text style={styles.yLabel}>
+                {axisValue(maximum, priceValues, unit)}
+              </Text>
+              <Text style={styles.yLabel}>
+                {axisValue(maximum / 2, priceValues, unit)}
+              </Text>
+              <Text style={styles.yLabel}>0</Text>
             </View>
-            <Text style={styles.value}>{item.value}</Text>
+            <View style={styles.plotColumn}>
+              <Svg
+                style={styles.svg}
+                viewBox={`0 0 ${PLOT_WIDTH} ${PLOT_HEIGHT + PLOT_TOP + 2}`}
+              >
+                {[PLOT_TOP, PLOT_TOP + PLOT_HEIGHT / 2, PLOT_TOP + PLOT_HEIGHT].map(
+                  (y) => (
+                    <Line
+                      key={y}
+                      x1={0}
+                      x2={PLOT_WIDTH}
+                      y1={y}
+                      y2={y}
+                      stroke="#C9D4E2"
+                      strokeWidth={0.6}
+                      strokeDasharray="3 3"
+                    />
+                  ),
+                )}
+                {line ? (
+                  <>
+                    <Polyline
+                      points={points}
+                      fill="none"
+                      stroke="#1D5FD1"
+                      strokeWidth={2.4}
+                    />
+                    {data.map((item, index) => {
+                      const x = index * step + step / 2;
+                      const y =
+                        PLOT_TOP +
+                        PLOT_HEIGHT -
+                        (item.value / maximum) * PLOT_HEIGHT;
+                      return (
+                        <Circle
+                          key={item.label}
+                          cx={x}
+                          cy={y}
+                          r={2.8}
+                          fill="#6ED3C1"
+                          stroke="#13233A"
+                          strokeWidth={0.8}
+                        />
+                      );
+                    })}
+                  </>
+                ) : (
+                  data.map((item, index) => {
+                    const height = (item.value / maximum) * PLOT_HEIGHT;
+                    return (
+                      <Rect
+                        key={item.label}
+                        x={index * step + (step - barWidth) / 2}
+                        y={PLOT_TOP + PLOT_HEIGHT - height}
+                        width={barWidth}
+                        height={Math.max(1, height)}
+                        rx={1.5}
+                        fill="#1D5FD1"
+                      />
+                    );
+                  })
+                )}
+              </Svg>
+              <View style={styles.axisLabels}>
+                {data.map((item) => (
+                  <Text
+                    key={item.label}
+                    style={[
+                      styles.axisLabel,
+                      { width: `${100 / data.length}%` },
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                ))}
+              </View>
+            </View>
           </View>
-        ))
+          <Text style={styles.chartNote}>
+            {data.length} plotted groups ·{" "}
+            {priceValues
+              ? "Average price"
+              : "Property count"}
+          </Text>
+        </>
       )}
     </View>
   );
@@ -166,7 +343,7 @@ function MarketReport({
       title="Housing Insights Market Report"
       author="Housing Insights"
     >
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" orientation="landscape" style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.eyebrow}>
             Housing Insights / Market analysis
@@ -184,7 +361,20 @@ function MarketReport({
             </View>
           ))}
         </View>
-        <PdfChart data={report.priceDistribution} />
+        <View style={styles.chartGrid}>
+          {MARKET_CHART_DEFINITIONS.map((chart) => (
+            <PdfChart
+              key={chart.key}
+              coordinate={chart.coordinate}
+              title={chart.title}
+              description={chart.description}
+              data={report.charts[chart.key]}
+              unit={metadata.price_currency}
+              priceValues={chart.priceValues}
+              line={chart.type === "line"}
+            />
+          ))}
+        </View>
         <Text style={styles.footer}>
           Generated {new Date().toISOString()} · Source: supplied read-only
           housing dataset

@@ -38,6 +38,9 @@ function RangeFields({
           aria-label={`Minimum ${label.toLowerCase()}`}
           placeholder={`Min ${range.minimum}`}
         />
+        <span className="range-separator" aria-hidden="true">
+          –
+        </span>
         <input
           className="input mono"
           name={maxName}
@@ -70,6 +73,13 @@ export function MarketFilters({
   onReset: () => void;
 }) {
   function submit(event: FormEvent<HTMLFormElement>) {
+    const submitter = (event.nativeEvent as SubmitEvent).submitter;
+    if (
+      submitter instanceof HTMLButtonElement &&
+      submitter.dataset.export === "true"
+    ) {
+      return;
+    }
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const query = new URLSearchParams();
@@ -85,7 +95,21 @@ export function MarketFilters({
 
   const options = metadata.filter_options;
   return (
-    <form onSubmit={submit} key={current.toString()}>
+    <form
+      id="market-filters"
+      onSubmit={submit}
+      key={current.toString()}
+    >
+      <input
+        type="hidden"
+        name="sort_by"
+        value={current.get("sort_by") ?? "id"}
+      />
+      <input
+        type="hidden"
+        name="sort_direction"
+        value={current.get("sort_direction") ?? "asc"}
+      />
       <div className="form-grid">
         <RangeFields
           label="Interior area"

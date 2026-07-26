@@ -1,6 +1,12 @@
 "use client";
 
-import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import Link from "next/link";
 
 import type {
   MarketMetadata,
@@ -8,18 +14,16 @@ import type {
   SortDirection,
   SortField,
 } from "@/api/types";
-import { fieldUnit } from "@/lib/fields";
+import {
+  fieldUnit,
+  PROPERTY_TABLE_COLUMNS,
+} from "@/lib/fields";
 import { formatNumber, formatPrice } from "@/lib/format";
+import { whatIfHref } from "@/lib/market-query";
 
 const columns: Array<{ key: SortField; label: string }> = [
   { key: "id", label: "ID" },
-  { key: "square_footage", label: "Area" },
-  { key: "bedrooms", label: "Beds" },
-  { key: "bathrooms", label: "Baths" },
-  { key: "year_built", label: "Year" },
-  { key: "lot_size", label: "Lot" },
-  { key: "distance_to_city_center", label: "Distance" },
-  { key: "school_rating", label: "School" },
+  ...PROPERTY_TABLE_COLUMNS,
   { key: "price", label: "Price" },
 ];
 
@@ -68,6 +72,7 @@ export function PropertyTable({
                   </th>
                 );
               })}
+              <th scope="col">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -92,6 +97,15 @@ export function PropertyTable({
                 <td>{record.school_rating}</td>
                 <td className="mono">
                   {formatPrice(record.price, metadata.price_currency)}
+                </td>
+                <td>
+                  <Link
+                    className="button table-action"
+                    href={whatIfHref(record)}
+                    aria-label={`Use property ${record.id} as the what-if baseline`}
+                  >
+                    What-if
+                  </Link>
                 </td>
               </tr>
             ))}

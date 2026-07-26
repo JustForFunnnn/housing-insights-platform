@@ -30,6 +30,19 @@ export const FIELD_DEFINITIONS: Record<
   school_rating: { label: "School rating" },
 };
 
+export const PROPERTY_TABLE_COLUMNS = [
+  { key: "square_footage", label: "Area" },
+  { key: "bedrooms", label: "Beds" },
+  { key: "bathrooms", label: "Baths" },
+  { key: "year_built", label: "Year" },
+  { key: "lot_size", label: "Lot" },
+  { key: "distance_to_city_center", label: "Distance" },
+  { key: "school_rating", label: "School" },
+] as const satisfies ReadonlyArray<{
+  key: FeatureKey;
+  label: string;
+}>;
+
 export function fieldErrorMessages(
   errors:
     | Partial<Record<FeatureKey, { message?: string }>>
@@ -72,6 +85,25 @@ export function createPropertySchema(metadata: PropertyMetadata) {
       FEATURE_KEYS.map((key) => [key, propertyNumber(metadata, key)]),
     ) as Record<FeatureKey, ReturnType<typeof propertyNumber>>,
   );
+}
+
+export function propertyFromSearchParams(
+  searchParams: Record<string, string | string[] | undefined>,
+  metadata: PropertyMetadata,
+) {
+  const candidate = Object.fromEntries(
+    FEATURE_KEYS.map((key) => {
+      const value = searchParams[key];
+      return [
+        key,
+        typeof value === "string" && value.trim() !== ""
+          ? Number(value)
+          : Number.NaN,
+      ];
+    }),
+  );
+  const result = createPropertySchema(metadata).safeParse(candidate);
+  return result.success ? result.data : undefined;
 }
 
 export function createComparisonSchema(metadata: PropertyMetadata) {
