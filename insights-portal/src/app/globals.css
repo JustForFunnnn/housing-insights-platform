@@ -459,6 +459,10 @@ a {
   font-size: 0.82rem;
 }
 
+.what-if-chart-scroll {
+  overflow-x: auto;
+}
+
 .what-if-price-chart {
   height: 360px;
 }

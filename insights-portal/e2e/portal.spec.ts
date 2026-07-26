@@ -132,7 +132,7 @@ test("runs what-if validation and displays signed differences", async ({
     page.getByRole("heading", { name: "Difference from baseline" }),
   ).toHaveCount(0);
   const priceBars = page.locator(
-    ".what-if-price-chart .recharts-bar-rectangle",
+    ".what-if-price-chart .what-if-price-bar",
   );
   await expect(priceBars).toHaveCount(2);
   await priceBars.nth(1).hover();

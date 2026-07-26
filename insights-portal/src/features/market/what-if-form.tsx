@@ -33,13 +33,10 @@ import {
 } from "@/api/browser";
 import { WhatIfResults } from "./what-if-results";
 
-function marketExample(
-  metadata: MarketMetadata,
-  variant = 0,
-): PropertyInput {
+function marketExample(metadata: MarketMetadata): PropertyInput {
   const options = metadata.filter_options;
   const midpoint = (minimum: number, maximum: number) =>
-    minimum + (maximum - minimum) * (variant ? 0.62 : 0.45);
+    minimum + (maximum - minimum) * 0.45;
   return {
     square_footage: Math.round(
       midpoint(
@@ -48,13 +45,9 @@ function marketExample(
       ),
     ),
     bedrooms:
-      options.bedrooms[
-        Math.min(variant + 1, options.bedrooms.length - 1)
-      ] ?? 0,
+      options.bedrooms[Math.min(1, options.bedrooms.length - 1)] ?? 0,
     bathrooms:
-      options.bathrooms[
-        Math.min(variant + 1, options.bathrooms.length - 1)
-      ] ?? 0,
+      options.bathrooms[Math.min(1, options.bathrooms.length - 1)] ?? 0,
     year_built: Math.round(
       midpoint(options.year_built.minimum, options.year_built.maximum),
     ),

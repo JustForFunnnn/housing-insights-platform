@@ -92,94 +92,98 @@ export function WhatIfResults({
     <section style={{ marginTop: 34 }}>
       <p className="measure-label">Scenario readings</p>
       <h2 className="instrument-title">Scenario prices</h2>
-      <div
-        className="chart-shell what-if-price-chart"
-        role="img"
-        aria-label={chartData
-          .map(
-            (point) =>
-              `${point.label}: ${formatPrice(
-                point.predictedPrice,
-                priceCurrency,
-              )}; change ${signedPrice(
-                point.priceDifference,
-                priceCurrency,
-              )}; ${signedPercentage(
-                point.percentageDifference,
-              )}`,
-          )
-          .join(". ")}
-      >
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={chartData}
-            margin={{ top: 30, right: 24, bottom: 8, left: 8 }}
-          >
-            <CartesianGrid
-              vertical={false}
-              stroke="#C9D4E2"
-              strokeDasharray="3 3"
-            />
-            <XAxis
-              dataKey="label"
-              tick={{ fill: "#52647C", fontSize: 12 }}
-            />
-            <YAxis
-              width={72}
-              domain={[0, "auto"]}
-              tick={{ fill: "#52647C", fontSize: 11 }}
-              tickFormatter={(value) =>
-                new Intl.NumberFormat("en-US", {
-                  notation: "compact",
-                }).format(Number(value))
-              }
-            />
-            <Tooltip
-              shared={false}
-              cursor={{ fill: "rgba(29, 95, 209, 0.06)" }}
-              position={{ x: 84, y: 18 }}
-              content={(props) => (
-                <ScenarioPriceTooltip
-                  {...props}
-                  unit={priceCurrency}
-                />
-              )}
-            />
-            <ReferenceLine
-              y={result.baseline_prediction}
-              ifOverflow="extendDomain"
-              stroke="#13233A"
-              strokeDasharray="7 4"
-              strokeWidth={1.5}
-              label={{
-                value: baselineLabel,
-                position: "insideTopRight",
-                fill: "#13233A",
-                fontSize: 12,
-              }}
-            />
-            <Bar
-              dataKey="predictedPrice"
-              name="Predicted price"
-              maxBarSize={72}
-              radius={[3, 3, 0, 0]}
-              activeBar={{ stroke: "#13233A", strokeWidth: 3 }}
+      <div className="what-if-chart-scroll">
+        <div
+          className="chart-shell what-if-price-chart"
+          style={{ minWidth: chartData.length * 96 }}
+          role="img"
+          aria-label={chartData
+            .map(
+              (point) =>
+                `${point.label}: ${formatPrice(
+                  point.predictedPrice,
+                  priceCurrency,
+                )}; change ${signedPrice(
+                  point.priceDifference,
+                  priceCurrency,
+                )}; ${signedPercentage(
+                  point.percentageDifference,
+                )}`,
+            )
+            .join(". ")}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={chartData}
+              margin={{ top: 30, right: 24, bottom: 8, left: 8 }}
             >
-              {chartData.map((point) => (
-                <Cell
-                  key={point.label}
-                  fill={
-                    point.isBaseline
-                      ? "#13233A"
-                      : point.priceDifference >= 0
-                      ? "#1D5FD1"
-                      : "#B4233A"
-                  }
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+              <CartesianGrid
+                vertical={false}
+                stroke="#C9D4E2"
+                strokeDasharray="3 3"
+              />
+              <XAxis
+                dataKey="label"
+                tick={{ fill: "#52647C", fontSize: 12 }}
+              />
+              <YAxis
+                width={72}
+                domain={[0, "auto"]}
+                tick={{ fill: "#52647C", fontSize: 11 }}
+                tickFormatter={(value) =>
+                  new Intl.NumberFormat("en-US", {
+                    notation: "compact",
+                  }).format(Number(value))
+                }
+              />
+              <Tooltip
+                shared={false}
+                cursor={{ fill: "rgba(29, 95, 209, 0.06)" }}
+                position={{ x: 84, y: 18 }}
+                content={(props) => (
+                  <ScenarioPriceTooltip
+                    {...props}
+                    unit={priceCurrency}
+                  />
+                )}
+              />
+              <ReferenceLine
+                y={result.baseline_prediction}
+                ifOverflow="extendDomain"
+                stroke="#13233A"
+                strokeDasharray="7 4"
+                strokeWidth={1.5}
+                label={{
+                  value: baselineLabel,
+                  position: "insideTopRight",
+                  fill: "#13233A",
+                  fontSize: 12,
+                }}
+              />
+              <Bar
+                className="what-if-price-bar"
+                dataKey="predictedPrice"
+                name="Predicted price"
+                maxBarSize={72}
+                radius={[3, 3, 0, 0]}
+                activeBar={{ stroke: "#13233A", strokeWidth: 3 }}
+              >
+                {chartData.map((point) => (
+                  <Cell
+                    key={point.label}
+                    fill={
+                      point.isBaseline
+                        ? "#13233A"
+                        : point.priceDifference >= 0
+                        ? "#1D5FD1"
+                        : "#B4233A"
+                    }
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
       <div className="data-table-wrap" style={{ marginTop: 22 }}>
         <table className="data-table">
