@@ -38,6 +38,7 @@ function dependencyError(dependency: Dependency): ErrorResponse {
 async function errorBody(
   response: Response,
   dependency: Dependency,
+  signal: AbortSignal,
 ): Promise<ErrorResponse> {
   try {
     const body = (await response.json()) as Partial<ErrorResponse>;
@@ -50,7 +51,8 @@ async function errorBody(
         message: body.message,
       };
     }
-  } catch {
+  } catch (error) {
+    if (signal.aborted) throw error;
     // The safe dependency error below handles non-JSON responses.
   }
   return dependencyError(dependency);
@@ -61,7 +63,6 @@ function logBackendError(
   path: string,
   init: RequestInit,
   response: Response,
-  body: ErrorResponse,
 ) {
   const requestId = response.headers.get("x-request-id");
   console.error(
@@ -71,13 +72,12 @@ function logBackendError(
       method: (init.method ?? "GET").toUpperCase(),
       path: path.split("?", 1)[0],
       status: response.status,
-      error_code: body.error_code,
       ...(requestId ? { request_id: requestId } : {}),
     }),
   );
 }
 
-async function backendFetch(
+async function backendJson<T>(
   dependency: Dependency,
   path: string,
   init: RequestInit = {},
@@ -95,36 +95,36 @@ async function backendFetch(
       signal: controller.signal,
       headers,
     });
-  } catch {
+
+    if (!response.ok) {
+      logBackendError(dependency, path, init, response);
+      const body = await errorBody(
+        response,
+        dependency,
+        controller.signal,
+      );
+      throw new BackendError(response.status, body);
+    }
+
+    try {
+      return (await response.json()) as T;
+    } catch (error) {
+      if (controller.signal.aborted) throw error;
+      const body = {
+        error_code: `${dependency}_invalid_response`,
+        message: `${
+          dependency === "estimator"
+            ? "Estimator"
+            : "Market analysis"
+        } returned an invalid response.`,
+      };
+      throw new BackendError(502, body);
+    }
+  } catch (error) {
+    if (error instanceof BackendError) throw error;
     throw new BackendError(503, dependencyError(dependency));
   } finally {
     clearTimeout(timer);
-  }
-
-  if (!response.ok) {
-    const body = await errorBody(response, dependency);
-    logBackendError(dependency, path, init, response, body);
-    throw new BackendError(response.status, body);
-  }
-
-  return response;
-}
-
-async function backendJson<T>(
-  dependency: Dependency,
-  path: string,
-  init: RequestInit = {},
-) {
-  const response = await backendFetch(dependency, path, init);
-  try {
-    return (await response.json()) as T;
-  } catch {
-    throw new BackendError(502, {
-      error_code: `${dependency}_invalid_response`,
-      message: `${
-        dependency === "estimator" ? "Estimator" : "Market analysis"
-      } returned an invalid response.`,
-    });
   }
 }
 

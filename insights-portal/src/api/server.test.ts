@@ -17,6 +17,7 @@ function jsonResponse(
 
 describe("server backend client", () => {
   afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
@@ -59,5 +60,36 @@ describe("server backend client", () => {
         error_code: "market_service_unavailable",
       },
     });
+  });
+
+  it("keeps the timeout active while reading the response body", async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn(
+      (_input: string, init: RequestInit | undefined) =>
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          json: () =>
+            new Promise((_resolve, reject) => {
+              init?.signal?.addEventListener("abort", () => {
+                reject(new DOMException("aborted", "AbortError"));
+              });
+            }),
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const backend = await import("@/api/server");
+
+    const request = backend.getMarketAnalysis();
+    const assertion = expect(request).rejects.toMatchObject({
+      status: 503,
+      body: {
+        error_code: "market_service_unavailable",
+      },
+    });
+    await vi.advanceTimersByTimeAsync(8000);
+
+    await assertion;
   });
 });

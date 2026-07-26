@@ -14,6 +14,7 @@ from prediction_service.constants import (
     ALGORITHM_NAME,
     FEATURE_NAMES,
     REQUEST_ID_HEADER,
+    TARGET_TRANSFORM,
 )
 from prediction_service.errors import ArtifactError
 from prediction_service.models import (
@@ -55,6 +56,7 @@ class StubPredictionService:
         return ModelInfo(
             training_timestamp="2026-07-21T12:00:00+00:00",
             algorithm=ALGORITHM_NAME,
+            target_transform=TARGET_TRANSFORM,
             features=FEATURE_NAMES,
             intercept=1000,
             coefficients={name: 1.0 for name in FEATURE_NAMES},
@@ -81,6 +83,7 @@ def test_health_and_model_info_contract() -> None:
     assert info.status_code == 200
     assert info.json()["training_timestamp"] == "2026-07-21T12:00:00+00:00"
     assert info.json()["algorithm"] == ALGORITHM_NAME
+    assert info.json()["target_transform"] == TARGET_TRANSFORM
     assert info.json()["cross_validation"]["folds"] == 5
 
 

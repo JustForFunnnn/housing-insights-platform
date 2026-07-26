@@ -61,10 +61,11 @@ def load_training_data(
     try:
         with stream:
             reader = csv.DictReader(stream, strict=True)
+            fieldnames = reader.fieldnames or []
             missing = [
                 column
                 for column in REQUIRED_COLUMNS
-                if column not in (reader.fieldnames or [])
+                if column not in fieldnames
             ]
             if missing:
                 raise TrainingError(
@@ -72,6 +73,10 @@ def load_training_data(
                 )
 
             for raw_row in reader:
+                if None in raw_row:
+                    raise TrainingError(
+                        f"CSV row {reader.line_num} has more values than columns"
+                    )
                 try:
                     row = TrainingRow.model_validate(raw_row)
                 except ValidationError as exc:

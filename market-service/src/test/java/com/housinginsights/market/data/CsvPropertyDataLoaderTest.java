@@ -54,6 +54,17 @@ class CsvPropertyDataLoaderTest {
     }
 
     @Test
+    void rejectsRowsWithUnexpectedColumns(@TempDir Path directory) throws IOException {
+        Path dataset = write(
+                directory,
+                HEADER + "1,1200,2,1,1990,5000,2.5,7.0,180000,unexpected\n");
+
+        assertThatThrownBy(() -> loader.load(dataset))
+                .isInstanceOf(DatasetLoadingException.class)
+                .hasMessageContaining("unexpected number of columns");
+    }
+
+    @Test
     void rejectsMalformedAndInvalidRows(@TempDir Path directory) throws IOException {
         Path malformed = write(directory, HEADER + "1,not-a-number,2,1,1990,5000,2.5,7.0,180000\n");
         assertThatThrownBy(() -> loader.load(malformed))

@@ -69,6 +69,19 @@ def test_missing_column_is_rejected(write_dataset, tmp_path: Path) -> None:
         train(write_dataset(fieldnames=columns), tmp_path / "model.joblib")
 
 
+def test_extra_cells_are_rejected(tmp_path: Path) -> None:
+    dataset = tmp_path / "malformed.csv"
+    dataset.write_text(
+        "id,square_footage,bedrooms,bathrooms,year_built,lot_size,"
+        "distance_to_city_center,school_rating,price\n"
+        "1,1200,2,1,1990,5000,2.5,7,180000,unexpected\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(TrainingError, match="more values than columns"):
+        load_training_data(dataset)
+
+
 @pytest.mark.parametrize(
     ("column", "value"),
     [

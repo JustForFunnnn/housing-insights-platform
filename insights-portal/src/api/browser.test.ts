@@ -8,10 +8,14 @@ import {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 describe("API client", () => {
   it("preserves a backend error response", async () => {
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
     const fetchMock = vi.fn(() =>
       Promise.resolve(
         new Response(
@@ -21,7 +25,10 @@ describe("API client", () => {
           }),
           {
             status: 422,
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              "X-Request-ID": "request-123",
+            },
           },
         ),
       ),
@@ -38,6 +45,9 @@ describe("API client", () => {
       error_code: "invalid_property",
       message: "Bedrooms are outside the allowed range.",
     });
+    expect(consoleError).toHaveBeenCalledWith(
+      expect.stringContaining('"request_id":"request-123"'),
+    );
   });
 
   it("maps unavailable market requests to a safe error", async () => {

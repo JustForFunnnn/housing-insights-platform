@@ -130,6 +130,12 @@ class CrossValidationResponse(ResponseModel):
 class ModelInfoResponse(ResponseModel):
     training_timestamp: str
     algorithm: str
+    target_transform: Literal["log"] = Field(
+        description=(
+            "The target is natural-log price; the intercept and coefficients "
+            "operate in that space."
+        )
+    )
     features: list[str]
     intercept: float
     coefficients: dict[str, float]

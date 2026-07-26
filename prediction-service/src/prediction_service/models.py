@@ -55,6 +55,7 @@ class CrossValidationInfo:
 class ModelInfo:
     training_timestamp: str
     algorithm: str
+    target_transform: str
     features: tuple[str, ...]
     intercept: float
     coefficients: dict[str, float]

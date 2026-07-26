@@ -33,3 +33,6 @@ housing-common = { path = "../packages/python/housing-common" }
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+markers = [
+    "integration: requires an explicit external test dependency",
+]

@@ -9,6 +9,7 @@ from prediction_service.constants import (
     FEATURE_NAMES,
     MAX_SIGNED_INT64,
     MINIMUM_PRICE,
+    TARGET_TRANSFORM,
 )
 from prediction_service.errors import PredictionError
 from prediction_service.models import (
@@ -74,6 +75,7 @@ class SklearnPredictionService:
         return ModelInfo(
             training_timestamp=self._artifact["trained_at"],
             algorithm=self._artifact["algorithm"],
+            target_transform=TARGET_TRANSFORM,
             features=FEATURE_NAMES,
             intercept=float(regressor.intercept_),
             coefficients={

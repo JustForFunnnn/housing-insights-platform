@@ -211,6 +211,25 @@ def test_openapi_exposes_shared_metadata_constraints(app_factory) -> None:
     assert metadata_features["additionalProperties"] is False
 
 
+def test_cors_exposes_request_id(app_factory) -> None:
+    app, _database, _store, _prediction = app_factory()
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/estimates",
+            headers={"Origin": "http://localhost:9100"},
+            json={"properties": []},
+        )
+
+    assert response.status_code == 422
+    assert "X-Request-ID" in response.headers
+    exposed_headers = {
+        header.strip()
+        for header in response.headers["Access-Control-Expose-Headers"].split(",")
+    }
+    assert "X-Request-ID" in exposed_headers
+
+
 @pytest.mark.parametrize(
     ("error", "status_code", "expected_response", "log_event"),
     [

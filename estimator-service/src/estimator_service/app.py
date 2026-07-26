@@ -96,6 +96,7 @@ def create_app(
         ],
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=[REQUEST_ID_HEADER],
     )
     application.include_router(router, prefix="/api")
     application.middleware("http")(log_request)

@@ -2,7 +2,11 @@ import math
 
 import pytest
 
-from prediction_service.constants import ALGORITHM_NAME, FEATURE_NAMES
+from prediction_service.constants import (
+    ALGORITHM_NAME,
+    FEATURE_NAMES,
+    TARGET_TRANSFORM,
+)
 from prediction_service.errors import PredictionError
 from prediction_service.models import HousingFeatures
 from prediction_service.prediction import SklearnPredictionService
@@ -94,6 +98,7 @@ def test_model_information_uses_artifact_metadata(artifact_factory) -> None:
 
     assert info.training_timestamp == artifact["trained_at"]
     assert info.algorithm == ALGORITHM_NAME
+    assert info.target_transform == TARGET_TRANSFORM
     assert info.features == FEATURE_NAMES
     assert set(info.coefficients) == set(FEATURE_NAMES)
     assert math.isfinite(info.intercept)

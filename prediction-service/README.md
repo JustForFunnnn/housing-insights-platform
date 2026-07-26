@@ -1,122 +1,86 @@
 # Prediction Service
 
-FastAPI service for training and serving a Scikit-learn log-target linear regression
-model.
+FastAPI service that trains a Scikit-learn housing price model and serves batch
+predictions from the generated model artifact.
 
-## Design
+## Responsibilities
 
-The modules follow the service's actual boundaries:
+- Read and validate the training CSV.
+- Train and evaluate a log-target linear regression model.
+- Persist and load the model artifact.
+- Serve predictions, model information, and health status.
 
-- `constants.py` contains shared service constants.
-- `settings.py` validates environment-backed configuration.
-- `errors.py` contains public error codes and service-specific exception types.
-- `models.py` contains the feature contract and framework-free result types.
-- `artifact.py` owns model persistence and compatibility checks.
-- `prediction.py` defines the prediction port and its Scikit-learn implementation.
-- `schemas.py` contains independent HTTP request, response, and CSV contracts that
-  preserve strict structural and finite-number validation.
-- `property_metadata.py` loads the configured snapshot with the shared metadata model.
-- `training.py` handles CSV ingestion, cross-validation, and fitting.
-- `api.py` translates between HTTP schemas and the prediction port.
-- `app.py` wires the implementation, shared observability, and application-level
-  errors to FastAPI.
+## Structure
 
-API requests use strict type validation, while CSV training rows allow numeric
-strings to be converted to numbers.
-
-
-## Local development
-
-Run commands from `prediction-service/`:
-
-```bash
-uv sync --extra dev
-uv run housing-train "../data/House Price Dataset.csv"
-uv run pytest
-uv run uvicorn prediction_service.app:app --reload --port 9000
+```text
+src/prediction_service/
+├── __init__.py           # Python package marker
+├── api.py                # FastAPI routes and dependency access
+├── app.py                # Application assembly, middleware, and errors
+├── artifact.py           # Model artifact persistence and validation
+├── constants.py          # Training, feature, and API constants
+├── errors.py             # Public error codes and service exceptions
+├── models.py             # Framework-independent domain models
+├── prediction.py         # Prediction service implementation
+├── property_metadata.py  # Shared property metadata loading
+├── schemas.py            # HTTP and training-row validation models
+├── settings.py           # Environment-backed configuration
+└── training.py           # CSV loading, evaluation, and model training
 ```
 
-Swagger UI is available at <http://localhost:9000/docs>.
+## Configuration
 
-To load an artifact from another location, set `MODEL_ARTIFACT_PATH` before
-starting Uvicorn. Its default is `artifacts/model_pipeline.joblib`.
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `MODEL_ARTIFACT_PATH` | `artifacts/model_pipeline.joblib` | Trained model artifact |
+| `PROPERTY_METADATA_PATH` | `../contracts/property-metadata.json` | Shared feature metadata |
+
+Configuration and metadata changes require a service restart.
 
 ## API
 
-Every request supports an optional `X-Request-ID` for request correlation. The
-active identifier is included in application logs and returned in the response.
+- `POST /api/predict` — generate price predictions for a property batch.
+- `GET /api/model-info` — inspect the loaded model and its training metrics.
+- `GET /api/health` — verify that the service started successfully.
 
-### Predict
+The complete request fields, response fields, validation rules, and error responses
+are available in Swagger UI at <http://localhost:9000/docs>.
 
-`POST /api/predict` always accepts a list of 1 to 20 property records. A single
-prediction is represented by a one-item list; bare objects are not accepted:
+## Notes
 
-```json
-{
-  "instances": [
-    {
-      "square_footage": 1850,
-      "bedrooms": 3,
-      "bathrooms": 2,
-      "year_built": 1998,
-      "lot_size": 7500,
-      "distance_to_city_center": 5.6,
-      "school_rating": 8.2
-    }
-  ]
-}
+- The training target uses a natural-log transformation. Model coefficients and the
+  intercept therefore operate in log-price space.
+- The Docker image trains the model during the build and includes the generated
+  artifact at runtime.
+- A missing or incompatible model artifact prevents application startup.
+- API requests support `X-Request-ID` correlation.
+
+To train the model locally, run from `prediction-service/`:
+
+```bash
+uv sync
+uv run housing-train "../data/House Price Dataset.csv"
 ```
 
-```json
-{
-  "predictions": [285479]
-}
-```
+## Start
 
-The numeric result depends on the trained artifact. Raw model outputs are rounded to
-integer prices; OpenAPI exposes each prediction as an `int64` value.
-
-### Housing Feature Inputs
-
-The prediction, estimator, and market services load the same
-`contracts/property-metadata.json` once at startup. Feature constraints and
-units are intentionally not duplicated in this README. They are exposed to portal
-clients by each application's `GET /api/metadata` endpoint.
-
-Prediction requests are validated against the same metadata. Strict types, finite
-numbers, batch size, extra-field rejection, and signed 64-bit result checks also
-remain in effect. Configuration changes require a service restart.
-
-### Model Information
-
-`GET /api/model-info` returns the training timestamp, feature coefficients, intercept,
-and five-fold R², RMSE, and MAE mean/standard-deviation summaries.
-
-### Health Check
-
-`GET /api/health` returns `{"status":"ok"}`. A missing or incompatible model artifact
-prevents the application from starting.
-
-### Error Responses
-
-API errors use a consistent response shape. The correlation identifier is
-returned in the `X-Request-ID` response header:
-
-```json
-{
-  "error_code": "validation_error",
-  "message": "Request validation failed."
-}
-```
-
-Internal exception messages and tracebacks are logged server-side but are never
-returned to clients.
-
-## Docker
-
-Run from the repository root. The image trains the model during the build, so it
-is self-contained at runtime:
+Run from the repository root:
 
 ```bash
 docker compose up --build prediction-service
 ```
+
+The API is available at <http://localhost:9000> and Swagger UI is available at
+<http://localhost:9000/docs>.
+
+## Testing
+
+Run from `prediction-service/`:
+
+```bash
+uv sync --extra dev
+uv run pytest
+```
+
+The test suite covers API behavior, validation, model artifacts, prediction,
+configuration, CSV ingestion, and training.

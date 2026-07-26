@@ -68,6 +68,11 @@ async def test_prediction_client_maps_server_failures_to_unavailable(
 @pytest.mark.parametrize(
     "response",
     [
+        httpx2.Response(
+            302,
+            json={"predictions": [265000]},
+            headers={"Location": "/api/predict"},
+        ),
         httpx2.Response(422, json={"error_code": "validation_error"}),
         httpx2.Response(200, content=b"not-json"),
         httpx2.Response(200, json={"predictions": [1.5]}),

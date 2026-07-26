@@ -83,6 +83,10 @@ public class CsvPropertyDataLoader {
 
         for (CSVRecord row : parser) {
             long lineNumber = row.getRecordNumber() + 1;
+            if (!row.isConsistent()) {
+                throw new DatasetLoadingException(
+                        "CSV row " + lineNumber + " has an unexpected number of columns");
+            }
             PropertyRecord property = parseRecord(row, lineNumber);
             if (!identifiers.add(property.id())) {
                 throw rowError(lineNumber, PropertyFieldNames.ID, "must be unique");

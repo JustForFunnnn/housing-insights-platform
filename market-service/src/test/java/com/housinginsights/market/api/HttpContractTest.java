@@ -1,6 +1,7 @@
 package com.housinginsights.market.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
@@ -102,10 +103,27 @@ class HttpContractTest {
                 .andExpect(jsonPath("$.error_code").value("http_error"))
                 .andExpect(jsonPath("$.message").value("The request could not be completed."));
 
+        mockMvc.perform(post("/api/health"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(header().string("Allow", containsString("GET")))
+                .andExpect(jsonPath("$.error_code").value("http_error"));
+
         assertThat(output)
                 .contains(
                         "request_validation_failed method=GET "
                                 + "path=/api/properties error=");
+    }
+
+    @Test
+    void corsExposesRequestIdToThePortal() throws Exception {
+        mockMvc.perform(get("/api/properties")
+                        .header("Origin", "http://localhost:9100")
+                        .param("limit", "0"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(header().exists(RequestCorrelation.HEADER_NAME))
+                .andExpect(header().string(
+                        "Access-Control-Expose-Headers",
+                        containsString(RequestCorrelation.HEADER_NAME)));
     }
 
     @Test

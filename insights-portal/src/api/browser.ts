@@ -37,6 +37,21 @@ function dependencyError(dependency: Dependency): ErrorResponse {
   };
 }
 
+function logApiError(
+  dependency: Dependency,
+  response: Response,
+) {
+  const requestId = response.headers.get("x-request-id");
+  console.error(
+    JSON.stringify({
+      event: "api_request_failed",
+      dependency,
+      status: response.status,
+      ...(requestId ? { request_id: requestId } : {}),
+    }),
+  );
+}
+
 async function fetchJson<T>(
   dependency: Dependency,
   input: string,
@@ -57,6 +72,7 @@ async function fetchJson<T>(
   }
 
   if (!response.ok) {
+    logApiError(dependency, response);
     let body = dependencyError(dependency);
     try {
       const candidate = (await response.json()) as Partial<ErrorResponse>;

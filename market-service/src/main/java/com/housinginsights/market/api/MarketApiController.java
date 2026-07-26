@@ -1,5 +1,6 @@
 package com.housinginsights.market.api;
 
+import com.housinginsights.market.observability.RequestCorrelation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -17,5 +18,5 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin(origins = {
         "http://localhost:9100",
         "http://host.docker.internal:9100"
-})
+}, exposedHeaders = RequestCorrelation.HEADER_NAME)
 public @interface MarketApiController {}

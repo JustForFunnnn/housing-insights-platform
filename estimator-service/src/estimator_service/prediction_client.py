@@ -96,9 +96,9 @@ class HttpPredictionClient:
             raise PredictionServiceUnavailableError(
                 f"prediction service returned status {response.status_code}"
             )
-        if response.status_code >= 400:
+        if response.status_code != 200:
             raise PredictionServiceInvalidResponseError(
-                "prediction service rejected request with status "
+                "prediction service returned unexpected status "
                 f"{response.status_code}"
             )
         return response
