@@ -35,7 +35,7 @@ export default function RootLayout({
     <html lang="en" className={`${spline.variable} ${mono.variable}`}>
       <body>
         <Providers>
-          <div className="app-shell">
+          <div className="min-h-screen min-[761px]:grid min-[761px]:grid-cols-[248px_minmax(0,1fr)]">
             <SiteNavigation />
             <main className="page-canvas">
               <div className="page-frame">{children}</div>

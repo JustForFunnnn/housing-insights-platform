@@ -67,12 +67,6 @@ a {
 }
 
 /* Application shell and navigation */
-.app-shell {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 248px minmax(0, 1fr);
-}
-
 .site-rail {
   position: sticky;
   top: 0;
@@ -727,10 +721,6 @@ details.filter-details summary {
 }
 
 @media (max-width: 760px) {
-  .app-shell {
-    display: block;
-  }
-
   .site-rail {
     position: sticky;
     height: auto;
