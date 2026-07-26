@@ -1,32 +1,16 @@
 "use client";
 
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { formatPrice } from "@/lib/format";
 
-export function EstimateChart({
-  values,
-  unit,
-}: {
-  values: Array<{ label: string; value: number }>;
-  unit: string;
-}) {
+export function EstimateChart({ values, unit }: { values: Array<{ label: string; value: number }>; unit: string }) {
   return (
     <>
       <div
         className="chart-shell"
         role="img"
-        aria-label={values
-          .map((item) => `${item.label}: ${formatPrice(item.value, unit)}`)
-          .join(". ")}
+        aria-label={values.map((item) => `${item.label}: ${formatPrice(item.value, unit)}`).join(". ")}
       >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
@@ -45,12 +29,7 @@ export function EstimateChart({
                     }).format(Number(value))
                   }
                 />
-                <YAxis
-                  type="category"
-                  dataKey="label"
-                  width={88}
-                  tick={{ fill: "#52647C", fontSize: 12 }}
-                />
+                <YAxis type="category" dataKey="label" width={88} tick={{ fill: "#52647C", fontSize: 12 }} />
               </>
             ) : (
               <>

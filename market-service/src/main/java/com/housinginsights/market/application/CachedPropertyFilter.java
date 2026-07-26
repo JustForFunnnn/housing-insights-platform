@@ -17,8 +17,6 @@ public class CachedPropertyFilter {
 
     @Cacheable(cacheNames = "filteredProperties", key = "#filter", sync = true)
     public List<PropertyRecord> filter(MarketFilter filter) {
-        return dataset.properties().stream()
-                .filter(filter::matches)
-                .toList();
+        return dataset.properties().stream().filter(filter::matches).toList();
     }
 }

@@ -30,10 +30,7 @@ class PropertyFeatureMetadata(BaseModel):
     @model_validator(mode="after")
     def validate_values(self) -> PropertyFeatureMetadata:
         values = (self.min, self.max)
-        if not all(
-            isinstance(value, int) or math.isfinite(value)
-            for value in values
-        ):
+        if not all(isinstance(value, int) or math.isfinite(value) for value in values):
             raise ValueError("min and max must be finite")
         if self.min > self.max:
             raise ValueError("min must not exceed max")
@@ -63,6 +60,4 @@ class PropertyMetadata(BaseModel):
         try:
             return cls.model_validate_json(path.read_text(encoding="utf-8"))
         except (OSError, UnicodeError, ValidationError) as exc:
-            raise PropertyMetadataError(
-                f"could not load valid property metadata: {path}"
-            ) from exc
+            raise PropertyMetadataError(f"could not load valid property metadata: {path}") from exc

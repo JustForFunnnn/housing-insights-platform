@@ -8,11 +8,7 @@ from housing_common.property_metadata import (
     PropertyMetadataError,
 )
 
-CONTRACT_PATH = (
-    Path(__file__).parents[4]
-    / "contracts"
-    / "property-metadata.json"
-)
+CONTRACT_PATH = Path(__file__).parents[4] / "contracts" / "property-metadata.json"
 FEATURE_NAMES = (
     "square_footage",
     "bedrooms",

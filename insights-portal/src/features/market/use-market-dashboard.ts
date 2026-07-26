@@ -3,16 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 
-import {
-  getMarketAnalysis,
-  getMarketProperties,
-} from "@/api/browser";
-import type {
-  MarketAnalysis,
-  PropertyPage,
-  SortDirection,
-  SortField,
-} from "@/api/types";
+import { getMarketAnalysis, getMarketProperties } from "@/api/browser";
+import type { MarketAnalysis, PropertyPage, SortDirection, SortField } from "@/api/types";
 import {
   allowedMarketQuery,
   applyMarketFilters,
@@ -32,9 +24,7 @@ interface InitialMarketData {
 
 export function useMarketDashboard(initial: InitialMarketData) {
   const searchParams = useSearchParams();
-  const current = withMarketDefaults(
-    new URLSearchParams(searchParams.toString()),
-  );
+  const current = withMarketDefaults(new URLSearchParams(searchParams.toString()));
   const filterQuery = allowedMarketQuery(current);
   const propertyQuery = allowedMarketQuery(current, {
     includePage: true,
@@ -46,30 +36,19 @@ export function useMarketDashboard(initial: InitialMarketData) {
   const analysis = useQuery({
     queryKey: ["market-analysis", filterQueryKey],
     queryFn: ({ signal }) => getMarketAnalysis(filterQuery, signal),
-    initialData:
-      filterQueryKey === initial.filterQuery
-        ? initial.analysis
-        : undefined,
+    initialData: filterQueryKey === initial.filterQuery ? initial.analysis : undefined,
     staleTime: STALE_TIME,
   });
   const properties = useQuery({
     queryKey: ["market-properties", propertyQueryKey],
-    queryFn: ({ signal }) =>
-      getMarketProperties(propertyQuery, signal),
-    initialData:
-      propertyQueryKey === initial.propertyQuery
-        ? initial.properties
-        : undefined,
+    queryFn: ({ signal }) => getMarketProperties(propertyQuery, signal),
+    initialData: propertyQueryKey === initial.propertyQuery ? initial.properties : undefined,
     staleTime: STALE_TIME,
   });
 
   function navigate(next: URLSearchParams) {
     const query = next.toString();
-    window.history.replaceState(
-      null,
-      "",
-      query ? `/market?${query}` : "/market",
-    );
+    window.history.replaceState(null, "", query ? `/market?${query}` : "/market");
   }
 
   return {

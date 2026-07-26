@@ -1,10 +1,6 @@
 import { SubNavigation } from "@/components/sub-navigation";
 
-export default function MarketLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function MarketLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <SubNavigation

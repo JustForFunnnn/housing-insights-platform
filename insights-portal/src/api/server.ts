@@ -19,10 +19,8 @@ import {
 } from "@/api/types";
 
 const SERVICE_URLS: Record<Dependency, () => string> = {
-  estimator: () =>
-    process.env.ESTIMATOR_SERVICE_URL ?? "http://localhost:9001",
-  market: () =>
-    process.env.MARKET_SERVICE_URL ?? "http://localhost:9002",
+  estimator: () => process.env.ESTIMATOR_SERVICE_URL ?? "http://localhost:9001",
+  market: () => process.env.MARKET_SERVICE_URL ?? "http://localhost:9002",
 };
 
 export class BackendError extends Error {
@@ -34,16 +32,9 @@ export class BackendError extends Error {
   }
 }
 
-async function errorBody(
-  response: Response,
-  dependency: Dependency,
-  signal: AbortSignal,
-): Promise<ErrorResponse> {
+async function errorBody(response: Response, dependency: Dependency, signal: AbortSignal): Promise<ErrorResponse> {
   try {
-    return normalizeErrorResponse(
-      await response.json(),
-      dependency,
-    );
+    return normalizeErrorResponse(await response.json(), dependency);
   } catch (error) {
     if (signal.aborted) throw error;
     // The safe dependency error below handles non-JSON responses.
@@ -51,12 +42,7 @@ async function errorBody(
   return dependencyError(dependency);
 }
 
-function logBackendError(
-  dependency: Dependency,
-  path: string,
-  init: RequestInit,
-  response: Response,
-) {
+function logBackendError(dependency: Dependency, path: string, init: RequestInit, response: Response) {
   const requestId = response.headers.get("x-request-id");
   console.error(
     JSON.stringify({
@@ -70,12 +56,7 @@ function logBackendError(
   );
 }
 
-async function backendJson<T>(
-  dependency: Dependency,
-  path: string,
-  schema: ZodType<T>,
-  init: RequestInit = {},
-) {
+async function backendJson<T>(dependency: Dependency, path: string, schema: ZodType<T>, init: RequestInit = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8000);
   const headers = new Headers(init.headers);
@@ -92,11 +73,7 @@ async function backendJson<T>(
 
     if (!response.ok) {
       logBackendError(dependency, path, init, response);
-      const body = await errorBody(
-        response,
-        dependency,
-        controller.signal,
-      );
+      const body = await errorBody(response, dependency, controller.signal);
       throw new BackendError(response.status, body);
     }
 
@@ -104,10 +81,7 @@ async function backendJson<T>(
       return await parseResponseJson(response, schema);
     } catch (error) {
       if (controller.signal.aborted) throw error;
-      throw new BackendError(
-        502,
-        invalidResponseError(dependency),
-      );
+      throw new BackendError(502, invalidResponseError(dependency));
     }
   } catch (error) {
     if (error instanceof BackendError) throw error;
@@ -118,11 +92,7 @@ async function backendJson<T>(
 }
 
 export function getEstimatorMetadata() {
-  return backendJson(
-    "estimator",
-    "/api/metadata",
-    propertyMetadataSchema,
-  );
+  return backendJson("estimator", "/api/metadata", propertyMetadataSchema);
 }
 
 export function getMarketMetadata() {
@@ -130,25 +100,13 @@ export function getMarketMetadata() {
 }
 
 export function getEstimates(query = "") {
-  return backendJson(
-    "estimator",
-    `/api/estimates${query ? `?${query}` : ""}`,
-    estimatePageSchema,
-  );
+  return backendJson("estimator", `/api/estimates${query ? `?${query}` : ""}`, estimatePageSchema);
 }
 
 export function getMarketAnalysis(query = "") {
-  return backendJson(
-    "market",
-    `/api/analysis${query ? `?${query}` : ""}`,
-    marketAnalysisSchema,
-  );
+  return backendJson("market", `/api/analysis${query ? `?${query}` : ""}`, marketAnalysisSchema);
 }
 
 export function getMarketProperties(query = "") {
-  return backendJson(
-    "market",
-    `/api/properties${query ? `?${query}` : ""}`,
-    propertyPageSchema,
-  );
+  return backendJson("market", `/api/properties${query ? `?${query}` : ""}`, propertyPageSchema);
 }

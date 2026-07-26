@@ -19,18 +19,15 @@ import org.springframework.context.annotation.Configuration;
 class CachedPropertyFilterTest {
     @Test
     void identicalCanonicalFilterReusesImmutableFullResult() {
-        try (var context =
-                new AnnotationConfigApplicationContext(TestConfiguration.class)) {
-            CachedPropertyFilter cachedFilter =
-                    context.getBean(CachedPropertyFilter.class);
+        try (var context = new AnnotationConfigApplicationContext(TestConfiguration.class)) {
+            CachedPropertyFilter cachedFilter = context.getBean(CachedPropertyFilter.class);
 
             var first = cachedFilter.filter(MarketFilter.empty());
             var second = cachedFilter.filter(MarketFilter.empty());
 
             assertThat(second).isSameAs(first);
             assertThat(first).containsExactlyElementsOf(RECORDS);
-            assertThatThrownBy(() -> first.add(RECORDS.getFirst()))
-                    .isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(() -> first.add(RECORDS.getFirst())).isInstanceOf(UnsupportedOperationException.class);
         }
     }
 
@@ -49,11 +46,8 @@ class CachedPropertyFilterTest {
 
         @Bean
         CacheManager cacheManager() {
-            CaffeineCacheManager manager =
-                    new CaffeineCacheManager("filteredProperties");
-            manager.setCaffeine(Caffeine.newBuilder()
-                    .maximumSize(10)
-                    .expireAfterAccess(1, TimeUnit.MINUTES));
+            CaffeineCacheManager manager = new CaffeineCacheManager("filteredProperties");
+            manager.setCaffeine(Caffeine.newBuilder().maximumSize(10).expireAfterAccess(1, TimeUnit.MINUTES));
             return manager;
         }
     }

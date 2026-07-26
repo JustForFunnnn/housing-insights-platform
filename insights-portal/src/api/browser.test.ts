@@ -1,10 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import {
-  createEstimates,
-  getMarketAnalysis,
-  toApiError,
-} from "@/api/browser";
+import { createEstimates, getMarketAnalysis, toApiError } from "@/api/browser";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -13,9 +9,7 @@ afterEach(() => {
 
 describe("API client", () => {
   it("preserves a backend error response", async () => {
-    const consoleError = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
     const fetchMock = vi.fn(() =>
       Promise.resolve(
         new Response(
@@ -45,9 +39,7 @@ describe("API client", () => {
       error_code: "invalid_property",
       message: "Bedrooms are outside the allowed range.",
     });
-    expect(consoleError).toHaveBeenCalledWith(
-      expect.stringContaining('"request_id":"request-123"'),
-    );
+    expect(consoleError).toHaveBeenCalledWith(expect.stringContaining('"request_id":"request-123"'));
   });
 
   it("maps unavailable market requests to a safe error", async () => {
@@ -56,45 +48,37 @@ describe("API client", () => {
       vi.fn(() => Promise.reject(new TypeError("connection refused"))),
     );
 
-    const error = await getMarketAnalysis(
-      new URLSearchParams(),
-    ).catch((reason) => reason);
+    const error = await getMarketAnalysis(new URLSearchParams()).catch((reason) => reason);
 
     expect(error).toMatchObject({ status: 503 });
     expect(toApiError(error)).toEqual({
       error_code: "market_service_unavailable",
-      message:
-        "Market analysis is temporarily unavailable. Try again shortly.",
+      message: "Market analysis is temporarily unavailable. Try again shortly.",
     });
   });
 
   it.each([
     ["valid JSON with the wrong shape", "{}"],
     ["malformed JSON", "not-json"],
-  ])(
-    "maps a successful %s response to an invalid-response error",
-    async (_case, body) => {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn(() =>
-          Promise.resolve(
-            new Response(body, {
-              status: 200,
-              headers: { "Content-Type": "application/json" },
-            }),
-          ),
+  ])("maps a successful %s response to an invalid-response error", async (_case, body) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve(
+          new Response(body, {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
         ),
-      );
+      ),
+    );
 
-      const error = await getMarketAnalysis(
-        new URLSearchParams(),
-      ).catch((reason) => reason);
+    const error = await getMarketAnalysis(new URLSearchParams()).catch((reason) => reason);
 
-      expect(error).toMatchObject({ status: 502 });
-      expect(toApiError(error)).toEqual({
-        error_code: "market_invalid_response",
-        message: "Market analysis returned an invalid response.",
-      });
-    },
-  );
+    expect(error).toMatchObject({ status: 502 });
+    expect(toApiError(error)).toEqual({
+      error_code: "market_invalid_response",
+      message: "Market analysis returned an invalid response.",
+    });
+  });
 });

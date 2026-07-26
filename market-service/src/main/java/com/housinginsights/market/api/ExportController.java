@@ -32,16 +32,12 @@ public class ExportController {
         this.propertyMetadata = propertyMetadata;
     }
 
-    @GetMapping(
-            value = "/properties/export/csv",
-            produces = "text/csv;charset=UTF-8")
+    @GetMapping(value = "/properties/export/csv", produces = "text/csv;charset=UTF-8")
     public ResponseEntity<byte[]> csv(
             @Valid @ParameterObject @ModelAttribute MarketFilterRequest filters,
             @ParameterObject @ModelAttribute MarketSortRequest sort) {
         byte[] body = csvExportService.export(propertyQueryService.findAll(
-                filters.toFilter(propertyMetadata),
-                sort.toSortField(),
-                sort.toSortDirection()));
+                filters.toFilter(propertyMetadata), sort.toSortField(), sort.toSortDirection()));
         return download(body, CSV_MEDIA_TYPE, "market-properties.csv");
     }
 

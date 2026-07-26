@@ -49,8 +49,7 @@ class InMemoryEstimateStore:
 
     async def insert_many(self, records: Sequence[EstimateRecord]) -> None:
         if self.fail_on_square_footage is not None and any(
-            record.property.square_footage == self.fail_on_square_footage
-            for record in records
+            record.property.square_footage == self.fail_on_square_footage for record in records
         ):
             raise StorageError("could not persist estimate batch")
         self.records.extend(records)
@@ -65,9 +64,7 @@ class InMemoryEstimateStore:
             key=lambda item: (item[1].created_at, item[0]),
             reverse=True,
         )
-        page = tuple(
-            record for _id, record in records[offset : offset + limit]
-        )
+        page = tuple(record for _id, record in records[offset : offset + limit])
         return page, len(records)
 
 

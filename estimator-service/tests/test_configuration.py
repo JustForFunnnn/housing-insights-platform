@@ -23,9 +23,7 @@ def test_settings_read_environment(
 
     assert str(settings.prediction_service_url) == "https://prediction.example/"
     assert settings.prediction_service_timeout_seconds == 2.5
-    assert str(settings.estimator_database_url) == (
-        "postgresql+asyncpg://user:pass@database.example:5432/estimator"
-    )
+    assert str(settings.estimator_database_url) == ("postgresql+asyncpg://user:pass@database.example:5432/estimator")
     assert settings.property_metadata_path == metadata_path
 
 

@@ -50,21 +50,11 @@ class SklearnPredictionService:
         if not all(math.isfinite(value) for value in predictions):
             raise PredictionError("model returned a non-finite prediction")
         if not all(value > 0 for value in predictions):
-            raise PredictionError(
-                "model returned a prediction outside the supported price range"
-            )
+            raise PredictionError("model returned a prediction outside the supported price range")
 
-        rounded_predictions = [
-            max(MINIMUM_PRICE, round(value))
-            for value in predictions
-        ]
-        if not all(
-            value <= MAX_SIGNED_INT64
-            for value in rounded_predictions
-        ):
-            raise PredictionError(
-                "model returned a prediction outside the supported price range"
-            )
+        rounded_predictions = [max(MINIMUM_PRICE, round(value)) for value in predictions]
+        if not all(value <= MAX_SIGNED_INT64 for value in rounded_predictions):
+            raise PredictionError("model returned a prediction outside the supported price range")
         return rounded_predictions
 
     def model_info(self) -> ModelInfo:

@@ -65,10 +65,7 @@ def _parse_model(model: object) -> TransformedTargetRegressor:
         if not isinstance(regressor, LinearRegression):
             raise ArtifactError("artifact regressor must be LinearRegression")
         check_is_fitted(regressor, ["coef_", "intercept_"])
-        coefficients = [
-            _finite_number(coefficient, "model coefficient")
-            for coefficient in regressor.coef_
-        ]
+        coefficients = [_finite_number(coefficient, "model coefficient") for coefficient in regressor.coef_]
         _finite_number(regressor.intercept_, "model intercept")
     except ArtifactError:
         raise
@@ -158,9 +155,7 @@ def parse_artifact(artifact: object) -> ModelArtifact:
     }
     missing = sorted(required.difference(artifact))
     if missing:
-        raise ArtifactError(
-            f"artifact is missing required fields: {', '.join(missing)}"
-        )
+        raise ArtifactError(f"artifact is missing required fields: {', '.join(missing)}")
 
     if artifact["algorithm"] != ALGORITHM_NAME:
         raise ArtifactError(f"artifact algorithm must be {ALGORITHM_NAME}")

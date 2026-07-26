@@ -2,12 +2,7 @@
 
 import { ErrorNotice } from "@/components/error-notice";
 
-export default function GlobalError({
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function GlobalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <ErrorNotice
       error={{

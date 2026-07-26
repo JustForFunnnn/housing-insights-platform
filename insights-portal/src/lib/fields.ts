@@ -1,11 +1,6 @@
 import { z } from "zod";
 
-import {
-  FEATURE_KEYS,
-  type FeatureKey,
-  type PropertyInput,
-  type PropertyMetadata,
-} from "@/api/types";
+import { FEATURE_KEYS, type FeatureKey, type PropertyInput, type PropertyMetadata } from "@/api/types";
 
 export const MAX_WHAT_IF_SCENARIOS = 7;
 
@@ -19,10 +14,7 @@ const PROPERTY_NUMBER_KINDS = {
   school_rating: "number",
 } as const satisfies Record<FeatureKey, "integer" | "number">;
 
-export const FIELD_DEFINITIONS: Record<
-  FeatureKey,
-  { label: string }
-> = {
+export const FIELD_DEFINITIONS: Record<FeatureKey, { label: string }> = {
   square_footage: { label: "Interior area" },
   bedrooms: { label: "Bedrooms" },
   bathrooms: { label: "Bathrooms" },
@@ -45,20 +37,13 @@ export const PROPERTY_TABLE_COLUMNS = [
   label: string;
 }>;
 
-export function fieldErrorMessages(
-  errors:
-    | Partial<Record<FeatureKey, { message?: string }>>
-    | undefined,
-) {
-  return Object.fromEntries(
-    FEATURE_KEYS.map((key) => [key, errors?.[key]?.message]),
-  ) as Partial<Record<FeatureKey, string>>;
+export function fieldErrorMessages(errors: Partial<Record<FeatureKey, { message?: string }>> | undefined) {
+  return Object.fromEntries(FEATURE_KEYS.map((key) => [key, errors?.[key]?.message])) as Partial<
+    Record<FeatureKey, string>
+  >;
 }
 
-function propertyNumber(
-  metadata: PropertyMetadata,
-  key: FeatureKey,
-) {
+function propertyNumber(metadata: PropertyMetadata, key: FeatureKey) {
   const field = metadata.features[key];
   const definition = FIELD_DEFINITIONS[key];
   let schema = z
@@ -83,9 +68,10 @@ export function fieldStep(key: FeatureKey) {
 
 export function createPropertySchema(metadata: PropertyMetadata) {
   return z.object(
-    Object.fromEntries(
-      FEATURE_KEYS.map((key) => [key, propertyNumber(metadata, key)]),
-    ) as Record<FeatureKey, ReturnType<typeof propertyNumber>>,
+    Object.fromEntries(FEATURE_KEYS.map((key) => [key, propertyNumber(metadata, key)])) as Record<
+      FeatureKey,
+      ReturnType<typeof propertyNumber>
+    >,
   );
 }
 
@@ -96,12 +82,7 @@ export function propertyFromSearchParams(
   const candidate = Object.fromEntries(
     FEATURE_KEYS.map((key) => {
       const value = searchParams[key];
-      return [
-        key,
-        typeof value === "string" && value.trim() !== ""
-          ? Number(value)
-          : Number.NaN,
-      ];
+      return [key, typeof value === "string" && value.trim() !== "" ? Number(value) : Number.NaN];
     }),
   );
   const result = createPropertySchema(metadata).safeParse(candidate);
@@ -120,31 +101,20 @@ export function createComparisonSchema(metadata: PropertyMetadata) {
 export function createWhatIfSchema(metadata: PropertyMetadata) {
   const scenario = z
     .object(
-      Object.fromEntries(
-        FEATURE_KEYS.map((key) => [
-          key,
-          propertyNumber(metadata, key).optional(),
-        ]),
-      ) as Record<
+      Object.fromEntries(FEATURE_KEYS.map((key) => [key, propertyNumber(metadata, key).optional()])) as Record<
         FeatureKey,
         z.ZodOptional<ReturnType<typeof propertyNumber>>
       >,
     )
     .strict()
-    .refine(
-      (value) => FEATURE_KEYS.some((key) => value[key] !== undefined),
-      "Change at least one feature.",
-    );
+    .refine((value) => FEATURE_KEYS.some((key) => value[key] !== undefined), "Change at least one feature.");
 
   return z.object({
     baseline: createPropertySchema(metadata),
     scenarios: z
       .array(scenario)
       .min(1, "Add at least one scenario.")
-      .max(
-        MAX_WHAT_IF_SCENARIOS,
-        `Add no more than ${MAX_WHAT_IF_SCENARIOS} scenarios.`,
-      ),
+      .max(MAX_WHAT_IF_SCENARIOS, `Add no more than ${MAX_WHAT_IF_SCENARIOS} scenarios.`),
   });
 }
 
@@ -175,10 +145,7 @@ export function exampleProperty(metadata: PropertyMetadata): PropertyInput {
   };
 }
 
-export function fieldUnit(
-  metadata: PropertyMetadata,
-  key: FeatureKey,
-) {
+export function fieldUnit(metadata: PropertyMetadata, key: FeatureKey) {
   const unit = metadata.features[key].unit;
   if (!unit) return "";
   if (unit === "sq_ft") return "sq ft";

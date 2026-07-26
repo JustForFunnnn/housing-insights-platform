@@ -24,9 +24,7 @@ class Settings(BaseSettings):
         validation_alias="PREDICTION_SERVICE_TIMEOUT_SECONDS",
     )
     estimator_database_url: PostgresDsn = Field(
-        default=PostgresDsn(
-            "postgresql+asyncpg://estimator:estimator@localhost:15432/estimator"
-        ),
+        default=PostgresDsn("postgresql+asyncpg://estimator:estimator@localhost:15432/estimator"),
         validation_alias="ESTIMATOR_DATABASE_URL",
     )
 
@@ -34,7 +32,5 @@ class Settings(BaseSettings):
     @classmethod
     def require_asyncpg(cls, value: PostgresDsn) -> PostgresDsn:
         if value.scheme != "postgresql+asyncpg":
-            raise ValueError(
-                "ESTIMATOR_DATABASE_URL must use postgresql+asyncpg"
-            )
+            raise ValueError("ESTIMATOR_DATABASE_URL must use postgresql+asyncpg")
         return value

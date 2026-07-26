@@ -100,9 +100,7 @@ export const priceDistributionBucketSchema = z.object({
   upper_bound: z.number(),
   count: z.number(),
 });
-export type PriceDistributionBucket = z.infer<
-  typeof priceDistributionBucketSchema
->;
+export type PriceDistributionBucket = z.infer<typeof priceDistributionBucketSchema>;
 
 export const averagePriceGroupSchema = z.object({
   label: z.string().optional(),
@@ -126,27 +124,20 @@ const averagePriceByYearBuiltDecadeSchema = averagePriceGroupSchema.extend({
   end_year: z.number(),
 });
 
-const averagePriceBySquareFootageBandSchema =
-  averagePriceGroupSchema.extend({
-    label: z.string(),
-    lower_bound: z.number(),
-    upper_bound_exclusive: z.number(),
-  });
+const averagePriceBySquareFootageBandSchema = averagePriceGroupSchema.extend({
+  label: z.string(),
+  lower_bound: z.number(),
+  upper_bound_exclusive: z.number(),
+});
 
 export const marketAnalysisSchema = z.object({
   count: z.number(),
   price_summary: priceSummarySchema,
   visualisations: z.object({
     price_distribution: z.array(priceDistributionBucketSchema),
-    average_price_by_bedrooms: z.array(
-      averagePriceByBedroomsSchema,
-    ),
-    average_price_by_year_built_decade: z.array(
-      averagePriceByYearBuiltDecadeSchema,
-    ),
-    average_price_by_square_footage_band: z.array(
-      averagePriceBySquareFootageBandSchema,
-    ),
+    average_price_by_bedrooms: z.array(averagePriceByBedroomsSchema),
+    average_price_by_year_built_decade: z.array(averagePriceByYearBuiltDecadeSchema),
+    average_price_by_square_footage_band: z.array(averagePriceBySquareFootageBandSchema),
   }),
   filter_options: filterOptionsSchema,
 });
@@ -158,11 +149,7 @@ export const propertyRecordSchema = propertyInputSchema.extend({
 });
 export type PropertyRecord = z.infer<typeof propertyRecordSchema>;
 
-export const sortFieldSchema = z.enum([
-  "id",
-  ...FEATURE_KEYS,
-  "price",
-]);
+export const sortFieldSchema = z.enum(["id", ...FEATURE_KEYS, "price"]);
 export type SortField = z.infer<typeof sortFieldSchema>;
 
 export const sortDirectionSchema = z.enum(["asc", "desc"]);

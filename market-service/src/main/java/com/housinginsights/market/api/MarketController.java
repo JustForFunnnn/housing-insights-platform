@@ -31,8 +31,7 @@ public class MarketController {
 
     @GetMapping("/metadata")
     public MarketMetadataResponse metadata() {
-        return MarketMetadataResponse.from(
-                propertyMetadata, analysisCalculator.filterOptions());
+        return MarketMetadataResponse.from(propertyMetadata, analysisCalculator.filterOptions());
     }
 
     @GetMapping("/analysis")

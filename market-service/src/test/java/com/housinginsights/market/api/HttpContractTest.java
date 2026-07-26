@@ -14,8 +14,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.housinginsights.market.domain.PropertyFieldNames;
 import com.housinginsights.market.domain.PropertyFeatures;
+import com.housinginsights.market.domain.PropertyFieldNames;
 import com.housinginsights.market.error.PredictionServiceUnavailableException;
 import com.housinginsights.market.observability.RequestCorrelation;
 import com.housinginsights.market.prediction.PredictionClient;
@@ -56,18 +56,12 @@ class HttpContractTest {
 
     @Test
     void healthPreservesValidRequestIdsOrGeneratesCompactRequestIds() throws Exception {
-        mockMvc.perform(get("/api/health")
-                        .header(
-                                RequestCorrelation.HEADER_NAME,
-                                HYPHENATED_REQUEST_ID))
+        mockMvc.perform(get("/api/health").header(RequestCorrelation.HEADER_NAME, HYPHENATED_REQUEST_ID))
                 .andExpect(status().isOk())
                 .andExpect(header().string(RequestCorrelation.HEADER_NAME, HYPHENATED_REQUEST_ID))
                 .andExpect(jsonPath("$.status").value("ok"));
 
-        mockMvc.perform(get("/api/health")
-                        .header(
-                                RequestCorrelation.HEADER_NAME,
-                                COMPACT_REQUEST_ID))
+        mockMvc.perform(get("/api/health").header(RequestCorrelation.HEADER_NAME, COMPACT_REQUEST_ID))
                 .andExpect(status().isOk())
                 .andExpect(header().string(RequestCorrelation.HEADER_NAME, COMPACT_REQUEST_ID));
 
@@ -108,10 +102,7 @@ class HttpContractTest {
                 .andExpect(header().string("Allow", containsString("GET")))
                 .andExpect(jsonPath("$.error_code").value("http_error"));
 
-        assertThat(output)
-                .contains(
-                        "request_validation_failed method=GET "
-                                + "path=/api/properties error=");
+        assertThat(output).contains("request_validation_failed method=GET " + "path=/api/properties error=");
     }
 
     @Test
@@ -122,8 +113,7 @@ class HttpContractTest {
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(header().exists(RequestCorrelation.HEADER_NAME))
                 .andExpect(header().string(
-                        "Access-Control-Expose-Headers",
-                        containsString(RequestCorrelation.HEADER_NAME)));
+                                "Access-Control-Expose-Headers", containsString(RequestCorrelation.HEADER_NAME)));
     }
 
     @Test
@@ -154,16 +144,12 @@ class HttpContractTest {
     }
 
     @Test
-    void metadataReturnsSharedFeaturesAndFullDatasetFilterOptions()
-            throws Exception {
+    void metadataReturnsSharedFeaturesAndFullDatasetFilterOptions() throws Exception {
         String response = mockMvc.perform(get("/api/metadata"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.filter_options.bedrooms.length()")
-                        .value(3))
-                .andExpect(jsonPath("$.filter_options.price.minimum")
-                        .value(150000))
-                .andExpect(jsonPath("$.filter_options.price.maximum")
-                        .value(450000))
+                .andExpect(jsonPath("$.filter_options.bedrooms.length()").value(3))
+                .andExpect(jsonPath("$.filter_options.price.minimum").value(150000))
+                .andExpect(jsonPath("$.filter_options.price.maximum").value(450000))
                 .andExpect(jsonPath("$.price_currency").value("USD"))
                 .andReturn()
                 .getResponse()
@@ -177,17 +163,13 @@ class HttpContractTest {
     }
 
     @Test
-    void propertiesAnalysisAndCsvShareTheSameCompleteFilterResult()
-            throws Exception {
-        mockMvc.perform(get("/api/properties")
-                        .param("bedrooms", "3")
-                        .param("limit", "1"))
+    void propertiesAnalysisAndCsvShareTheSameCompleteFilterResult() throws Exception {
+        mockMvc.perform(get("/api/properties").param("bedrooms", "3").param("limit", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.records.length()").value(1))
                 .andExpect(jsonPath("$.total").value(2));
 
-        mockMvc.perform(get("/api/analysis")
-                        .param("bedrooms", "3"))
+        mockMvc.perform(get("/api/analysis").param("bedrooms", "3"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.count").value(2));
 
@@ -205,19 +187,16 @@ class HttpContractTest {
 
     @Test
     void oldAndPdfRoutesAreNotExposed() throws Exception {
-        for (String path :
-                List.of(
-                        "/health",
-                        "/properties",
-                        "/analysis",
-                        "/exports/properties.csv",
-                        "/exports/market-analysis.pdf",
-                        "/api/properties/export/pdf")) {
+        for (String path : List.of(
+                "/health",
+                "/properties",
+                "/analysis",
+                "/exports/properties.csv",
+                "/exports/market-analysis.pdf",
+                "/api/properties/export/pdf")) {
             mockMvc.perform(get(path)).andExpect(status().isNotFound());
         }
-        mockMvc.perform(post("/what-if")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(validWhatIfJson()))
+        mockMvc.perform(post("/what-if").contentType(MediaType.APPLICATION_JSON).content(validWhatIfJson()))
                 .andExpect(status().isNotFound());
     }
 
@@ -228,45 +207,31 @@ class HttpContractTest {
         String openApi = mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath(featureProperties + ".square_footage").exists())
-                .andExpect(jsonPath(featureProperties + ".square_footage.example").value(1850))
+                .andExpect(
+                        jsonPath(featureProperties + ".square_footage.example").value(1850))
                 .andExpect(jsonPath(featureProperties + ".squareFootage").doesNotExist())
                 .andExpect(
                         jsonPath("$.components.schemas.MarketAnalysisResponse").exists())
                 .andExpect(jsonPath("$.components.schemas.PropertyPageResponse").exists())
                 .andExpect(jsonPath("$.components.schemas.WhatIfResponse").exists())
-                .andExpect(jsonPath("$.paths['/api/metadata'].get")
-                        .exists())
-                .andExpect(jsonPath(
-                                "$.paths['/api/properties/export/csv'].get")
-                        .exists())
-                .andExpect(jsonPath(
-                                "$.paths['/api/properties/export/pdf']")
-                        .doesNotExist())
-                .andExpect(jsonPath(
-                                "$.paths['/api/properties'].get.parameters"
-                                        + "[?(@.name == 'limit')]")
+                .andExpect(jsonPath("$.paths['/api/metadata'].get").exists())
+                .andExpect(jsonPath("$.paths['/api/properties/export/csv'].get").exists())
+                .andExpect(jsonPath("$.paths['/api/properties/export/pdf']").doesNotExist())
+                .andExpect(jsonPath("$.paths['/api/properties'].get.parameters" + "[?(@.name == 'limit')]")
                         .isNotEmpty())
-                .andExpect(jsonPath(
-                                "$.paths['/api/properties'].get.parameters"
-                                        + "[?(@.name == 'offset')]")
+                .andExpect(jsonPath("$.paths['/api/properties'].get.parameters" + "[?(@.name == 'offset')]")
                         .isNotEmpty())
-                .andExpect(jsonPath(
-                                "$.paths['/api/analysis'].get.parameters"
-                                        + "[?(@.name == 'min_square_footage')]")
+                .andExpect(jsonPath("$.paths['/api/analysis'].get.parameters" + "[?(@.name == 'min_square_footage')]")
                         .isNotEmpty())
-                .andExpect(jsonPath(
-                                "$.paths['/api/analysis'].get.parameters"
-                                        + "[?(@.name == 'minSquareFootage')]")
+                .andExpect(jsonPath("$.paths['/api/analysis'].get.parameters" + "[?(@.name == 'minSquareFootage')]")
                         .isEmpty())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
 
-        JsonNode metadataFeatures = objectMapper
-                .readTree(openApi)
-                .at("/components/schemas/PropertyMetadataFeaturesResponse/properties");
-        assertThat(metadataFeatures.size())
-                .isEqualTo(PropertyFieldNames.FEATURE_COLUMNS.size());
+        JsonNode metadataFeatures =
+                objectMapper.readTree(openApi).at("/components/schemas/PropertyMetadataFeaturesResponse/properties");
+        assertThat(metadataFeatures.size()).isEqualTo(PropertyFieldNames.FEATURE_COLUMNS.size());
         for (String fieldName : PropertyFieldNames.FEATURE_COLUMNS) {
             assertThat(metadataFeatures.has(fieldName)).isTrue();
         }
@@ -350,5 +315,4 @@ class HttpContractTest {
                 }
                 """;
     }
-
 }

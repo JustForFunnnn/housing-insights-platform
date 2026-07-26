@@ -57,7 +57,7 @@ router = APIRouter(
             **ERROR_RESPONSE_WITH_REQUEST_ID,
             "description": "The request could not be completed.",
         }
-    }
+    },
 )
 
 

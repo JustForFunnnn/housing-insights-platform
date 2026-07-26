@@ -17,14 +17,7 @@ export function SiteNavigation() {
   return (
     <aside className="site-rail">
       <Link className="brand" href="/" aria-label="Housing Insights home">
-        <Image
-          className="brand-mark"
-          src="/parcel-mark.svg"
-          alt=""
-          width={42}
-          height={42}
-          priority
-        />
+        <Image className="brand-mark" src="/parcel-mark.svg" alt="" width={42} height={42} priority />
         <span>
           <span className="brand-title">Housing Insights</span>
           <span className="brand-subtitle">Measured decisions</span>
@@ -32,14 +25,9 @@ export function SiteNavigation() {
       </Link>
       <nav className="site-nav" aria-label="Applications">
         {links.map(({ href, label, icon: Icon }) => {
-          const active =
-            href === "/" ? pathname === "/" : pathname.startsWith(href);
+          const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
           return (
-            <Link
-              key={href}
-              href={href}
-              aria-current={active ? "page" : undefined}
-            >
+            <Link key={href} href={href} aria-current={active ? "page" : undefined}>
               <Icon size={17} aria-hidden="true" />
               {label}
             </Link>

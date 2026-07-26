@@ -7,19 +7,9 @@ import { useFieldArray, useForm } from "react-hook-form";
 
 import { ErrorNotice } from "@/components/error-notice";
 import { PropertyFields } from "@/components/property-fields";
-import {
-  type PropertyInput,
-  type PropertyMetadata,
-} from "@/api/types";
-import {
-  createComparisonSchema,
-  exampleProperty,
-  fieldErrorMessages,
-} from "@/lib/fields";
-import {
-  createEstimates,
-  toApiError,
-} from "@/api/browser";
+import { type PropertyInput, type PropertyMetadata } from "@/api/types";
+import { createComparisonSchema, exampleProperty, fieldErrorMessages } from "@/lib/fields";
+import { createEstimates, toApiError } from "@/api/browser";
 
 import { ComparisonResults } from "./comparison-results";
 
@@ -27,11 +17,7 @@ interface ComparisonValues {
   properties: PropertyInput[];
 }
 
-export function ComparisonForm({
-  metadata,
-}: {
-  metadata: PropertyMetadata;
-}) {
+export function ComparisonForm({ metadata }: { metadata: PropertyMetadata }) {
   const form = useForm<ComparisonValues>({
     resolver: zodResolver(createComparisonSchema(metadata)),
     defaultValues: {
@@ -55,16 +41,10 @@ export function ComparisonForm({
 
   return (
     <>
-      <form
-        onSubmit={form.handleSubmit((value) =>
-          comparison.mutate(value.properties),
-        )}
-        noValidate
-      >
+      <form onSubmit={form.handleSubmit((value) => comparison.mutate(value.properties))} noValidate>
         <div className="scenario-stack">
           {fields.fields.map((field, index) => {
-            const propertyErrors =
-              form.formState.errors.properties?.[index];
+            const propertyErrors = form.formState.errors.properties?.[index];
             return (
               <section
                 className="parcel parcel-pad"
@@ -89,10 +69,9 @@ export function ComparisonForm({
                 <PropertyFields
                   metadata={metadata}
                   registerField={(key) =>
-                    form.register(
-                      `properties.${index}.${key}` as const,
-                      { valueAsNumber: true },
-                    )
+                    form.register(`properties.${index}.${key}` as const, {
+                      valueAsNumber: true,
+                    })
                   }
                   errors={fieldErrorMessages(propertyErrors)}
                 />
@@ -111,11 +90,7 @@ export function ComparisonForm({
             <Plus size={16} aria-hidden="true" />
             Add property
           </button>
-          <button
-            className="button"
-            type="submit"
-            disabled={comparison.isPending}
-          >
+          <button className="button" type="submit" disabled={comparison.isPending}>
             {comparison.isPending ? "Comparing…" : "Compare values"}
           </button>
         </div>
@@ -125,21 +100,12 @@ export function ComparisonForm({
         <div style={{ marginTop: 22 }}>
           <ErrorNotice
             error={toApiError(comparison.error)}
-            onRetry={() =>
-              form.handleSubmit((value) =>
-                comparison.mutate(value.properties),
-              )()
-            }
+            onRetry={() => form.handleSubmit((value) => comparison.mutate(value.properties))()}
           />
         </div>
       ) : null}
 
-      {comparison.data ? (
-        <ComparisonResults
-          result={comparison.data}
-          metadata={metadata}
-        />
-      ) : null}
+      {comparison.data ? <ComparisonResults result={comparison.data} metadata={metadata} /> : null}
     </>
   );
 }

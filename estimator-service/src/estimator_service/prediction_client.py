@@ -64,14 +64,10 @@ class HttpPredictionClient:
         try:
             payload = PredictionResponse.model_validate(response.json())
         except ValueError as exc:
-            raise PredictionServiceInvalidResponseError(
-                "prediction service returned an invalid response"
-            ) from exc
+            raise PredictionServiceInvalidResponseError("prediction service returned an invalid response") from exc
 
         if len(payload.predictions) != len(properties):
-            raise PredictionServiceInvalidResponseError(
-                "prediction service returned the wrong number of predictions"
-            )
+            raise PredictionServiceInvalidResponseError("prediction service returned the wrong number of predictions")
         return payload.predictions
 
     async def _request(
@@ -88,17 +84,12 @@ class HttpPredictionClient:
                 headers={REQUEST_ID_HEADER: current_request_id()},
             )
         except (httpx2.TimeoutException, httpx2.RequestError) as exc:
-            raise PredictionServiceUnavailableError(
-                "prediction service request failed"
-            ) from exc
+            raise PredictionServiceUnavailableError("prediction service request failed") from exc
 
         if response.status_code >= 500:
-            raise PredictionServiceUnavailableError(
-                f"prediction service returned status {response.status_code}"
-            )
+            raise PredictionServiceUnavailableError(f"prediction service returned status {response.status_code}")
         if response.status_code != 200:
             raise PredictionServiceInvalidResponseError(
-                "prediction service returned unexpected status "
-                f"{response.status_code}"
+                f"prediction service returned unexpected status {response.status_code}"
             )
         return response

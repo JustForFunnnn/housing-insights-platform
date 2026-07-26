@@ -14,8 +14,8 @@ import java.util.TreeSet;
 import org.junit.jupiter.api.Test;
 
 class PropertyQueryServiceTest {
-    private final PropertyQueryService service = new PropertyQueryService(
-            new CachedPropertyFilter(new PropertyDataset(RECORDS)));
+    private final PropertyQueryService service =
+            new PropertyQueryService(new CachedPropertyFilter(new PropertyDataset(RECORDS)));
 
     @Test
     void filtersSortsAndLimitsWithStableOrder() {

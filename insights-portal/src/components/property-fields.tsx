@@ -3,16 +3,8 @@
 import type { ReactNode } from "react";
 import type { UseFormRegisterReturn } from "react-hook-form";
 
-import {
-  FIELD_DEFINITIONS,
-  fieldStep,
-  fieldUnit,
-} from "@/lib/fields";
-import {
-  FEATURE_KEYS,
-  type FeatureKey,
-  type PropertyMetadata,
-} from "@/api/types";
+import { FIELD_DEFINITIONS, fieldStep, fieldUnit } from "@/lib/fields";
+import { FEATURE_KEYS, type FeatureKey, type PropertyMetadata } from "@/api/types";
 
 export function FeatureNumberInput({
   feature,

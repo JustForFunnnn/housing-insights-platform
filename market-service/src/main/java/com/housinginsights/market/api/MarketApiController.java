@@ -15,8 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Documented
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = {
-        "http://localhost:9100",
-        "http://host.docker.internal:9100"
-}, exposedHeaders = RequestCorrelation.HEADER_NAME)
+@CrossOrigin(
+        origins = {"http://localhost:9100", "http://host.docker.internal:9100"},
+        exposedHeaders = RequestCorrelation.HEADER_NAME)
 public @interface MarketApiController {}

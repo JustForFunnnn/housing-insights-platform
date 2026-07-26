@@ -1,23 +1,9 @@
 "use client";
 
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import type { MarketAnalysis } from "@/api/types";
-import {
-  MARKET_CHART_DEFINITIONS,
-  marketChartSeries,
-  type ChartDatum,
-} from "@/lib/chart-data";
+import { MARKET_CHART_DEFINITIONS, marketChartSeries, type ChartDatum } from "@/lib/chart-data";
 import { formatPrice } from "@/lib/format";
 
 function ChartPanel({
@@ -39,10 +25,7 @@ function ChartPanel({
 }) {
   const Chart = line ? LineChart : BarChart;
   return (
-    <section
-      className="parcel parcel-span-6 parcel-pad"
-      data-coordinate={coordinate}
-    >
+    <section className="parcel parcel-span-6 parcel-pad" data-coordinate={coordinate}>
       <p className="measure-label">Visual reading</p>
       <h2 className="instrument-title">{title}</h2>
       <p className="instrument-copy">{description}</p>
@@ -58,18 +41,9 @@ function ChartPanel({
           .join(". ")}
       >
         <ResponsiveContainer width="100%" height="100%">
-          <Chart
-            data={data}
-            margin={{ top: 18, right: 16, bottom: 40, left: 8 }}
-          >
+          <Chart data={data} margin={{ top: 18, right: 16, bottom: 40, left: 8 }}>
             <CartesianGrid stroke="#C9D4E2" strokeDasharray="3 3" />
-            <XAxis
-              dataKey="label"
-              angle={-25}
-              textAnchor="end"
-              interval={0}
-              tick={{ fill: "#52647C", fontSize: 11 }}
-            />
+            <XAxis dataKey="label" angle={-25} textAnchor="end" interval={0} tick={{ fill: "#52647C", fontSize: 11 }} />
             <YAxis
               tickFormatter={(value) =>
                 priceValues
@@ -82,11 +56,7 @@ function ChartPanel({
             />
             <Tooltip
               shared={false}
-              formatter={(value) =>
-                priceValues
-                  ? formatPrice(Number(value), unit)
-                  : `${value} properties`
-              }
+              formatter={(value) => (priceValues ? formatPrice(Number(value), unit) : `${value} properties`)}
               contentStyle={{
                 border: "1px solid #91A2B8",
                 borderRadius: 4,
@@ -116,13 +86,7 @@ function ChartPanel({
   );
 }
 
-export function MarketCharts({
-  analysis,
-  unit,
-}: {
-  analysis: MarketAnalysis;
-  unit: string;
-}) {
+export function MarketCharts({ analysis, unit }: { analysis: MarketAnalysis; unit: string }) {
   const series = marketChartSeries(analysis);
   return (
     <div className="parcel-grid" style={{ marginTop: 28 }}>

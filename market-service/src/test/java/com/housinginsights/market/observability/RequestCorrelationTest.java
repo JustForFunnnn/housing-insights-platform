@@ -21,5 +21,4 @@ class RequestCorrelationTest {
                 .isFalse();
         assertThat(RequestCorrelation.isUuid4("not-a-uuid")).isFalse();
     }
-
 }

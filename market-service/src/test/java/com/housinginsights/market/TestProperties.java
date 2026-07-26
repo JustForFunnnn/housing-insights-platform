@@ -14,9 +14,7 @@ public final class TestProperties {
             new PropertyRecord(4, 2400, 4, 3, 2015, 10000, 8, 9, 450000));
 
     public static PropertyMetadata propertyMetadata() {
-        return PropertyMetadata.load(
-                Path.of("..", "contracts", "property-metadata.json"),
-                new ObjectMapper());
+        return PropertyMetadata.load(Path.of("..", "contracts", "property-metadata.json"), new ObjectMapper());
     }
 
     private TestProperties() {}

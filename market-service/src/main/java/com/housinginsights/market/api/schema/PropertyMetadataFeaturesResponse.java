@@ -25,8 +25,7 @@ public record PropertyMetadataFeaturesResponse(
                 feature(features, PropertyFieldNames.SCHOOL_RATING));
     }
 
-    private static PropertyFeatureMetadataResponse feature(
-            Map<String, PropertyFeatureMetadata> features, String name) {
+    private static PropertyFeatureMetadataResponse feature(Map<String, PropertyFeatureMetadata> features, String name) {
         return PropertyFeatureMetadataResponse.from(features.get(name));
     }
 }

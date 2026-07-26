@@ -16,8 +16,7 @@ class CsvPropertyDataLoaderTest {
             id,square_footage,bedrooms,bathrooms,year_built,lot_size,distance_to_city_center,school_rating,price
             """;
 
-    private final CsvPropertyDataLoader loader =
-            new CsvPropertyDataLoader(propertyMetadata());
+    private final CsvPropertyDataLoader loader = new CsvPropertyDataLoader(propertyMetadata());
 
     @Test
     void loadsValidDataset(@TempDir Path directory) throws IOException {
@@ -55,9 +54,7 @@ class CsvPropertyDataLoaderTest {
 
     @Test
     void rejectsRowsWithUnexpectedColumns(@TempDir Path directory) throws IOException {
-        Path dataset = write(
-                directory,
-                HEADER + "1,1200,2,1,1990,5000,2.5,7.0,180000,unexpected\n");
+        Path dataset = write(directory, HEADER + "1,1200,2,1,1990,5000,2.5,7.0,180000,unexpected\n");
 
         assertThatThrownBy(() -> loader.load(dataset))
                 .isInstanceOf(DatasetLoadingException.class)

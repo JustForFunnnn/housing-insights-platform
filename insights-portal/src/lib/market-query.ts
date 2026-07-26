@@ -1,9 +1,4 @@
-import {
-  FEATURE_KEYS,
-  type PropertyInput,
-  type SortDirection,
-  type SortField,
-} from "@/api/types";
+import { FEATURE_KEYS, type PropertyInput, type SortDirection, type SortField } from "@/api/types";
 
 export const FILTER_KEYS = [
   "min_square_footage",
@@ -69,10 +64,7 @@ export function allowedMarketQuery(
   return result;
 }
 
-export function applyMarketFilters(
-  current: URLSearchParams,
-  filters: URLSearchParams,
-) {
+export function applyMarketFilters(current: URLSearchParams, filters: URLSearchParams) {
   const next = new URLSearchParams(filters);
   next.set("sort_by", current.get("sort_by") ?? "id");
   next.set("sort_direction", current.get("sort_direction") ?? "asc");
@@ -81,11 +73,7 @@ export function applyMarketFilters(
   return next;
 }
 
-export function applyMarketSort(
-  current: URLSearchParams,
-  field: SortField,
-  direction: SortDirection,
-) {
+export function applyMarketSort(current: URLSearchParams, field: SortField, direction: SortDirection) {
   const next = withMarketDefaults(current);
   next.set("sort_by", field);
   next.set("sort_direction", direction);
@@ -93,10 +81,7 @@ export function applyMarketSort(
   return next;
 }
 
-export function applyMarketPage(
-  current: URLSearchParams,
-  offset: number,
-) {
+export function applyMarketPage(current: URLSearchParams, offset: number) {
   const next = withMarketDefaults(current);
   next.set("offset", String(offset));
   return next;

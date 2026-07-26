@@ -1,10 +1,6 @@
 import { SubNavigation } from "@/components/sub-navigation";
 
-export default function EstimatorLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function EstimatorLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <SubNavigation

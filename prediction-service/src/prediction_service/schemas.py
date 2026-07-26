@@ -39,25 +39,13 @@ def _feature_field(
 class HousingFields(BaseModel):
     """Shared feature shape; concrete input models choose their own parsing policy."""
 
-    square_footage: float = _feature_field(
-        PROPERTY_METADATA.features.square_footage, 1850
-    )
+    square_footage: float = _feature_field(PROPERTY_METADATA.features.square_footage, 1850)
     bedrooms: int = _feature_field(PROPERTY_METADATA.features.bedrooms, 3)
-    bathrooms: float = _feature_field(
-        PROPERTY_METADATA.features.bathrooms, 2.5
-    )
-    year_built: int = _feature_field(
-        PROPERTY_METADATA.features.year_built, 1998
-    )
-    lot_size: float = _feature_field(
-        PROPERTY_METADATA.features.lot_size, 7500
-    )
-    distance_to_city_center: float = _feature_field(
-        PROPERTY_METADATA.features.distance_to_city_center, 5.6
-    )
-    school_rating: float = _feature_field(
-        PROPERTY_METADATA.features.school_rating, 8.2
-    )
+    bathrooms: float = _feature_field(PROPERTY_METADATA.features.bathrooms, 2.5)
+    year_built: int = _feature_field(PROPERTY_METADATA.features.year_built, 1998)
+    lot_size: float = _feature_field(PROPERTY_METADATA.features.lot_size, 7500)
+    distance_to_city_center: float = _feature_field(PROPERTY_METADATA.features.distance_to_city_center, 5.6)
+    school_rating: float = _feature_field(PROPERTY_METADATA.features.school_rating, 8.2)
 
     def to_features(self) -> HousingFeatures:
         return HousingFeatures(**self.model_dump())
@@ -129,10 +117,7 @@ class ModelInfoResponse(ResponseModel):
     training_timestamp: str
     algorithm: str
     target_transform: Literal["log"] = Field(
-        description=(
-            "The target is natural-log price; the intercept and coefficients "
-            "operate in that space."
-        )
+        description=("The target is natural-log price; the intercept and coefficients operate in that space.")
     )
     features: list[str]
     intercept: float

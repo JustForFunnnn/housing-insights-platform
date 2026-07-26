@@ -51,9 +51,7 @@ async def test_prediction_client_sends_contract_and_request_id() -> None:
 async def test_prediction_client_maps_server_failures_to_unavailable(
     status_code: int,
 ) -> None:
-    transport = httpx2.MockTransport(
-        lambda _request: httpx2.Response(status_code, json={})
-    )
+    transport = httpx2.MockTransport(lambda _request: httpx2.Response(status_code, json={}))
     async with httpx2.AsyncClient(
         base_url="http://prediction.test",
         transport=transport,

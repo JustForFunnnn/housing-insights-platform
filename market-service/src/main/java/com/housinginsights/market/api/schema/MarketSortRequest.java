@@ -6,17 +6,17 @@ import com.housinginsights.market.domain.SortField;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record MarketSortRequest(
-        @Schema(defaultValue = MarketSortRequest.DEFAULT_SORT_BY) String sortBy,
+        @Schema(defaultValue = MarketSortRequest.DEFAULT_SORT_BY)
+        String sortBy,
+
         @Schema(defaultValue = MarketSortRequest.DEFAULT_SORT_DIRECTION)
-                String sortDirection) {
+        String sortDirection) {
     public static final String DEFAULT_SORT_BY = PropertyFieldNames.ID;
-    public static final String DEFAULT_SORT_DIRECTION =
-            SortDirection.ASC_VALUE;
+    public static final String DEFAULT_SORT_DIRECTION = SortDirection.ASC_VALUE;
 
     public MarketSortRequest {
         sortBy = sortBy == null ? DEFAULT_SORT_BY : sortBy;
-        sortDirection =
-                sortDirection == null ? DEFAULT_SORT_DIRECTION : sortDirection;
+        sortDirection = sortDirection == null ? DEFAULT_SORT_DIRECTION : sortDirection;
     }
 
     public SortField toSortField() {

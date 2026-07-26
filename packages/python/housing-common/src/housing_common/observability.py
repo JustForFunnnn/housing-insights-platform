@@ -18,16 +18,10 @@ RequestLoggingMiddleware = Callable[
 def configure_logging(package_name: str) -> None:
     logging.basicConfig(
         level=logging.INFO,
-        format=(
-            "%(asctime)s %(levelname)s request_id=%(correlation_id)s "
-            "%(name)s %(message)s"
-        ),
+        format=("%(asctime)s %(levelname)s request_id=%(correlation_id)s %(name)s %(message)s"),
     )
     for handler in logging.getLogger().handlers:
-        if not any(
-            isinstance(log_filter, CorrelationIdFilter)
-            for log_filter in handler.filters
-        ):
+        if not any(isinstance(log_filter, CorrelationIdFilter) for log_filter in handler.filters):
             handler.addFilter(CorrelationIdFilter(default_value="-"))
     logging.getLogger(package_name).setLevel(logging.INFO)
 

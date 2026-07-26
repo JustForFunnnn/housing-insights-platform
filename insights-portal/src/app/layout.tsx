@@ -24,13 +24,10 @@ export const metadata: Metadata = {
     default: "Housing Insights",
     template: "%s · Housing Insights",
   },
-  description:
-    "Property estimation and housing market analysis in one measured workspace.",
+  description: "Property estimation and housing market analysis in one measured workspace.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${spline.variable} ${mono.variable}`}>
       <body>

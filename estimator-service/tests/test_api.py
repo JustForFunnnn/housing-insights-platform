@@ -24,6 +24,7 @@ HYPHENATED_REQUEST_ID = "123E4567-E89B-42D3-A456-426614174000"
 SUPPLIED_REQUEST_ID = "123e4567e89b42d3a456426614174000"
 INVALID_REQUEST_ID = "estimate-request-123"
 
+
 def test_create_single_and_batch_estimates_and_propagate_request_id(
     app_factory,
     caplog: pytest.LogCaptureFixture,
@@ -73,14 +74,10 @@ def test_create_single_and_batch_estimates_and_propagate_request_id(
     assert UUID(replaced_request_id).version == 4
     assert replaced_request_id == UUID(replaced_request_id).hex
     assert replaced_request_id != INVALID_REQUEST_ID
-    assert len(
-        {HYPHENATED_REQUEST_ID, batch_request_id, replaced_request_id}
-    ) == 3
+    assert len({HYPHENATED_REQUEST_ID, batch_request_id, replaced_request_id}) == 3
     assert prediction.calls[2][1] == replaced_request_id
     request_records = {
-        record.correlation_id: record
-        for record in caplog.records
-        if "request_completed" in record.message
+        record.correlation_id: record for record in caplog.records if "request_completed" in record.message
     }
     assert {
         HYPHENATED_REQUEST_ID,
@@ -92,10 +89,7 @@ def test_create_single_and_batch_estimates_and_propagate_request_id(
         batch_request_id,
         replaced_request_id,
     ):
-        assert (
-            "method=POST path=/api/estimates status=201"
-            in request_records[request_id].message
-        )
+        assert "method=POST path=/api/estimates status=201" in request_records[request_id].message
 
 
 def test_history_pagination_and_out_of_range_offset(app_factory) -> None:
@@ -123,13 +117,8 @@ def test_history_pagination_and_out_of_range_offset(app_factory) -> None:
     assert page.json()["limit"] == 2
     assert page.json()["offset"] == 0
     estimates = page.json()["estimates"]
-    assert {
-        estimate["estimated_price"] for estimate in estimates
-    } == {200000, 300000}
-    timestamps = [
-        datetime.fromisoformat(estimate["created_at"])
-        for estimate in estimates
-    ]
+    assert {estimate["estimated_price"] for estimate in estimates} == {200000, 300000}
+    timestamps = [datetime.fromisoformat(estimate["created_at"]) for estimate in estimates]
     assert timestamps == sorted(timestamps, reverse=True)
     assert past_total.status_code == 200
     assert past_total.json()["estimates"] == []
@@ -190,17 +179,11 @@ def test_openapi_exposes_shared_metadata_constraints(app_factory) -> None:
     if square_footage.min is None:
         assert "minimum" not in property_input["square_footage"]
     else:
-        assert (
-            property_input["square_footage"]["minimum"]
-            == square_footage.min
-        )
+        assert property_input["square_footage"]["minimum"] == square_footage.min
     if square_footage.max is None:
         assert "maximum" not in property_input["square_footage"]
     else:
-        assert (
-            property_input["square_footage"]["maximum"]
-            == square_footage.max
-        )
+        assert property_input["square_footage"]["maximum"] == square_footage.max
     assert "multipleOf" not in property_input["bathrooms"]
     assert "multipleOf" not in property_input["school_rating"]
 
@@ -223,10 +206,7 @@ def test_cors_exposes_request_id(app_factory) -> None:
 
     assert response.status_code == 422
     assert "X-Request-ID" in response.headers
-    exposed_headers = {
-        header.strip()
-        for header in response.headers["Access-Control-Expose-Headers"].split(",")
-    }
+    exposed_headers = {header.strip() for header in response.headers["Access-Control-Expose-Headers"].split(",")}
     assert "X-Request-ID" in exposed_headers
 
 
@@ -276,7 +256,9 @@ def test_prediction_failures_are_logged_and_mapped(
     assert record.exc_info[1] is error
 
 
-def test_health_ignores_prediction_service_but_estimates_return_503(app_factory) -> None:
+def test_health_ignores_prediction_service_but_estimates_return_503(
+    app_factory,
+) -> None:
     app, _database, _store, _prediction = app_factory(
         prediction_client=StubPredictionClient(error=PredictionServiceUnavailableError("offline"))
     )
@@ -345,11 +327,7 @@ def test_store_failure_returns_500_without_partial_history(
         "message": "An unexpected server error occurred.",
     }
     assert store.records == []
-    record = next(
-        record
-        for record in caplog.records
-        if "database_operation_failed" in record.message
-    )
+    record = next(record for record in caplog.records if "database_operation_failed" in record.message)
     assert record.exc_info is not None
     assert str(record.exc_info[1]) == "could not persist estimate batch"
     assert "could not persist estimate batch" in record.message

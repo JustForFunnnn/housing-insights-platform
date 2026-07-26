@@ -27,8 +27,7 @@ import org.springframework.stereotype.Component;
 public class CsvPropertyDataLoader {
     private static final Logger logger = LoggerFactory.getLogger(CsvPropertyDataLoader.class);
 
-    private static final List<String> REQUIRED_COLUMNS =
-            PropertyFieldNames.CSV_COLUMNS;
+    private static final List<String> REQUIRED_COLUMNS = PropertyFieldNames.CSV_COLUMNS;
 
     private static final CSVFormat CSV_FORMAT = CSVFormat.DEFAULT
             .builder()
@@ -84,8 +83,7 @@ public class CsvPropertyDataLoader {
         for (CSVRecord row : parser) {
             long lineNumber = row.getRecordNumber() + 1;
             if (!row.isConsistent()) {
-                throw new DatasetLoadingException(
-                        "CSV row " + lineNumber + " has an unexpected number of columns");
+                throw new DatasetLoadingException("CSV row " + lineNumber + " has an unexpected number of columns");
             }
             PropertyRecord property = parseRecord(row, lineNumber);
             if (!identifiers.add(property.id())) {
@@ -116,10 +114,7 @@ public class CsvPropertyDataLoader {
             propertyMetadata.validate(property.features());
         } catch (RuntimeException exception) {
             throw new DatasetLoadingException(
-                    "CSV row "
-                            + lineNumber
-                            + " contains invalid property features: "
-                            + exception.getMessage(),
+                    "CSV row " + lineNumber + " contains invalid property features: " + exception.getMessage(),
                     exception);
         }
         return property;

@@ -97,8 +97,7 @@ public class GlobalExceptionHandler {
     }
 
     private static ResponseEntity<ApiErrorResponse> httpError(ResponseEntity.BodyBuilder builder) {
-        return builder
-                .contentType(MediaType.APPLICATION_JSON)
+        return builder.contentType(MediaType.APPLICATION_JSON)
                 .body(new ApiErrorResponse(ErrorCode.HTTP_ERROR.value(), "The request could not be completed."));
     }
 

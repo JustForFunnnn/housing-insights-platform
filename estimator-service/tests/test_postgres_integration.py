@@ -47,9 +47,7 @@ async def postgres_store() -> AsyncGenerator[PostgresEstimateStore, None]:
 
     database_name = make_url(database_url).database or ""
     if "test" not in database_name.lower():
-        pytest.fail(
-            f"{TEST_DATABASE_ENV} must target a database whose name contains 'test'"
-        )
+        pytest.fail(f"{TEST_DATABASE_ENV} must target a database whose name contains 'test'")
 
     database = PostgresDatabase(database_url)
     initialized = False

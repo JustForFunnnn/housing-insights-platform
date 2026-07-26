@@ -51,25 +51,13 @@ def _feature_field(
 class PropertyInput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    square_footage: float = _feature_field(
-        PROPERTY_METADATA.features.square_footage, 1850
-    )
+    square_footage: float = _feature_field(PROPERTY_METADATA.features.square_footage, 1850)
     bedrooms: int = _feature_field(PROPERTY_METADATA.features.bedrooms, 3)
-    bathrooms: float = _feature_field(
-        PROPERTY_METADATA.features.bathrooms, 2.5
-    )
-    year_built: int = _feature_field(
-        PROPERTY_METADATA.features.year_built, 1998
-    )
-    lot_size: float = _feature_field(
-        PROPERTY_METADATA.features.lot_size, 7500
-    )
-    distance_to_city_center: float = _feature_field(
-        PROPERTY_METADATA.features.distance_to_city_center, 5.6
-    )
-    school_rating: float = _feature_field(
-        PROPERTY_METADATA.features.school_rating, 8.2
-    )
+    bathrooms: float = _feature_field(PROPERTY_METADATA.features.bathrooms, 2.5)
+    year_built: int = _feature_field(PROPERTY_METADATA.features.year_built, 1998)
+    lot_size: float = _feature_field(PROPERTY_METADATA.features.lot_size, 7500)
+    distance_to_city_center: float = _feature_field(PROPERTY_METADATA.features.distance_to_city_center, 5.6)
+    school_rating: float = _feature_field(PROPERTY_METADATA.features.school_rating, 8.2)
 
     def to_features(self) -> PropertyFeatures:
         return PropertyFeatures(**self.model_dump())
@@ -127,9 +115,7 @@ class EstimateBatchResponse(ResponseModel):
         records: tuple[EstimateRecord, ...],
     ) -> EstimateBatchResponse:
         return cls(
-            estimates=[
-                EstimateRecordResponse.from_record(record) for record in records
-            ],
+            estimates=[EstimateRecordResponse.from_record(record) for record in records],
         )
 
 
@@ -141,10 +127,7 @@ class EstimatePageResponse(EstimateBatchResponse):
     @classmethod
     def from_page(cls, page: EstimatePage) -> EstimatePageResponse:
         return cls(
-            estimates=[
-                EstimateRecordResponse.from_record(record)
-                for record in page.estimates
-            ],
+            estimates=[EstimateRecordResponse.from_record(record) for record in page.estimates],
             total=page.total,
             limit=page.limit,
             offset=page.offset,
@@ -181,9 +164,7 @@ class PropertyMetadataResponse(ResponseModel):
         metadata: PropertyMetadata,
     ) -> PropertyMetadataResponse:
         return cls(
-            features=PropertyMetadataFeaturesResponse.model_validate(
-                metadata.features
-            ),
+            features=PropertyMetadataFeaturesResponse.model_validate(metadata.features),
             price_currency=metadata.price_currency,
         )
 

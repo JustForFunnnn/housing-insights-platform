@@ -18,7 +18,12 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from estimator_service.api import router
 from estimator_service.constants import REQUEST_ID_HEADER
-from estimator_service.data_access import Database, EstimateStore, PostgresDatabase, PostgresEstimateStore
+from estimator_service.data_access import (
+    Database,
+    EstimateStore,
+    PostgresDatabase,
+    PostgresEstimateStore,
+)
 from estimator_service.estimator import EstimatorService
 from estimator_service.errors import (
     ErrorCode,

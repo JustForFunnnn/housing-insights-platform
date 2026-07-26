@@ -13,8 +13,7 @@ public class SnakeCaseBindingAdvice {
             String parameterName = parameter.getParameterName();
             return parameterName == null
                     ? null
-                    : PropertyNamingStrategies.SNAKE_CASE.nameForField(
-                            null, null, parameterName);
+                    : PropertyNamingStrategies.SNAKE_CASE.nameForField(null, null, parameterName);
         });
     }
 }

@@ -20,9 +20,7 @@ const analysis: MarketAnalysis = {
         count: 2,
       },
     ],
-    average_price_by_bedrooms: [
-      { bedrooms: 3, average_price: 150000, count: 2 },
-    ],
+    average_price_by_bedrooms: [{ bedrooms: 3, average_price: 150000, count: 2 }],
     average_price_by_year_built_decade: [
       {
         label: "1990s",

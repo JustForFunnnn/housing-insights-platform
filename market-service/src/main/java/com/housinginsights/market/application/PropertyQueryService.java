@@ -22,9 +22,7 @@ public class PropertyQueryService {
     }
 
     public List<PropertyRecord> findAll(MarketFilter filter, SortField sortField, SortDirection direction) {
-        return filter(filter).stream()
-                .sorted(comparator(sortField, direction))
-                .toList();
+        return filter(filter).stream().sorted(comparator(sortField, direction)).toList();
     }
 
     public PropertyPage findPage(

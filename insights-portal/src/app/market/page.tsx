@@ -1,21 +1,11 @@
 import { PageHeader } from "@/components/page-header";
 import { MarketDashboard } from "@/features/market/market-dashboard";
-import {
-  allowedMarketQuery,
-  withMarketDefaults,
-} from "@/lib/market-query";
-import {
-  getMarketAnalysis,
-  getMarketMetadata,
-  getMarketProperties,
-} from "@/api/server";
+import { allowedMarketQuery, withMarketDefaults } from "@/lib/market-query";
+import { getMarketAnalysis, getMarketMetadata, getMarketProperties } from "@/api/server";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = Record<
-  string,
-  string | string[] | undefined
->;
+type SearchParams = Record<string, string | string[] | undefined>;
 
 function toSearchParams(values: SearchParams) {
   const params = new URLSearchParams();
@@ -29,14 +19,8 @@ function toSearchParams(values: SearchParams) {
   return params;
 }
 
-export default async function MarketPage({
-  searchParams,
-}: {
-  searchParams: Promise<SearchParams>;
-}) {
-  const input = withMarketDefaults(
-    toSearchParams(await searchParams),
-  );
+export default async function MarketPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const input = withMarketDefaults(toSearchParams(await searchParams));
   const filterQuery = allowedMarketQuery(input).toString();
   const propertyQuery = allowedMarketQuery(input, {
     includePage: true,

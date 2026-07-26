@@ -88,12 +88,8 @@ def test_health_and_model_info_contract() -> None:
 
 
 def test_openapi_exposes_shared_metadata_constraints() -> None:
-    with TestClient(
-        create_app(prediction_service=StubPredictionService())
-    ) as client:
-        schema = client.get("/openapi.json").json()["components"]["schemas"][
-            "PredictionInstance"
-        ]["properties"]
+    with TestClient(create_app(prediction_service=StubPredictionService())) as client:
+        schema = client.get("/openapi.json").json()["components"]["schemas"]["PredictionInstance"]["properties"]
 
     square_footage = PROPERTY_METADATA.features.square_footage
     if square_footage.min is None:
@@ -126,18 +122,14 @@ def test_request_ids_are_preserved_generated_replaced_and_logged(
     generated_request_id = generated.headers[REQUEST_ID_HEADER]
     replaced_request_id = replaced.headers[REQUEST_ID_HEADER]
     request_records = {
-        record.correlation_id: record
-        for record in caplog.records
-        if "request_completed" in record.message
+        record.correlation_id: record for record in caplog.records if "request_completed" in record.message
     }
 
     assert UUID(generated_request_id).version == 4
     assert UUID(replaced_request_id).version == 4
     assert generated_request_id == UUID(generated_request_id).hex
     assert replaced_request_id == UUID(replaced_request_id).hex
-    assert len(
-        {HYPHENATED_REQUEST_ID, generated_request_id, replaced_request_id}
-    ) == 3
+    assert len({HYPHENATED_REQUEST_ID, generated_request_id, replaced_request_id}) == 3
     assert {
         HYPHENATED_REQUEST_ID,
         generated_request_id,
@@ -148,10 +140,7 @@ def test_request_ids_are_preserved_generated_replaced_and_logged(
         generated_request_id,
         replaced_request_id,
     ):
-        assert (
-            "method=GET path=/api/health status=200"
-            in request_records[request_id].message
-        )
+        assert "method=GET path=/api/health status=200" in request_records[request_id].message
     assert response.headers[REQUEST_ID_HEADER] == HYPHENATED_REQUEST_ID
     assert replaced_request_id != INVALID_REQUEST_ID
 
@@ -258,9 +247,7 @@ def test_failure_is_logged_and_returns_standard_response(
             headers={REQUEST_ID_HEADER: request_id},
         )
 
-    record = next(
-        record for record in caplog.records if "request_failed" in record.message
-    )
+    record = next(record for record in caplog.records if "request_failed" in record.message)
     assert f"error={error}" in record.message
     assert record.exc_info is not None
     assert record.exc_info[0] is type(error)
@@ -316,9 +303,7 @@ def test_missing_artifact_logs_context_and_preserves_cause(
         with TestClient(create_app(artifact_path=str(path))):
             pass
 
-    record = next(
-        record for record in caplog.records if "model_load_failed" in record.message
-    )
+    record = next(record for record in caplog.records if "model_load_failed" in record.message)
     assert "error=model artifact does not exist" in record.message
     assert record.exc_info is None
     assert isinstance(caught.value.__cause__, ArtifactError)

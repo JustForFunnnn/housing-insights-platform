@@ -8,34 +8,19 @@ import { useForm } from "react-hook-form";
 import { ErrorNotice } from "@/components/error-notice";
 import { EstimateChart } from "@/components/estimate-chart";
 import { PropertyFields } from "@/components/property-fields";
-import type {
-  PropertyInput,
-  PropertyMetadata,
-} from "@/api/types";
-import {
-  createPropertySchema,
-  exampleProperty,
-  fieldErrorMessages,
-} from "@/lib/fields";
+import type { PropertyInput, PropertyMetadata } from "@/api/types";
+import { createPropertySchema, exampleProperty, fieldErrorMessages } from "@/lib/fields";
 import { formatDate, formatPrice } from "@/lib/format";
-import {
-  createEstimates,
-  toApiError,
-} from "@/api/browser";
+import { createEstimates, toApiError } from "@/api/browser";
 
-export function EstimatorForm({
-  initialMetadata,
-}: {
-  initialMetadata: PropertyMetadata;
-}) {
+export function EstimatorForm({ initialMetadata }: { initialMetadata: PropertyMetadata }) {
   const metadata = initialMetadata;
   const form = useForm<PropertyInput>({
     resolver: zodResolver(createPropertySchema(metadata)),
     defaultValues: exampleProperty(metadata),
   });
   const estimate = useMutation({
-    mutationFn: (property: PropertyInput) =>
-      createEstimates([property]),
+    mutationFn: (property: PropertyInput) => createEstimates([property]),
   });
 
   const result = estimate.data?.estimates[0];
@@ -43,33 +28,20 @@ export function EstimatorForm({
 
   return (
     <div className="parcel-grid">
-      <section
-        className="parcel parcel-span-7 parcel-pad"
-        data-coordinate="INPUT / A-12"
-      >
+      <section className="parcel parcel-span-7 parcel-pad" data-coordinate="INPUT / A-12">
         <p className="measure-label">Property field sheet</p>
         <h2 className="instrument-title">Describe the property</h2>
         <p className="instrument-copy" style={{ marginBottom: 24 }}>
-          Every range and unit below comes from the estimator metadata
-          contract.
+          Every range and unit below comes from the estimator metadata contract.
         </p>
-        <form
-          onSubmit={form.handleSubmit((value) => estimate.mutate(value))}
-          noValidate
-        >
+        <form onSubmit={form.handleSubmit((value) => estimate.mutate(value))} noValidate>
           <PropertyFields
             metadata={metadata}
-            registerField={(key) =>
-              form.register(key, { valueAsNumber: true })
-            }
+            registerField={(key) => form.register(key, { valueAsNumber: true })}
             errors={errors}
           />
           <div className="button-row" style={{ marginTop: 26 }}>
-            <button
-              className="button"
-              type="submit"
-              disabled={estimate.isPending}
-            >
+            <button className="button" type="submit" disabled={estimate.isPending}>
               {estimate.isPending ? "Estimating…" : "Estimate value"}
               <ArrowRight size={16} aria-hidden="true" />
             </button>
@@ -88,11 +60,7 @@ export function EstimatorForm({
         </form>
       </section>
 
-      <section
-        className="parcel parcel-span-5 parcel-pad"
-        data-coordinate="RESULT / B-12"
-        aria-live="polite"
-      >
+      <section className="parcel parcel-span-5 parcel-pad" data-coordinate="RESULT / B-12" aria-live="polite">
         <p className="measure-label">Model reading</p>
         <h2 className="instrument-title">Estimated value</h2>
         {estimate.isError ? (
@@ -116,17 +84,13 @@ export function EstimatorForm({
             />
             <p className="estimate-time">
               <span className="measure-label">Time</span>
-              <time dateTime={result.created_at}>
-                {formatDate(result.created_at)}
-              </time>
+              <time dateTime={result.created_at}>{formatDate(result.created_at)}</time>
             </p>
           </>
         ) : (
           <div className="empty-state">
             <h2>No reading yet</h2>
-            <p>
-              Complete the field sheet and run an estimate to plot the result.
-            </p>
+            <p>Complete the field sheet and run an estimate to plot the result.</p>
           </div>
         )}
       </section>

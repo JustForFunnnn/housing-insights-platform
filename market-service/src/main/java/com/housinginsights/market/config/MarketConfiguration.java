@@ -55,10 +55,8 @@ public class MarketConfiguration {
     }
 
     @Bean
-    PropertyMetadata propertyMetadata(
-            MarketProperties properties, ObjectMapper objectMapper) {
-        return PropertyMetadata.load(
-                properties.propertyMetadataPath(), objectMapper);
+    PropertyMetadata propertyMetadata(MarketProperties properties, ObjectMapper objectMapper) {
+        return PropertyMetadata.load(properties.propertyMetadataPath(), objectMapper);
     }
 
     @Bean

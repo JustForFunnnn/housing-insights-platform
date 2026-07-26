@@ -24,18 +24,14 @@ describe("API query allowlists", () => {
   });
 
   it("separates analysis filters from table paging and sorting", () => {
-    const source = new URLSearchParams(
-      "bedrooms=3&limit=20&offset=40&sort_by=price&sort_direction=desc",
-    );
+    const source = new URLSearchParams("bedrooms=3&limit=20&offset=40&sort_by=price&sort_direction=desc");
     expect(allowedMarketQuery(source).toString()).toBe("bedrooms=3");
     expect(
       allowedMarketQuery(source, {
         includePage: true,
         includeSort: true,
       }).toString(),
-    ).toBe(
-      "bedrooms=3&sort_by=price&sort_direction=desc&limit=20&offset=40",
-    );
+    ).toBe("bedrooms=3&sort_by=price&sort_direction=desc&limit=20&offset=40");
   });
 });
 
@@ -57,22 +53,15 @@ describe("market URL state", () => {
   });
 
   it("adds stable defaults without discarding repeated filters", () => {
-    const result = withMarketDefaults(
-      new URLSearchParams("bedrooms=2&bedrooms=3"),
-    );
+    const result = withMarketDefaults(new URLSearchParams("bedrooms=2&bedrooms=3"));
     expect(result.getAll("bedrooms")).toEqual(["2", "3"]);
     expect(result.get("limit")).toBe("20");
     expect(result.get("offset")).toBe("0");
   });
 
   it("resets pagination whenever filters or sorting change", () => {
-    const current = new URLSearchParams(
-      "offset=60&limit=20&sort_by=price&sort_direction=desc",
-    );
-    const filtered = applyMarketFilters(
-      current,
-      new URLSearchParams("bedrooms=4"),
-    );
+    const current = new URLSearchParams("offset=60&limit=20&sort_by=price&sort_direction=desc");
+    const filtered = applyMarketFilters(current, new URLSearchParams("bedrooms=4"));
     expect(filtered.get("offset")).toBe("0");
     expect(filtered.get("sort_by")).toBe("price");
 
@@ -82,9 +71,7 @@ describe("market URL state", () => {
   });
 
   it("changes pagination without altering filters or sorting", () => {
-    const current = new URLSearchParams(
-      "bedrooms=3&sort_by=price&sort_direction=desc&limit=20",
-    );
+    const current = new URLSearchParams("bedrooms=3&sort_by=price&sort_direction=desc&limit=20");
     const result = applyMarketPage(current, 40);
     expect(result.get("bedrooms")).toBe("3");
     expect(result.get("sort_by")).toBe("price");

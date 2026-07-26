@@ -1,14 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  FeatureNumberInput,
-  PropertyFields,
-} from "@/components/property-fields";
-import type {
-  FeatureKey,
-  PropertyMetadata,
-} from "@/api/types";
+import { FeatureNumberInput, PropertyFields } from "@/components/property-fields";
+import type { FeatureKey, PropertyMetadata } from "@/api/types";
 
 const metadata: PropertyMetadata = {
   features: {
@@ -34,29 +28,13 @@ function registerField(key: FeatureKey) {
 
 describe("metadata property features", () => {
   it("renders metadata min, max and units with OpenAPI-derived steps", () => {
-    render(
-      <PropertyFields
-        metadata={metadata}
-        registerField={registerField}
-      />,
-    );
+    render(<PropertyFields metadata={metadata} registerField={registerField} />);
 
-    expect(screen.getByLabelText("Interior area (sq ft)")).toHaveAttribute(
-      "min",
-      "400",
-    );
-    expect(screen.getByLabelText("Interior area (sq ft)")).toHaveAttribute(
-      "max",
-      "5000",
-    );
+    expect(screen.getByLabelText("Interior area (sq ft)")).toHaveAttribute("min", "400");
+    expect(screen.getByLabelText("Interior area (sq ft)")).toHaveAttribute("max", "5000");
     expect(screen.getByLabelText("Bedrooms")).toHaveAttribute("step", "1");
-    expect(screen.getByLabelText("Bathrooms")).toHaveAttribute(
-      "step",
-      "any",
-    );
-    expect(
-      screen.getByLabelText("Distance to city center (mi)"),
-    ).toBeVisible();
+    expect(screen.getByLabelText("Bathrooms")).toHaveAttribute("step", "any");
+    expect(screen.getByLabelText("Distance to city center (mi)")).toBeVisible();
   });
 
   it("associates validation messages with their inputs", () => {
@@ -70,9 +48,7 @@ describe("metadata property features", () => {
 
     const input = screen.getByLabelText("Bedrooms");
     expect(input).toHaveAttribute("aria-invalid", "true");
-    expect(input).toHaveAccessibleDescription(
-      "Bedrooms must be a whole number.",
-    );
+    expect(input).toHaveAccessibleDescription("Bedrooms must be a whole number.");
   });
 
   it("supports custom labels while preserving error associations", () => {
@@ -95,11 +71,7 @@ describe("metadata property features", () => {
     expect(input).toHaveAttribute("min", "0");
     expect(input).toHaveAttribute("max", "10");
     expect(input).toHaveAttribute("step", "any");
-    expect(input).toHaveAccessibleDescription(
-      "Bathrooms must be within the supported range.",
-    );
-    expect(
-      screen.getByText("New bathrooms for scenario 1"),
-    ).toHaveClass("sr-only");
+    expect(input).toHaveAccessibleDescription("Bathrooms must be within the supported range.");
+    expect(screen.getByText("New bathrooms for scenario 1")).toHaveClass("sr-only");
   });
 });

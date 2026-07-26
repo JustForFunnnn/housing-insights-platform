@@ -28,9 +28,7 @@ def test_valid_artifact_round_trips(tmp_path: Path, artifact_factory) -> None:
         lambda artifact: artifact.update(features=list(reversed(FEATURE_NAMES))),
         lambda artifact: artifact.update(trained_at=123),
         lambda artifact: artifact.pop("cross_validation"),
-        lambda artifact: artifact["cross_validation"]["metrics"]["rmse"].update(
-            mean=float("nan")
-        ),
+        lambda artifact: artifact["cross_validation"]["metrics"]["rmse"].update(mean=float("nan")),
     ],
     ids=[
         "incompatible-feature-order",

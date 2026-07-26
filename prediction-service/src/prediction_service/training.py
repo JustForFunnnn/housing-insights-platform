@@ -62,30 +62,19 @@ def load_training_data(
         with stream:
             reader = csv.DictReader(stream, strict=True)
             fieldnames = reader.fieldnames or []
-            missing = [
-                column
-                for column in REQUIRED_COLUMNS
-                if column not in fieldnames
-            ]
+            missing = [column for column in REQUIRED_COLUMNS if column not in fieldnames]
             if missing:
-                raise TrainingError(
-                    f"dataset is missing required columns: {', '.join(missing)}"
-                )
+                raise TrainingError(f"dataset is missing required columns: {', '.join(missing)}")
 
             for raw_row in reader:
                 if None in raw_row:
-                    raise TrainingError(
-                        f"CSV row {reader.line_num} has more values than columns"
-                    )
+                    raise TrainingError(f"CSV row {reader.line_num} has more values than columns")
                 try:
                     row = TrainingRow.model_validate(raw_row)
                 except ValidationError as exc:
                     error = exc.errors()[0]
                     column = error["loc"][0]
-                    raise TrainingError(
-                        f"CSV row {reader.line_num} column '{column}': "
-                        f"{error['msg']}"
-                    ) from exc
+                    raise TrainingError(f"CSV row {reader.line_num} column '{column}': {error['msg']}") from exc
                 feature_rows.append(row.to_features().as_row())
                 prices.append(row.price)
     except TrainingError:
@@ -94,9 +83,7 @@ def load_training_data(
         raise TrainingError(f"could not read dataset: {dataset_path}") from exc
 
     if len(feature_rows) < MINIMUM_ROWS:
-        raise TrainingError(
-            f"dataset has {len(feature_rows)} rows; at least {MINIMUM_ROWS} are required"
-        )
+        raise TrainingError(f"dataset has {len(feature_rows)} rows; at least {MINIMUM_ROWS} are required")
 
     return np.asarray(feature_rows), np.asarray(prices)
 
@@ -216,10 +203,7 @@ def _parser(app_settings: Settings | None = None) -> argparse.ArgumentParser:
         "--output",
         type=Path,
         default=app_settings.model_artifact_path,
-        help=(
-            "artifact output path "
-            f"(default: {app_settings.model_artifact_path})"
-        ),
+        help=(f"artifact output path (default: {app_settings.model_artifact_path})"),
     )
     return parser
 

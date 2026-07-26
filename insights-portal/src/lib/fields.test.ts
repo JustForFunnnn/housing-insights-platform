@@ -26,10 +26,7 @@ const metadata: PropertyMetadata = {
 
 describe("metadata-driven property validation", () => {
   it("accepts the example and uses display units", () => {
-    expect(
-      createPropertySchema(metadata).safeParse(exampleProperty(metadata))
-        .success,
-    ).toBe(true);
+    expect(createPropertySchema(metadata).safeParse(exampleProperty(metadata)).success).toBe(true);
     expect(fieldUnit(metadata, "square_footage")).toBe("sq ft");
     expect(fieldUnit(metadata, "distance_to_city_center")).toBe("mi");
     expect(fieldStep("bedrooms")).toBe(1);
@@ -91,29 +88,12 @@ describe("metadata-driven property validation", () => {
 
   it("accepts only a complete metadata-valid URL baseline", () => {
     const property = exampleProperty(metadata);
-    const validParams = Object.fromEntries(
-      Object.entries(property).map(([key, value]) => [key, String(value)]),
-    );
+    const validParams = Object.fromEntries(Object.entries(property).map(([key, value]) => [key, String(value)]));
 
     expect(propertyFromSearchParams(validParams, metadata)).toEqual(property);
-    expect(
-      propertyFromSearchParams(
-        { ...validParams, bedrooms: "2.5" },
-        metadata,
-      ),
-    ).toBeUndefined();
-    expect(
-      propertyFromSearchParams(
-        { ...validParams, square_footage: undefined },
-        metadata,
-      ),
-    ).toBeUndefined();
-    expect(
-      propertyFromSearchParams(
-        { ...validParams, bedrooms: "" },
-        metadata,
-      ),
-    ).toBeUndefined();
+    expect(propertyFromSearchParams({ ...validParams, bedrooms: "2.5" }, metadata)).toBeUndefined();
+    expect(propertyFromSearchParams({ ...validParams, square_footage: undefined }, metadata)).toBeUndefined();
+    expect(propertyFromSearchParams({ ...validParams, bedrooms: "" }, metadata)).toBeUndefined();
   });
 
   it("enforces the portal comparison and what-if limits", () => {

@@ -1,12 +1,6 @@
 import type { ErrorResponse } from "@/api/types";
 
-export function ErrorNotice({
-  error,
-  onRetry,
-}: {
-  error: ErrorResponse;
-  onRetry?: () => void;
-}) {
+export function ErrorNotice({ error, onRetry }: { error: ErrorResponse; onRetry?: () => void }) {
   return (
     <div className="error-notice" role="alert">
       <h2>Unable to complete this request</h2>

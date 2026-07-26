@@ -14,14 +14,8 @@ import {
   renderToBuffer,
 } from "@react-pdf/renderer";
 
-import type {
-  MarketAnalysis,
-  MarketMetadata,
-} from "@/api/types";
-import {
-  MARKET_CHART_DEFINITIONS,
-  type ChartDatum,
-} from "@/lib/chart-data";
+import type { MarketAnalysis, MarketMetadata } from "@/api/types";
+import { MARKET_CHART_DEFINITIONS, type ChartDatum } from "@/lib/chart-data";
 import { buildMarketReportData } from "@/lib/market-report-data";
 
 const styles = StyleSheet.create({
@@ -204,8 +198,7 @@ function PdfChart({
   const points = data
     .map((item, index) => {
       const x = index * step + step / 2;
-      const y =
-        PLOT_TOP + PLOT_HEIGHT - (item.value / maximum) * PLOT_HEIGHT;
+      const y = PLOT_TOP + PLOT_HEIGHT - (item.value / maximum) * PLOT_HEIGHT;
       return `${x},${y}`;
     })
     .join(" ");
@@ -219,54 +212,35 @@ function PdfChart({
       <Text style={styles.chartTitle}>{title}</Text>
       <Text style={styles.chartDescription}>{description}</Text>
       {data.length === 0 ? (
-        <Text style={{ color: "#52647C" }}>
-          No chart data is available for this segment.
-        </Text>
+        <Text style={{ color: "#52647C" }}>No chart data is available for this segment.</Text>
       ) : (
         <>
           <View style={styles.plotRow}>
             <View style={styles.yLabels}>
-              <Text style={styles.yLabel}>
-                {axisValue(maximum, priceValues, unit)}
-              </Text>
-              <Text style={styles.yLabel}>
-                {axisValue(maximum / 2, priceValues, unit)}
-              </Text>
+              <Text style={styles.yLabel}>{axisValue(maximum, priceValues, unit)}</Text>
+              <Text style={styles.yLabel}>{axisValue(maximum / 2, priceValues, unit)}</Text>
               <Text style={styles.yLabel}>0</Text>
             </View>
             <View style={styles.plotColumn}>
-              <Svg
-                style={styles.svg}
-                viewBox={`0 0 ${PLOT_WIDTH} ${PLOT_HEIGHT + PLOT_TOP + 2}`}
-              >
-                {[PLOT_TOP, PLOT_TOP + PLOT_HEIGHT / 2, PLOT_TOP + PLOT_HEIGHT].map(
-                  (y) => (
-                    <Line
-                      key={y}
-                      x1={0}
-                      x2={PLOT_WIDTH}
-                      y1={y}
-                      y2={y}
-                      stroke="#C9D4E2"
-                      strokeWidth={0.6}
-                      strokeDasharray="3 3"
-                    />
-                  ),
-                )}
+              <Svg style={styles.svg} viewBox={`0 0 ${PLOT_WIDTH} ${PLOT_HEIGHT + PLOT_TOP + 2}`}>
+                {[PLOT_TOP, PLOT_TOP + PLOT_HEIGHT / 2, PLOT_TOP + PLOT_HEIGHT].map((y) => (
+                  <Line
+                    key={y}
+                    x1={0}
+                    x2={PLOT_WIDTH}
+                    y1={y}
+                    y2={y}
+                    stroke="#C9D4E2"
+                    strokeWidth={0.6}
+                    strokeDasharray="3 3"
+                  />
+                ))}
                 {line ? (
                   <>
-                    <Polyline
-                      points={points}
-                      fill="none"
-                      stroke="#1D5FD1"
-                      strokeWidth={2.4}
-                    />
+                    <Polyline points={points} fill="none" stroke="#1D5FD1" strokeWidth={2.4} />
                     {data.map((item, index) => {
                       const x = index * step + step / 2;
-                      const y =
-                        PLOT_TOP +
-                        PLOT_HEIGHT -
-                        (item.value / maximum) * PLOT_HEIGHT;
+                      const y = PLOT_TOP + PLOT_HEIGHT - (item.value / maximum) * PLOT_HEIGHT;
                       return (
                         <Circle
                           key={item.label}
@@ -299,13 +273,7 @@ function PdfChart({
               </Svg>
               <View style={styles.axisLabels}>
                 {data.map((item) => (
-                  <Text
-                    key={item.label}
-                    style={[
-                      styles.axisLabel,
-                      { width: `${100 / data.length}%` },
-                    ]}
-                  >
+                  <Text key={item.label} style={[styles.axisLabel, { width: `${100 / data.length}%` }]}>
                     {item.label}
                   </Text>
                 ))}
@@ -313,10 +281,7 @@ function PdfChart({
             </View>
           </View>
           <Text style={styles.chartNote}>
-            {data.length} plotted groups ·{" "}
-            {priceValues
-              ? "Average price"
-              : "Property count"}
+            {data.length} plotted groups · {priceValues ? "Average price" : "Property count"}
           </Text>
         </>
       )}
@@ -333,25 +298,14 @@ function MarketReport({
   metadata: MarketMetadata;
   filterSummary: string;
 }) {
-  const report = buildMarketReportData(
-    analysis,
-    metadata,
-    filterSummary,
-  );
+  const report = buildMarketReportData(analysis, metadata, filterSummary);
   return (
-    <Document
-      title="Housing Insights Market Report"
-      author="Housing Insights"
-    >
+    <Document title="Housing Insights Market Report" author="Housing Insights">
       <Page size="A4" orientation="landscape" style={styles.page}>
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>
-            Housing Insights / Market analysis
-          </Text>
+          <Text style={styles.eyebrow}>Housing Insights / Market analysis</Text>
           <Text style={styles.title}>Measured market report</Text>
-          <Text style={{ marginTop: 7, color: "#52647C" }}>
-            Active segment: {report.segment}
-          </Text>
+          <Text style={{ marginTop: 7, color: "#52647C" }}>Active segment: {report.segment}</Text>
         </View>
         <View style={styles.summary}>
           {report.metrics.map((metric) => (
@@ -376,24 +330,13 @@ function MarketReport({
           ))}
         </View>
         <Text style={styles.footer}>
-          Generated {new Date().toISOString()} · Source: supplied read-only
-          housing dataset
+          Generated {new Date().toISOString()} · Source: supplied read-only housing dataset
         </Text>
       </Page>
     </Document>
   );
 }
 
-export function renderMarketReport(
-  analysis: MarketAnalysis,
-  metadata: MarketMetadata,
-  filterSummary: string,
-) {
-  return renderToBuffer(
-    <MarketReport
-      analysis={analysis}
-      metadata={metadata}
-      filterSummary={filterSummary}
-    />,
-  );
+export function renderMarketReport(analysis: MarketAnalysis, metadata: MarketMetadata, filterSummary: string) {
+  return renderToBuffer(<MarketReport analysis={analysis} metadata={metadata} filterSummary={filterSummary} />);
 }

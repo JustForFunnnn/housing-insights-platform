@@ -19,8 +19,7 @@ class PropertyMetadataTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
-    void loadsOnceAsImmutableStartupSnapshot(@TempDir Path directory)
-            throws IOException {
+    void loadsOnceAsImmutableStartupSnapshot(@TempDir Path directory) throws IOException {
         ObjectNode root = contract();
         root.put("price_currency", "fixture_currency");
         Path path = directory.resolve("property-metadata.json");
@@ -29,23 +28,17 @@ class PropertyMetadataTest {
         PropertyMetadata metadata = PropertyMetadata.load(path, objectMapper);
         Files.writeString(path, "{}");
 
-        assertThat(metadata.features().keySet())
-                .containsExactlyElementsOf(PropertyFieldNames.FEATURE_COLUMNS);
+        assertThat(metadata.features().keySet()).containsExactlyElementsOf(PropertyFieldNames.FEATURE_COLUMNS);
         assertThat(metadata.priceCurrency()).isEqualTo("fixture_currency");
     }
 
     @Test
-    void rejectsMissingOrInvalidMetadataAndIgnoresExtraFields(
-            @TempDir Path directory)
-            throws IOException {
-        assertThatThrownBy(() -> PropertyMetadata.load(
-                        directory.resolve("missing.json"), objectMapper))
+    void rejectsMissingOrInvalidMetadataAndIgnoresExtraFields(@TempDir Path directory) throws IOException {
+        assertThatThrownBy(() -> PropertyMetadata.load(directory.resolve("missing.json"), objectMapper))
                 .isInstanceOf(PropertyMetadataException.class);
 
         ObjectNode root = contract();
-        feature(root, PropertyFieldNames.BATHROOMS)
-                .put("min", 2)
-                .put("max", 1);
+        feature(root, PropertyFieldNames.BATHROOMS).put("min", 2).put("max", 1);
         Path invalid = directory.resolve("invalid.json");
         objectMapper.writeValue(invalid.toFile(), root);
 
@@ -62,16 +55,13 @@ class PropertyMetadataTest {
         feature(extraField, PropertyFieldNames.BEDROOMS).put("unexpected", 1);
         extraField.put("unexpected", true);
         objectMapper.writeValue(invalid.toFile(), extraField);
-        assertThat(PropertyMetadata.load(invalid, objectMapper)
-                        .features()
-                        .keySet())
+        assertThat(PropertyMetadata.load(invalid, objectMapper).features().keySet())
                 .containsExactlyElementsOf(PropertyFieldNames.FEATURE_COLUMNS);
     }
 
     @Test
     void validatorAppliesConfiguredBounds() {
-        var bounded =
-                new PropertyFeatureMetadata(BigDecimal.ONE, BigDecimal.TEN, null);
+        var bounded = new PropertyFeatureMetadata(BigDecimal.ONE, BigDecimal.TEN, null);
         bounded.validate("bathrooms", 2);
         assertThatThrownBy(() -> bounded.validate("bathrooms", 11))
                 .isInstanceOf(InvalidRequestException.class)
@@ -87,7 +77,6 @@ class PropertyMetadataTest {
     }
 
     private static Path contractPath() {
-        return Path.of(
-                "..", "contracts", "property-metadata.json");
+        return Path.of("..", "contracts", "property-metadata.json");
     }
 }

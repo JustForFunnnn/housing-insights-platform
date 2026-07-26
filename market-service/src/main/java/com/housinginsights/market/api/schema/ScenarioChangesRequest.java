@@ -14,18 +14,14 @@ public record ScenarioChangesRequest(
         Double distanceToCityCenter,
         Double schoolRating) {
 
-    public PropertyFeatures applyTo(
-            PropertyFeatures baseline,
-            PropertyMetadata propertyMetadata) {
+    public PropertyFeatures applyTo(PropertyFeatures baseline, PropertyMetadata propertyMetadata) {
         var features = new PropertyFeatures(
                 squareFootage == null ? baseline.squareFootage() : squareFootage,
                 bedrooms == null ? baseline.bedrooms() : bedrooms,
                 bathrooms == null ? baseline.bathrooms() : bathrooms,
                 yearBuilt == null ? baseline.yearBuilt() : yearBuilt,
                 lotSize == null ? baseline.lotSize() : lotSize,
-                distanceToCityCenter == null
-                        ? baseline.distanceToCityCenter()
-                        : distanceToCityCenter,
+                distanceToCityCenter == null ? baseline.distanceToCityCenter() : distanceToCityCenter,
                 schoolRating == null ? baseline.schoolRating() : schoolRating);
         propertyMetadata.validate(features);
         return features;

@@ -4,17 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
-import {
-  useFieldArray,
-  useForm,
-  type UseFormReturn,
-} from "react-hook-form";
+import { useFieldArray, useForm, type UseFormReturn } from "react-hook-form";
 
 import { ErrorNotice } from "@/components/error-notice";
-import {
-  FeatureNumberInput,
-  PropertyFields,
-} from "@/components/property-fields";
+import { FeatureNumberInput, PropertyFields } from "@/components/property-fields";
 import {
   FEATURE_KEYS,
   type FeatureKey,
@@ -22,51 +15,23 @@ import {
   type PropertyInput,
   type WhatIfRequest,
 } from "@/api/types";
-import {
-  createWhatIfSchema,
-  FIELD_DEFINITIONS,
-  fieldErrorMessages,
-  MAX_WHAT_IF_SCENARIOS,
-} from "@/lib/fields";
-import {
-  runWhatIf,
-  toApiError,
-} from "@/api/browser";
+import { createWhatIfSchema, FIELD_DEFINITIONS, fieldErrorMessages, MAX_WHAT_IF_SCENARIOS } from "@/lib/fields";
+import { runWhatIf, toApiError } from "@/api/browser";
 import { WhatIfResults } from "./what-if-results";
 
 function marketExample(metadata: MarketMetadata): PropertyInput {
   const options = metadata.filter_options;
-  const midpoint = (minimum: number, maximum: number) =>
-    minimum + (maximum - minimum) * 0.45;
+  const midpoint = (minimum: number, maximum: number) => minimum + (maximum - minimum) * 0.45;
   return {
-    square_footage: Math.round(
-      midpoint(
-        options.square_footage.minimum,
-        options.square_footage.maximum,
-      ),
-    ),
-    bedrooms:
-      options.bedrooms[Math.min(1, options.bedrooms.length - 1)] ?? 0,
-    bathrooms:
-      options.bathrooms[Math.min(1, options.bathrooms.length - 1)] ?? 0,
-    year_built: Math.round(
-      midpoint(options.year_built.minimum, options.year_built.maximum),
-    ),
-    lot_size: Math.round(
-      midpoint(options.lot_size.minimum, options.lot_size.maximum),
-    ),
+    square_footage: Math.round(midpoint(options.square_footage.minimum, options.square_footage.maximum)),
+    bedrooms: options.bedrooms[Math.min(1, options.bedrooms.length - 1)] ?? 0,
+    bathrooms: options.bathrooms[Math.min(1, options.bathrooms.length - 1)] ?? 0,
+    year_built: Math.round(midpoint(options.year_built.minimum, options.year_built.maximum)),
+    lot_size: Math.round(midpoint(options.lot_size.minimum, options.lot_size.maximum)),
     distance_to_city_center: Number(
-      midpoint(
-        options.distance_to_city_center.minimum,
-        options.distance_to_city_center.maximum,
-      ).toFixed(1),
+      midpoint(options.distance_to_city_center.minimum, options.distance_to_city_center.maximum).toFixed(1),
     ),
-    school_rating: Number(
-      midpoint(
-        options.school_rating.minimum,
-        options.school_rating.maximum,
-      ).toFixed(1),
-    ),
+    school_rating: Number(midpoint(options.school_rating.minimum, options.school_rating.maximum).toFixed(1)),
   };
 }
 
@@ -83,66 +48,41 @@ function ScenarioEditor({
   canRemove: boolean;
   onRemove: () => void;
 }) {
-  const [selectedFeatures, setSelectedFeatures] = useState<FeatureKey[]>(
-    () => {
-      const scenario =
-        form.getValues(`scenarios.${index}` as const) ?? {};
-      const existing = Object.keys(scenario).filter(
-        (key): key is FeatureKey =>
-          FEATURE_KEYS.includes(key as FeatureKey),
-      );
-      return existing.length > 0
-        ? existing
-        : [FEATURE_KEYS[index % FEATURE_KEYS.length]];
-    },
-  );
+  const [selectedFeatures, setSelectedFeatures] = useState<FeatureKey[]>(() => {
+    const scenario = form.getValues(`scenarios.${index}` as const) ?? {};
+    const existing = Object.keys(scenario).filter((key): key is FeatureKey => FEATURE_KEYS.includes(key as FeatureKey));
+    return existing.length > 0 ? existing : [FEATURE_KEYS[index % FEATURE_KEYS.length]];
+  });
   const errors = fieldErrorMessages(
-    form.formState.errors.scenarios?.[index] as
-      | Partial<Record<FeatureKey, { message?: string }>>
-      | undefined,
+    form.formState.errors.scenarios?.[index] as Partial<Record<FeatureKey, { message?: string }>> | undefined,
   );
 
   function replaceFeature(current: FeatureKey, next: FeatureKey) {
     if (current === next) return;
     form.unregister(`scenarios.${index}.${current}` as const);
-    setSelectedFeatures((features) =>
-      features.map((feature) =>
-        feature === current ? next : feature,
-      ),
-    );
+    setSelectedFeatures((features) => features.map((feature) => (feature === current ? next : feature)));
   }
 
   function addFeature() {
-    const next = FEATURE_KEYS.find(
-      (key) => !selectedFeatures.includes(key),
-    );
+    const next = FEATURE_KEYS.find((key) => !selectedFeatures.includes(key));
     if (!next) return;
     setSelectedFeatures((features) => [...features, next]);
   }
 
   function removeFeature(feature: FeatureKey) {
     form.unregister(`scenarios.${index}.${feature}` as const);
-    setSelectedFeatures((features) =>
-      features.filter((key) => key !== feature),
-    );
+    setSelectedFeatures((features) => features.filter((key) => key !== feature));
   }
 
   return (
-    <section
-      className="parcel parcel-pad"
-      data-coordinate={`SCN / W-${String(index + 2).padStart(2, "0")}`}
-    >
+    <section className="parcel parcel-pad" data-coordinate={`SCN / W-${String(index + 2).padStart(2, "0")}`}>
       <div className="scenario-heading">
         <div>
           <p className="measure-label">Feature overrides</p>
           <h2>Scenario {index + 1}</h2>
         </div>
         {canRemove ? (
-          <button
-            className="button button-danger"
-            type="button"
-            onClick={onRemove}
-          >
+          <button className="button button-danger" type="button" onClick={onRemove}>
             <Trash2 size={15} aria-hidden="true" />
             Remove scenario
           </button>
@@ -150,9 +90,7 @@ function ScenarioEditor({
       </div>
 
       <div className="scenario-intro">
-        <p className="instrument-copy">
-          Only listed values override the baseline.
-        </p>
+        <p className="instrument-copy">Only listed values override the baseline.</p>
         <span className="scenario-change-count">
           {selectedFeatures.length} / {FEATURE_KEYS.length} features
         </span>
@@ -165,40 +103,27 @@ function ScenarioEditor({
         </div>
         {selectedFeatures.map((key, changeIndex) => {
           const definition = FIELD_DEFINITIONS[key];
-          const registration = form.register(
-            `scenarios.${index}.${key}` as const,
-            { valueAsNumber: true },
-          );
+          const registration = form.register(`scenarios.${index}.${key}` as const, { valueAsNumber: true });
           return (
             <div className="scenario-change-row" key={key}>
               <div className="field scenario-change-feature">
-                <label
-                  className="sr-only"
-                  htmlFor={`scenario-${index}-${key}-feature`}
-                >
+                <label className="sr-only" htmlFor={`scenario-${index}-${key}-feature`}>
                   Scenario {index + 1} feature {changeIndex + 1}
                 </label>
                 <select
                   className="input"
                   id={`scenario-${index}-${key}-feature`}
                   value={key}
-                  onChange={(event) =>
-                    replaceFeature(
-                      key,
-                      event.target.value as FeatureKey,
-                    )
-                  }
+                  onChange={(event) => replaceFeature(key, event.target.value as FeatureKey)}
                   aria-label={`Scenario ${index + 1} feature ${changeIndex + 1}`}
                 >
-                  {FEATURE_KEYS.filter(
-                    (option) =>
-                      option === key ||
-                      !selectedFeatures.includes(option),
-                  ).map((option) => (
-                    <option value={option} key={option}>
-                      {FIELD_DEFINITIONS[option].label}
-                    </option>
-                  ))}
+                  {FEATURE_KEYS.filter((option) => option === key || !selectedFeatures.includes(option)).map(
+                    (option) => (
+                      <option value={option} key={option}>
+                        {FIELD_DEFINITIONS[option].label}
+                      </option>
+                    ),
+                  )}
                 </select>
               </div>
 
@@ -211,8 +136,7 @@ function ScenarioEditor({
                 labelClassName="sr-only"
                 label={
                   <>
-                    New {definition.label.toLowerCase()} for scenario{" "}
-                    {index + 1}
+                    New {definition.label.toLowerCase()} for scenario {index + 1}
                   </>
                 }
               />
@@ -228,10 +152,7 @@ function ScenarioEditor({
                   <Trash2 size={16} aria-hidden="true" />
                 </button>
               ) : (
-                <span
-                  className="scenario-change-end"
-                  aria-hidden="true"
-                />
+                <span className="scenario-change-end" aria-hidden="true" />
               )}
             </div>
           );
@@ -276,15 +197,9 @@ export function WhatIfForm({
 
   return (
     <>
-      <form
-        onSubmit={form.handleSubmit((values) => whatIf.mutate(values))}
-        noValidate
-      >
+      <form onSubmit={form.handleSubmit((values) => whatIf.mutate(values))} noValidate>
         <div className="scenario-stack">
-          <section
-            className="parcel parcel-pad"
-            data-coordinate="BASE / W-01"
-          >
+          <section className="parcel parcel-pad" data-coordinate="BASE / W-01">
             <div className="scenario-heading">
               <div>
                 <p className="measure-label">Reference parcel</p>
@@ -298,9 +213,7 @@ export function WhatIfForm({
                   valueAsNumber: true,
                 })
               }
-              errors={fieldErrorMessages(
-                form.formState.errors.baseline,
-              )}
+              errors={fieldErrorMessages(form.formState.errors.baseline)}
             />
           </section>
 
@@ -320,19 +233,13 @@ export function WhatIfForm({
           <button
             className="button button-secondary"
             type="button"
-            disabled={
-              scenarios.fields.length >= MAX_WHAT_IF_SCENARIOS
-            }
+            disabled={scenarios.fields.length >= MAX_WHAT_IF_SCENARIOS}
             onClick={() => scenarios.append({})}
           >
             <Plus size={16} aria-hidden="true" />
             Add scenario
           </button>
-          <button
-            className="button"
-            type="submit"
-            disabled={whatIf.isPending}
-          >
+          <button className="button" type="submit" disabled={whatIf.isPending}>
             {whatIf.isPending ? "Calculating…" : "Run what-if"}
           </button>
         </div>
@@ -342,19 +249,12 @@ export function WhatIfForm({
         <div style={{ marginTop: 24 }}>
           <ErrorNotice
             error={toApiError(whatIf.error)}
-            onRetry={() =>
-              form.handleSubmit((value) => whatIf.mutate(value))()
-            }
+            onRetry={() => form.handleSubmit((value) => whatIf.mutate(value))()}
           />
         </div>
       ) : null}
 
-      {whatIf.data ? (
-        <WhatIfResults
-          result={whatIf.data}
-          priceCurrency={metadata.price_currency}
-        />
-      ) : null}
+      {whatIf.data ? <WhatIfResults result={whatIf.data} priceCurrency={metadata.price_currency} /> : null}
     </>
   );
 }

@@ -36,9 +36,7 @@ def test_batch_prediction_preserves_count_and_order(
     monkeypatch.setattr(artifact["model"], "predict", controlled_predict)
     service = SklearnPredictionService(artifact)
 
-    predictions = service.predict(
-        [features(2000, 4), features(900, 2), features(1500, 3)]
-    )
+    predictions = service.predict([features(2000, 4), features(900, 2), features(1500, 3)])
 
     assert len(predictions) == 3
     assert predictions == [20004, 9002, 15003]
@@ -60,9 +58,7 @@ def test_predictions_are_rounded_to_positive_integers(
         lambda rows: [0.1, 1000.4, 2000.6],
     )
 
-    predictions = SklearnPredictionService(artifact).predict(
-        [features(500, 1), features(1000, 2), features(2000, 3)]
-    )
+    predictions = SklearnPredictionService(artifact).predict([features(500, 1), features(1000, 2), features(2000, 3)])
 
     assert predictions == [1, 1000, 2001]
     assert all(isinstance(value, int) for value in predictions)

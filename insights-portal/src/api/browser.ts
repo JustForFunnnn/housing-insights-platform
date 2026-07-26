@@ -18,14 +18,8 @@ import {
   type WhatIfRequest,
 } from "@/api/types";
 
-const ESTIMATOR_API = (
-  process.env.NEXT_PUBLIC_ESTIMATOR_SERVICE_URL ??
-  "http://localhost:9001"
-).replace(/\/$/, "");
-const MARKET_API = (
-  process.env.NEXT_PUBLIC_MARKET_SERVICE_URL ??
-  "http://localhost:9002"
-).replace(/\/$/, "");
+const ESTIMATOR_API = (process.env.NEXT_PUBLIC_ESTIMATOR_SERVICE_URL ?? "http://localhost:9001").replace(/\/$/, "");
+const MARKET_API = (process.env.NEXT_PUBLIC_MARKET_SERVICE_URL ?? "http://localhost:9002").replace(/\/$/, "");
 
 class ApiError extends Error {
   constructor(
@@ -36,10 +30,7 @@ class ApiError extends Error {
   }
 }
 
-function logApiError(
-  dependency: Dependency,
-  response: Response,
-) {
+function logApiError(dependency: Dependency, response: Response) {
   const requestId = response.headers.get("x-request-id");
   console.error(
     JSON.stringify({
@@ -51,12 +42,7 @@ function logApiError(
   );
 }
 
-async function fetchJson<T>(
-  dependency: Dependency,
-  input: string,
-  schema: ZodType<T>,
-  init?: RequestInit,
-): Promise<T> {
+async function fetchJson<T>(dependency: Dependency, input: string, schema: ZodType<T>, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
   if (!headers.has("Accept")) headers.set("Accept", "application/json");
 
@@ -75,10 +61,7 @@ async function fetchJson<T>(
     logApiError(dependency, response);
     let body = dependencyError(dependency);
     try {
-      body = normalizeErrorResponse(
-        await response.json(),
-        dependency,
-      );
+      body = normalizeErrorResponse(await response.json(), dependency);
     } catch {
       // Keep the safe dependency error for non-JSON responses.
     }
@@ -107,57 +90,27 @@ function withQuery(base: string, query: URLSearchParams) {
 }
 
 export function createEstimates(properties: PropertyInput[]) {
-  return fetchJson(
-    "estimator",
-    `${ESTIMATOR_API}/api/estimates`,
-    estimateBatchSchema,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ properties }),
-    },
-  );
+  return fetchJson("estimator", `${ESTIMATOR_API}/api/estimates`, estimateBatchSchema, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ properties }),
+  });
 }
 
-export function getEstimateHistory(
-  limit: number,
-  offset: number,
-  signal?: AbortSignal,
-) {
+export function getEstimateHistory(limit: number, offset: number, signal?: AbortSignal) {
   const query = new URLSearchParams({
     limit: String(limit),
     offset: String(offset),
   });
-  return fetchJson(
-    "estimator",
-    withQuery(`${ESTIMATOR_API}/api/estimates`, query),
-    estimatePageSchema,
-    { signal },
-  );
+  return fetchJson("estimator", withQuery(`${ESTIMATOR_API}/api/estimates`, query), estimatePageSchema, { signal });
 }
 
-export function getMarketAnalysis(
-  query: URLSearchParams,
-  signal?: AbortSignal,
-) {
-  return fetchJson(
-    "market",
-    withQuery(`${MARKET_API}/api/analysis`, query),
-    marketAnalysisSchema,
-    { signal },
-  );
+export function getMarketAnalysis(query: URLSearchParams, signal?: AbortSignal) {
+  return fetchJson("market", withQuery(`${MARKET_API}/api/analysis`, query), marketAnalysisSchema, { signal });
 }
 
-export function getMarketProperties(
-  query: URLSearchParams,
-  signal?: AbortSignal,
-) {
-  return fetchJson(
-    "market",
-    withQuery(`${MARKET_API}/api/properties`, query),
-    propertyPageSchema,
-    { signal },
-  );
+export function getMarketProperties(query: URLSearchParams, signal?: AbortSignal) {
+  return fetchJson("market", withQuery(`${MARKET_API}/api/properties`, query), propertyPageSchema, { signal });
 }
 
 export function marketCsvExportUrl(query: URLSearchParams) {
@@ -169,14 +122,9 @@ export function marketPdfExportUrl(query: URLSearchParams) {
 }
 
 export function runWhatIf(payload: WhatIfRequest) {
-  return fetchJson(
-    "market",
-    `${MARKET_API}/api/what-if`,
-    whatIfResponseSchema,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    },
-  );
+  return fetchJson("market", `${MARKET_API}/api/what-if`, whatIfResponseSchema, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
 }

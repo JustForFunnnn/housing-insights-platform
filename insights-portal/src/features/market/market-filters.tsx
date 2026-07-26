@@ -74,10 +74,7 @@ export function MarketFilters({
 }) {
   function submit(event: FormEvent<HTMLFormElement>) {
     const submitter = (event.nativeEvent as SubmitEvent).submitter;
-    if (
-      submitter instanceof HTMLButtonElement &&
-      submitter.dataset.export === "true"
-    ) {
+    if (submitter instanceof HTMLButtonElement && submitter.dataset.export === "true") {
       return;
     }
     event.preventDefault();
@@ -95,21 +92,9 @@ export function MarketFilters({
 
   const options = metadata.filter_options;
   return (
-    <form
-      id="market-filters"
-      onSubmit={submit}
-      key={current.toString()}
-    >
-      <input
-        type="hidden"
-        name="sort_by"
-        value={current.get("sort_by") ?? "id"}
-      />
-      <input
-        type="hidden"
-        name="sort_direction"
-        value={current.get("sort_direction") ?? "asc"}
-      />
+    <form id="market-filters" onSubmit={submit} key={current.toString()}>
+      <input type="hidden" name="sort_by" value={current.get("sort_by") ?? "id"} />
+      <input type="hidden" name="sort_direction" value={current.get("sort_direction") ?? "asc"} />
       <div className="form-grid">
         <RangeFields
           label="Interior area"
@@ -136,9 +121,7 @@ export function MarketFilters({
                   type="checkbox"
                   name="bedrooms"
                   value={value}
-                  defaultChecked={current
-                    .getAll("bedrooms")
-                    .includes(String(value))}
+                  defaultChecked={current.getAll("bedrooms").includes(String(value))}
                 />
                 {value}
               </label>
@@ -154,9 +137,7 @@ export function MarketFilters({
                   type="checkbox"
                   name="bathrooms"
                   value={value}
-                  defaultChecked={current
-                    .getAll("bathrooms")
-                    .includes(String(value))}
+                  defaultChecked={current.getAll("bathrooms").includes(String(value))}
                 />
                 {value}
               </label>
@@ -207,11 +188,7 @@ export function MarketFilters({
         <button className="button" type="submit">
           Apply segment
         </button>
-        <button
-          className="button button-secondary"
-          type="button"
-          onClick={onReset}
-        >
+        <button className="button button-secondary" type="button" onClick={onReset}>
           Reset filters
         </button>
       </div>

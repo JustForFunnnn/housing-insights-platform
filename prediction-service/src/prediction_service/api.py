@@ -49,7 +49,7 @@ router = APIRouter(
             **ERROR_RESPONSE_WITH_REQUEST_ID,
             "description": "The request could not be completed.",
         }
-    }
+    },
 )
 
 
@@ -69,9 +69,7 @@ def predict_prices(
     payload: PredictionRequest,
     service: PredictionService = Depends(get_prediction_service),
 ) -> PredictionResponse:
-    predictions = service.predict(
-        [instance.to_features() for instance in payload.instances]
-    )
+    predictions = service.predict([instance.to_features() for instance in payload.instances])
     return PredictionResponse(predictions=predictions)
 
 
@@ -83,7 +81,9 @@ def predict_prices(
         422: ERROR_RESPONSE_WITH_REQUEST_ID,
     },
 )
-def model_information(service: PredictionService = Depends(get_prediction_service)) -> ModelInfoResponse:
+def model_information(
+    service: PredictionService = Depends(get_prediction_service),
+) -> ModelInfoResponse:
     return ModelInfoResponse.model_validate(service.model_info())
 
 

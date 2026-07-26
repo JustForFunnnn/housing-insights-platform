@@ -6,7 +6,8 @@ import jakarta.validation.constraints.Min;
 
 public record MarketPageRequest(
         @Min(1) @Max(MarketPageRequest.MAX_LIMIT) @Schema(defaultValue = "20")
-                Integer limit,
+        Integer limit,
+
         @Min(0) @Schema(defaultValue = "0") Integer offset) {
     public static final int MAX_LIMIT = 100;
     public static final int DEFAULT_LIMIT = 20;

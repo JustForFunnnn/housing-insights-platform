@@ -44,9 +44,7 @@ def create_app(
         service = prediction_service
         if service is None:
             try:
-                service = SklearnPredictionService(
-                    load_artifact(Path(artifact_path))
-                )
+                service = SklearnPredictionService(load_artifact(Path(artifact_path)))
             except ArtifactError as exc:
                 # Uvicorn records the propagated traceback once during startup.
                 logger.error(
@@ -54,9 +52,7 @@ def create_app(
                     artifact_path,
                     exc,
                 )
-                raise RuntimeError(
-                    f"could not start without model: {artifact_path}"
-                ) from exc
+                raise RuntimeError(f"could not start without model: {artifact_path}") from exc
 
             logger.info("model_loaded artifact=%s", artifact_path)
 

@@ -74,9 +74,7 @@ class PostgresDatabase:
             async with self._engine.begin() as connection:
                 await connection.run_sync(Base.metadata.create_all)
         except SQLAlchemyError as exc:
-            raise StorageUnavailableError(
-                "could not initialize database schema"
-            ) from exc
+            raise StorageUnavailableError("could not initialize database schema") from exc
 
     async def health(self) -> None:
         try:

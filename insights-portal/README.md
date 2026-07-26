@@ -66,12 +66,12 @@ backend Swagger documentation for complete API details:
 
 Copy `.env.example` to `.env.local` to override local backend URLs.
 
-| Environment variable | Default | Purpose |
-| --- | --- | --- |
-| `ESTIMATOR_SERVICE_URL` | `http://localhost:9001` | Server-side Estimator requests |
-| `MARKET_SERVICE_URL` | `http://localhost:9002` | Server-side Market requests and reports |
-| `NEXT_PUBLIC_ESTIMATOR_SERVICE_URL` | `http://localhost:9001` | Browser-side Estimator requests |
-| `NEXT_PUBLIC_MARKET_SERVICE_URL` | `http://localhost:9002` | Browser-side Market requests |
+| Environment variable                | Default                 | Purpose                                 |
+| ----------------------------------- | ----------------------- | --------------------------------------- |
+| `ESTIMATOR_SERVICE_URL`             | `http://localhost:9001` | Server-side Estimator requests          |
+| `MARKET_SERVICE_URL`                | `http://localhost:9002` | Server-side Market requests and reports |
+| `NEXT_PUBLIC_ESTIMATOR_SERVICE_URL` | `http://localhost:9001` | Browser-side Estimator requests         |
+| `NEXT_PUBLIC_MARKET_SERVICE_URL`    | `http://localhost:9002` | Browser-side Market requests            |
 
 `NEXT_PUBLIC_*` values are included in the browser bundle at build time. Rebuild
 the Portal after changing them.

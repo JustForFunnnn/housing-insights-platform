@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type {
-  MarketAnalysis,
-  MarketMetadata,
-} from "@/api/types";
+import type { MarketAnalysis, MarketMetadata } from "@/api/types";
 import { buildMarketReportData } from "@/lib/market-report-data";
 
 const analysis: MarketAnalysis = {
@@ -23,9 +20,7 @@ const analysis: MarketAnalysis = {
         count: 1,
       },
     ],
-    average_price_by_bedrooms: [
-      { bedrooms: 3, average_price: 200000, count: 1 },
-    ],
+    average_price_by_bedrooms: [{ bedrooms: 3, average_price: 200000, count: 1 }],
     average_price_by_year_built_decade: [
       {
         label: "2000s",
@@ -65,11 +60,7 @@ const metadata = {
 
 describe("PDF report data", () => {
   it("contains the active filters, currency statistics, and all chart series", () => {
-    const report = buildMarketReportData(
-      analysis,
-      metadata,
-      "bedrooms=3, min_price=150000",
-    );
+    const report = buildMarketReportData(analysis, metadata, "bedrooms=3, min_price=150000");
     expect(report.segment).toContain("bedrooms=3");
     expect(report.metrics).toEqual(
       expect.arrayContaining([
@@ -77,18 +68,10 @@ describe("PDF report data", () => {
         { label: "Median", value: "$200,000" },
       ]),
     );
-    expect(report.charts.priceDistribution).toEqual([
-      { label: "200k", value: 1, count: 1 },
-    ]);
-    expect(report.charts.bedrooms).toEqual([
-      { label: "3 bed", value: 200000, count: 1 },
-    ]);
-    expect(report.charts.decades).toEqual([
-      { label: "2000s", value: 200000, count: 1 },
-    ]);
-    expect(report.charts.squareFootage).toEqual([
-      { label: "1500–1999", value: 200000, count: 1 },
-    ]);
+    expect(report.charts.priceDistribution).toEqual([{ label: "200k", value: 1, count: 1 }]);
+    expect(report.charts.bedrooms).toEqual([{ label: "3 bed", value: 200000, count: 1 }]);
+    expect(report.charts.decades).toEqual([{ label: "2000s", value: 200000, count: 1 }]);
+    expect(report.charts.squareFootage).toEqual([{ label: "1500–1999", value: 200000, count: 1 }]);
   });
 
   it("preserves empty-analysis nulls as unavailable instead of fake zeroes", () => {
@@ -112,11 +95,7 @@ describe("PDF report data", () => {
       metadata,
       "",
     );
-    expect(report.metrics.slice(1).every((item) => item.value === "Not available")).toBe(
-      true,
-    );
-    expect(
-      Object.values(report.charts).every((series) => series.length === 0),
-    ).toBe(true);
+    expect(report.metrics.slice(1).every((item) => item.value === "Not available")).toBe(true);
+    expect(Object.values(report.charts).every((series) => series.length === 0)).toBe(true);
   });
 });
