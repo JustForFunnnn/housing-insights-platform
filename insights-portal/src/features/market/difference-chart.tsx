@@ -14,13 +14,15 @@ import {
 
 import { formatPrice } from "@/lib/format";
 
+interface DifferenceChartProps {
+  values: Array<{ label: string; value: number }>;
+  unit: string;
+}
+
 export function DifferenceChart({
   values,
   unit,
-}: {
-  values: Array<{ label: string; value: number }>;
-  unit: string;
-}) {
+}: DifferenceChartProps) {
   return (
     <>
       <div

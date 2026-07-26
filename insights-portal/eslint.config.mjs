@@ -10,6 +10,5 @@ export default defineConfig([
     "coverage/**",
     "playwright-report/**",
     "test-results/**",
-    "src/lib/api/generated/**",
   ]),
 ]);

@@ -101,7 +101,7 @@ export function MarketFilters({
           maxName="max_price"
           range={options.price}
           current={current}
-          unit={metadata.price.unit}
+          unit={metadata.price_currency}
         />
         <fieldset className="field">
           <legend>Bedrooms</legend>

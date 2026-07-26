@@ -14,7 +14,6 @@ import type {
   MarketMetadata,
 } from "@/lib/api/types";
 import type { ChartDatum } from "@/lib/chart-data";
-import { formatPrice } from "@/lib/format";
 import { buildMarketReportData } from "@/lib/market-report-data";
 
 const styles = StyleSheet.create({
@@ -65,14 +64,8 @@ const styles = StyleSheet.create({
     fontWeight: 700,
     marginTop: 5,
   },
-  chartGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-  },
   chart: {
-    width: "48%",
-    minHeight: 190,
+    minHeight: 210,
     padding: 12,
     borderWidth: 1,
     borderColor: "#C9D4E2",
@@ -120,36 +113,36 @@ const styles = StyleSheet.create({
 });
 
 function PdfChart({
-  title,
   data,
-  price,
-  unit,
 }: {
-  title: string;
   data: ChartDatum[];
-  price: boolean;
-  unit: string;
 }) {
   const maximum = Math.max(...data.map((item) => item.value), 1);
   return (
     <View style={styles.chart}>
-      <Text style={styles.chartTitle}>{title}</Text>
-      {data.map((item) => (
-        <View style={styles.row} key={item.label}>
-          <Text style={styles.label}>{item.label}</Text>
-          <View style={styles.track}>
-            <View
-              style={[
-                styles.bar,
-                { width: `${Math.max(2, (item.value / maximum) * 100)}%` },
-              ]}
-            />
+      <Text style={styles.chartTitle}>Price distribution</Text>
+      {data.length === 0 ? (
+        <Text style={{ color: "#52647C" }}>
+          No distribution data is available for this segment.
+        </Text>
+      ) : (
+        data.map((item) => (
+          <View style={styles.row} key={item.label}>
+            <Text style={styles.label}>{item.label}</Text>
+            <View style={styles.track}>
+              <View
+                style={[
+                  styles.bar,
+                  {
+                    width: `${Math.max(2, (item.value / maximum) * 100)}%`,
+                  },
+                ]}
+              />
+            </View>
+            <Text style={styles.value}>{item.value}</Text>
           </View>
-          <Text style={styles.value}>
-            {price ? formatPrice(item.value, unit) : item.value}
-          </Text>
-        </View>
-      ))}
+        ))
+      )}
     </View>
   );
 }
@@ -173,7 +166,7 @@ function MarketReport({
       title="Housing Insights Market Report"
       author="Housing Insights"
     >
-      <Page size="A4" orientation="landscape" style={styles.page}>
+      <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.eyebrow}>
             Housing Insights / Market analysis
@@ -191,17 +184,7 @@ function MarketReport({
             </View>
           ))}
         </View>
-        <View style={styles.chartGrid}>
-          {report.charts.map((chart) => (
-            <PdfChart
-              key={chart.title}
-              title={chart.title}
-              data={chart.data}
-              price={chart.price}
-              unit={metadata.price.unit}
-            />
-          ))}
-        </View>
+        <PdfChart data={report.priceDistribution} />
         <Text style={styles.footer}>
           Generated {new Date().toISOString()} · Source: supplied read-only
           housing dataset

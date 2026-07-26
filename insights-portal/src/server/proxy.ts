@@ -2,10 +2,7 @@ import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
 
-import {
-  allowedMarketQuery,
-  estimatorHistoryQuery,
-} from "@/lib/market-query";
+import { allowedMarketQuery } from "@/lib/market-query";
 import {
   backendFetch,
   backendJson,
@@ -39,7 +36,10 @@ export async function proxyJson(
   try {
     let query = new URLSearchParams();
     if (options.query === "estimator-history") {
-      query = estimatorHistoryQuery(request.nextUrl.searchParams);
+      for (const key of ["limit", "offset"]) {
+        const value = request.nextUrl.searchParams.get(key);
+        if (value) query.set(key, value);
+      }
     }
     if (options.query === "market-analysis") {
       query = allowedMarketQuery(request.nextUrl.searchParams);

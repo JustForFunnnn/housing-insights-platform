@@ -120,7 +120,7 @@ export function EstimatorForm({
         ) : result ? (
           <>
             <strong className="metric-value" style={{ fontSize: "2.2rem" }}>
-              {formatPrice(result.estimated_price, metadata.price.unit)}
+              {formatPrice(result.estimated_price, metadata.price_currency)}
             </strong>
             <EstimateChart
               values={[
@@ -129,7 +129,7 @@ export function EstimatorForm({
                   value: result.estimated_price,
                 },
               ]}
-              unit={metadata.price.unit}
+              unit={metadata.price_currency}
             />
             <div className="data-table-wrap" style={{ marginTop: 22 }}>
               <table className="data-table">
@@ -140,7 +140,7 @@ export function EstimatorForm({
                     <td className="mono">
                       {formatPrice(
                         result.estimated_price,
-                        metadata.price.unit,
+                        metadata.price_currency,
                       )}
                     </td>
                   </tr>

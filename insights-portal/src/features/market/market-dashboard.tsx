@@ -21,9 +21,9 @@ import {
   applyMarketFilters,
   applyMarketPage,
   applyMarketSort,
+  allowedMarketQuery,
   withMarketDefaults,
-} from "@/lib/market-navigation";
-import { allowedMarketQuery } from "@/lib/market-query";
+} from "@/lib/market-query";
 
 import { MarketCharts } from "./market-charts";
 import { MarketFilters } from "./market-filters";
@@ -177,7 +177,7 @@ export function MarketDashboard({
                   <strong className="metric-value">
                     {formatPrice(
                       value as number | null,
-                      metadata.data.price.unit,
+                      metadata.data.price_currency,
                     )}
                   </strong>
                 </div>
@@ -186,7 +186,7 @@ export function MarketDashboard({
           </section>
           <MarketCharts
             analysis={analysis.data}
-            unit={metadata.data.price.unit}
+            unit={metadata.data.price_currency}
           />
         </>
       ) : (

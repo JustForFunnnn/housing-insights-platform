@@ -4,13 +4,11 @@ import { unstable_cache } from "next/cache";
 
 import type {
   ErrorResponse,
-  EstimateBatch,
   EstimatePage,
   MarketAnalysis,
   MarketMetadata,
   PropertyMetadata,
   PropertyPage,
-  WhatIfResponse,
 } from "@/lib/api/types";
 
 export type Dependency = "estimator" | "market";
@@ -147,14 +145,6 @@ export function getEstimates(query = "") {
   );
 }
 
-export function createEstimates(properties: unknown) {
-  return backendJson<EstimateBatch>("estimator", "/api/estimates", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(properties),
-  });
-}
-
 export function getMarketAnalysis(query = "") {
   return backendJson<MarketAnalysis>(
     "market",
@@ -167,14 +157,6 @@ export function getMarketProperties(query = "") {
     "market",
     `/api/properties${query ? `?${query}` : ""}`,
   );
-}
-
-export function runWhatIf(payload: unknown) {
-  return backendJson<WhatIfResponse>("market", "/api/what-if", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
 }
 
 export async function dependencyHealth(dependency: Dependency) {

@@ -166,13 +166,13 @@ export function ComparisonForm({
               <div className="metric">
                 <span className="measure-label">Highest · {highest.label}</span>
                 <strong className="metric-value">
-                  {formatPrice(highest.value, metadata.price.unit)}
+                  {formatPrice(highest.value, metadata.price_currency)}
                 </strong>
               </div>
               <div className="metric">
                 <span className="measure-label">Lowest · {lowest.label}</span>
                 <strong className="metric-value">
-                  {formatPrice(lowest.value, metadata.price.unit)}
+                  {formatPrice(lowest.value, metadata.price_currency)}
                 </strong>
               </div>
               <div className="metric">
@@ -180,14 +180,14 @@ export function ComparisonForm({
                 <strong className="metric-value">
                   {formatPrice(
                     highest.value - lowest.value,
-                    metadata.price.unit,
+                    metadata.price_currency,
                   )}
                 </strong>
               </div>
             </div>
           ) : null}
           <EstimateChart
-            unit={metadata.price.unit}
+            unit={metadata.price_currency}
             values={comparison.data.estimates.map((record, index) => ({
               label: `Property ${String.fromCharCode(65 + index)}`,
               value: record.estimated_price,
@@ -215,7 +215,7 @@ export function ComparisonForm({
                     <td className="mono" key={record.created_at}>
                       {formatPrice(
                         record.estimated_price,
-                        metadata.price.unit,
+                        metadata.price_currency,
                       )}
                     </td>
                   ))}
@@ -229,8 +229,8 @@ export function ComparisonForm({
                         key={`${record.created_at}-${key}`}
                       >
                         {formatNumber(record.property[key])}
-                        {metadata.fields[key].unit
-                          ? ` ${metadata.fields[key].unit}`
+                        {metadata.features[key].unit
+                          ? ` ${metadata.features[key].unit}`
                           : ""}
                       </td>
                     ))}

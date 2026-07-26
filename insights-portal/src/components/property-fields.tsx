@@ -26,7 +26,7 @@ export function PropertyFields({
     <div className="form-grid">
       {FEATURE_KEYS.map((key) => {
         const definition = FIELD_DEFINITIONS[key];
-        const field = metadata.fields[key];
+        const field = metadata.features[key];
         const unit = fieldUnit(metadata, key);
         const registration = registerField(key);
         const errorId = `${registration.name}-error`;

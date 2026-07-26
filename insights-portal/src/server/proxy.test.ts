@@ -1,21 +1,41 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { backendFetch } = vi.hoisted(() => ({
+const { backendFetch, backendJson } = vi.hoisted(() => ({
   backendFetch: vi.fn(),
+  backendJson: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/server/backend", () => ({
   backendFetch,
-  backendJson: vi.fn(),
+  backendJson,
   getEstimatorMetadata: vi.fn(),
   getMarketMetadata: vi.fn(),
 }));
 
-describe("CSV proxy", () => {
+describe("route proxies", () => {
   beforeEach(() => {
     backendFetch.mockReset();
+    backendJson.mockReset();
+  });
+
+  it("forwards only estimator history pagination", async () => {
+    backendJson.mockResolvedValue({ estimates: [] });
+    const { proxyJson } = await import("@/server/proxy");
+    const request = new NextRequest(
+      "http://localhost:9100/api/estimator/estimates?limit=20&offset=40&query=secret",
+    );
+
+    await proxyJson(request, "estimator", "/api/estimates", {
+      query: "estimator-history",
+    });
+
+    expect(backendJson).toHaveBeenCalledWith(
+      "estimator",
+      "/api/estimates?limit=20&offset=40",
+      { method: "GET" },
+    );
   });
 
   it("forwards filters and sorting, excludes pagination, and preserves binary headers", async () => {

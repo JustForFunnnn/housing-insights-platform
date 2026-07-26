@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { formatPrice } from "@/lib/format";
 
 describe("price formatting", () => {
-  it("uses the metadata price unit", () => {
+  it("uses the metadata price currency", () => {
     expect(formatPrice(125000, "USD")).toContain("$125,000");
     expect(formatPrice(125000, "EUR")).toMatch(/€125,000|125,000\s?€/);
   });

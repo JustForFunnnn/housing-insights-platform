@@ -6,7 +6,6 @@ import { Plus, Trash2 } from "lucide-react";
 import { useFieldArray, useForm } from "react-hook-form";
 
 import { ErrorNotice } from "@/components/error-notice";
-import { DifferenceChart } from "@/components/difference-chart";
 import { EstimateChart } from "@/components/estimate-chart";
 import { PropertyFields } from "@/components/property-fields";
 import {
@@ -22,6 +21,8 @@ import {
 } from "@/lib/browser-api";
 import { createWhatIfSchema } from "@/lib/fields";
 import { formatPrice } from "@/lib/format";
+
+import { DifferenceChart } from "./difference-chart";
 
 interface WhatIfValues {
   baseline: PropertyInput;
@@ -224,7 +225,7 @@ export function WhatIfForm({
           <p className="measure-label">Scenario readings</p>
           <h2 className="instrument-title">Change from baseline</h2>
           <EstimateChart
-            unit={metadata.price.unit}
+            unit={metadata.price_currency}
             values={[
               {
                 label: "Baseline",
@@ -240,7 +241,7 @@ export function WhatIfForm({
             Difference from baseline
           </h3>
           <DifferenceChart
-            unit={metadata.price.unit}
+            unit={metadata.price_currency}
             values={whatIf.data.scenarios.map((scenario, index) => ({
               label: `Scenario ${index + 1}`,
               value: scenario.price_difference,
@@ -266,14 +267,14 @@ export function WhatIfForm({
                     <td className="mono">
                       {formatPrice(
                         scenario.predicted_price,
-                        metadata.price.unit,
+                        metadata.price_currency,
                       )}
                     </td>
                     <td className="mono">
                       {scenario.price_difference >= 0 ? "+" : ""}
                       {formatPrice(
                         scenario.price_difference,
-                        metadata.price.unit,
+                        metadata.price_currency,
                       )}
                     </td>
                     <td className="mono">

@@ -1,6 +1,3 @@
-import type { components as EstimatorComponents } from "./generated/estimator";
-import type { components as MarketComponents } from "./generated/market";
-
 export const FEATURE_KEYS = [
   "square_footage",
   "bedrooms",
@@ -12,18 +9,26 @@ export const FEATURE_KEYS = [
 ] as const;
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
-export type PropertyInput =
-  EstimatorComponents["schemas"]["PropertyInput"];
 
-export interface FieldMetadata {
+export interface PropertyInput {
+  square_footage: number;
+  bedrooms: number;
+  bathrooms: number;
+  year_built: number;
+  lot_size: number;
+  distance_to_city_center: number;
+  school_rating: number;
+}
+
+export interface FeatureMetadata {
   min: number;
   max: number;
   unit: string | null;
 }
 
 export interface PropertyMetadata {
-  fields: Record<FeatureKey, FieldMetadata>;
-  price: { unit: string };
+  features: Record<FeatureKey, FeatureMetadata>;
+  price_currency: string;
 }
 
 export interface ErrorResponse {
@@ -146,5 +151,3 @@ export interface WhatIfResponse {
     percentage_difference: number;
   }>;
 }
-
-export type MarketOpenApiSchemas = MarketComponents["schemas"];

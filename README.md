@@ -74,7 +74,8 @@ The estimator API is available at <http://localhost:9001>, with Swagger UI at
 The Java market backend loads the fixed housing dataset into read-only memory and
 provides filtered aggregate analysis, visualisation data, pageable property records,
 what-if predictions, and CSV exports. The portal's PDF export uses the same analysis
-response and frontend visualisations, avoiding a second Java chart-rendering stack.
+response and price-distribution data as the dashboard, avoiding a second Java
+chart-rendering stack.
 
 For local development with JDK 21, run commands from `market-service/`:
 
@@ -95,6 +96,28 @@ docker compose up --build market-service
 
 The market API is available at <http://localhost:9002>, with Swagger UI at
 <http://localhost:9002/docs>.
+
+## Insights portal
+
+The Next.js portal provides a shared shell for the estimator and market
+applications. It reads form constraints and display units from backend metadata,
+keeps market filters in the URL, and generates market PDF reports from the same
+analysis data used by the browser charts.
+
+Start the complete interview environment from the repository root:
+
+```bash
+docker compose up --build
+```
+
+Open the portal at <http://localhost:9100>. The portal container talks to the
+Estimator and Market services over the Compose network; their host ports remain
+available for API inspection.
+
+For local portal development, copy `insights-portal/.env.example` to
+`insights-portal/.env.local` and run the application on port 9100. The repository
+does not require Node on the host because linting, tests, and production builds
+can run through the portal Dockerfile.
 
 ## Backend routes
 

@@ -28,10 +28,10 @@ vi.mock("next/cache", () => ({
 }));
 
 const metadata = {
-  fields: {
+  features: {
     square_footage: { min: 1, max: 100000, unit: "sq_ft" },
   },
-  price: { unit: "USD" },
+  price_currency: "USD",
 };
 
 function jsonResponse(

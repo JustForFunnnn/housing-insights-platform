@@ -19,52 +19,31 @@ export function buildMarketReportData(
         label: "Minimum",
         value: formatPrice(
           analysis.price_summary.minimum,
-          metadata.price.unit,
+          metadata.price_currency,
         ),
       },
       {
         label: "Average",
         value: formatPrice(
           analysis.price_summary.average,
-          metadata.price.unit,
+          metadata.price_currency,
         ),
       },
       {
         label: "Median",
         value: formatPrice(
           analysis.price_summary.median,
-          metadata.price.unit,
+          metadata.price_currency,
         ),
       },
       {
         label: "Maximum",
         value: formatPrice(
           analysis.price_summary.maximum,
-          metadata.price.unit,
+          metadata.price_currency,
         ),
       },
     ],
-    charts: [
-      {
-        title: "Price distribution",
-        data: charts.priceDistribution,
-        price: false,
-      },
-      {
-        title: "Average price by bedrooms",
-        data: charts.bedrooms,
-        price: true,
-      },
-      {
-        title: "Average price by build decade",
-        data: charts.decades,
-        price: true,
-      },
-      {
-        title: "Average price by interior area",
-        data: charts.squareFootage,
-        price: true,
-      },
-    ],
+    priceDistribution: charts.priceDistribution,
   };
 }

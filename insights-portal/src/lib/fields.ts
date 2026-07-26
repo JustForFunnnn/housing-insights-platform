@@ -6,7 +6,16 @@ import {
   type PropertyInput,
   type PropertyMetadata,
 } from "@/lib/api/types";
-import { PROPERTY_NUMBER_KINDS } from "@/lib/api/generated/property-number-kinds";
+
+const PROPERTY_NUMBER_KINDS = {
+  square_footage: "number",
+  bedrooms: "integer",
+  bathrooms: "number",
+  year_built: "integer",
+  lot_size: "number",
+  distance_to_city_center: "number",
+  school_rating: "number",
+} as const satisfies Record<FeatureKey, "integer" | "number">;
 
 export const FIELD_DEFINITIONS: Record<
   FeatureKey,
@@ -25,7 +34,7 @@ function propertyNumber(
   metadata: PropertyMetadata,
   key: FeatureKey,
 ) {
-  const field = metadata.fields[key];
+  const field = metadata.features[key];
   const definition = FIELD_DEFINITIONS[key];
   let schema = z
     .number({
@@ -87,7 +96,7 @@ export function exampleProperty(metadata: PropertyMetadata): PropertyInput {
 
   return Object.fromEntries(
     FEATURE_KEYS.map((key) => {
-      const { min, max } = metadata.fields[key];
+      const { min, max } = metadata.features[key];
       return [key, Math.min(max, Math.max(min, examples[key]))];
     }),
   ) as unknown as PropertyInput;
@@ -97,7 +106,7 @@ export function fieldUnit(
   metadata: PropertyMetadata,
   key: FeatureKey,
 ) {
-  const unit = metadata.fields[key].unit;
+  const unit = metadata.features[key].unit;
   if (!unit) return "";
   if (unit === "sq_ft") return "sq ft";
   if (unit === "mi") return "mi";

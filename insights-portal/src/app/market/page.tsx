@@ -2,6 +2,7 @@ import { PageHeader } from "@/components/page-header";
 import { MarketDashboard } from "@/features/market/market-dashboard";
 import {
   allowedMarketQuery,
+  withMarketDefaults,
 } from "@/lib/market-query";
 import {
   getMarketAnalysis,
@@ -33,13 +34,9 @@ export default async function MarketPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const input = toSearchParams(await searchParams);
-  if (!input.has("limit")) input.set("limit", "20");
-  if (!input.has("offset")) input.set("offset", "0");
-  if (!input.has("sort_by")) input.set("sort_by", "id");
-  if (!input.has("sort_direction")) {
-    input.set("sort_direction", "asc");
-  }
+  const input = withMarketDefaults(
+    toSearchParams(await searchParams),
+  );
   const filterQuery = allowedMarketQuery(input).toString();
   const propertyQuery = allowedMarketQuery(input, {
     includePage: true,

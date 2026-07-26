@@ -84,14 +84,14 @@ export function HistoryView({
                   <td className="mono">
                     {formatPrice(
                       record.estimated_price,
-                      metadata.price.unit,
+                      metadata.price_currency,
                     )}
                   </td>
                   <td className="mono">
                     {formatNumber(record.property.square_footage)}{" "}
-                    {metadata.fields.square_footage.unit === "sq_ft"
+                    {metadata.features.square_footage.unit === "sq_ft"
                       ? "sq ft"
-                      : metadata.fields.square_footage.unit}
+                      : metadata.features.square_footage.unit}
                   </td>
                   <td>{record.property.bedrooms}</td>
                   <td>{record.property.bathrooms}</td>

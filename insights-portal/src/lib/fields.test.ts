@@ -11,7 +11,7 @@ import {
 } from "@/lib/fields";
 
 const metadata: PropertyMetadata = {
-  fields: {
+  features: {
     square_footage: { min: 1, max: 100000, unit: "sq_ft" },
     bedrooms: { min: 0, max: 100, unit: null },
     bathrooms: { min: 0, max: 100, unit: null },
@@ -20,7 +20,7 @@ const metadata: PropertyMetadata = {
     distance_to_city_center: { min: 0, max: 400, unit: "mi" },
     school_rating: { min: 0, max: 10, unit: null },
   },
-  price: { unit: "USD" },
+  price_currency: "USD",
 };
 
 describe("metadata-driven property validation", () => {

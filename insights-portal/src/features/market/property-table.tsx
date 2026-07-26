@@ -91,7 +91,7 @@ export function PropertyTable({
                 </td>
                 <td>{record.school_rating}</td>
                 <td className="mono">
-                  {formatPrice(record.price, metadata.price.unit)}
+                  {formatPrice(record.price, metadata.price_currency)}
                 </td>
               </tr>
             ))}
