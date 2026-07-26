@@ -1,0 +1,117 @@
+import { describe, expect, it } from "vitest";
+
+import type {
+  MarketAnalysis,
+  MarketMetadata,
+} from "@/lib/api/types";
+import { buildMarketReportData } from "@/lib/market-report-data";
+
+const analysis: MarketAnalysis = {
+  count: 1,
+  price_summary: {
+    minimum: 200000,
+    maximum: 200000,
+    average: 200000,
+    median: 200000,
+  },
+  visualisations: {
+    price_distribution: [
+      {
+        label: "200k",
+        lower_bound: 200000,
+        upper_bound: 200000,
+        count: 1,
+      },
+    ],
+    average_price_by_bedrooms: [
+      { bedrooms: 3, average_price: 200000, count: 1 },
+    ],
+    average_price_by_year_built_decade: [
+      {
+        label: "2000s",
+        start_year: 2000,
+        end_year: 2009,
+        average_price: 200000,
+        count: 1,
+      },
+    ],
+    average_price_by_square_footage_band: [
+      {
+        label: "1500–1999",
+        lower_bound: 1500,
+        upper_bound_exclusive: 2000,
+        average_price: 200000,
+        count: 1,
+      },
+    ],
+  },
+  filter_options: {
+    square_footage: { minimum: 1500, maximum: 1999 },
+    bedrooms: [3],
+    bathrooms: [2],
+    year_built: { minimum: 2000, maximum: 2009 },
+    lot_size: { minimum: 5000, maximum: 5000 },
+    distance_to_city_center: { minimum: 4, maximum: 4 },
+    school_rating: { minimum: 8, maximum: 8 },
+    price: { minimum: 200000, maximum: 200000 },
+  },
+};
+
+const metadata = {
+  fields: {},
+  price: { unit: "USD" },
+  filter_options: analysis.filter_options,
+} as unknown as MarketMetadata;
+
+describe("PDF report data", () => {
+  it("contains the active filters, currency statistics, and four charts", () => {
+    const report = buildMarketReportData(
+      analysis,
+      metadata,
+      "bedrooms=3, min_price=150000",
+    );
+    expect(report.segment).toContain("bedrooms=3");
+    expect(report.metrics).toEqual(
+      expect.arrayContaining([
+        { label: "Properties", value: "1" },
+        { label: "Median", value: "$200,000" },
+      ]),
+    );
+    expect(report.charts).toHaveLength(4);
+    expect(report.charts.map((chart) => chart.title)).toEqual([
+      "Price distribution",
+      "Average price by bedrooms",
+      "Average price by build decade",
+      "Average price by interior area",
+    ]);
+  });
+
+  it("preserves empty-analysis nulls as unavailable instead of fake zeroes", () => {
+    const report = buildMarketReportData(
+      {
+        ...analysis,
+        count: 0,
+        price_summary: {
+          minimum: null,
+          maximum: null,
+          average: null,
+          median: null,
+        },
+        visualisations: {
+          price_distribution: [],
+          average_price_by_bedrooms: [],
+          average_price_by_year_built_decade: [],
+          average_price_by_square_footage_band: [],
+        },
+      },
+      metadata,
+      "",
+    );
+    expect(report.metrics.slice(1).every((item) => item.value === "Not available")).toBe(
+      true,
+    );
+    expect(report.charts.every((chart) => chart.data.length === 0)).toBe(
+      true,
+    );
+  });
+});
