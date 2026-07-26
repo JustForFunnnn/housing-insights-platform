@@ -11,7 +11,10 @@ import {
 } from "react-hook-form";
 
 import { ErrorNotice } from "@/components/error-notice";
-import { PropertyFields } from "@/components/property-fields";
+import {
+  FeatureNumberInput,
+  PropertyFields,
+} from "@/components/property-fields";
 import {
   FEATURE_KEYS,
   type FeatureKey,
@@ -23,8 +26,6 @@ import {
   createWhatIfSchema,
   FIELD_DEFINITIONS,
   fieldErrorMessages,
-  fieldStep,
-  fieldUnit,
   MAX_WHAT_IF_SCENARIOS,
 } from "@/lib/fields";
 import {
@@ -164,13 +165,10 @@ function ScenarioEditor({
         </div>
         {selectedFeatures.map((key, changeIndex) => {
           const definition = FIELD_DEFINITIONS[key];
-          const field = metadata.features[key];
-          const unit = fieldUnit(metadata, key);
           const registration = form.register(
             `scenarios.${index}.${key}` as const,
             { valueAsNumber: true },
           );
-          const errorId = `${registration.name}-error`;
           return (
             <div className="scenario-change-row" key={key}>
               <div className="field scenario-change-feature">
@@ -204,32 +202,20 @@ function ScenarioEditor({
                 </select>
               </div>
 
-              <div className="field scenario-change-value">
-                <label className="sr-only" htmlFor={registration.name}>
-                  New {definition.label.toLowerCase()} for scenario{" "}
-                  {index + 1}
-                </label>
-                <input
-                  {...registration}
-                  id={registration.name}
-                  className="input mono"
-                  type="number"
-                  min={field.min}
-                  max={field.max}
-                  step={fieldStep(key)}
-                  aria-invalid={Boolean(errors[key])}
-                  aria-describedby={errors[key] ? errorId : undefined}
-                />
-                <span className="field-hint mono">
-                  {field.min} — {field.max}
-                  {unit ? ` ${unit}` : ""}
-                </span>
-                {errors[key] ? (
-                  <span className="field-error" id={errorId}>
-                    {errors[key]}
-                  </span>
-                ) : null}
-              </div>
+              <FeatureNumberInput
+                feature={key}
+                metadata={metadata}
+                registration={registration}
+                error={errors[key]}
+                className="field scenario-change-value"
+                labelClassName="sr-only"
+                label={
+                  <>
+                    New {definition.label.toLowerCase()} for scenario{" "}
+                    {index + 1}
+                  </>
+                }
+              />
 
               {selectedFeatures.length > 1 ? (
                 <button

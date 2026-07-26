@@ -1,7 +1,4 @@
-from housing_common.property_metadata import (
-    PropertyFeatureMetadata,
-    PropertyMetadataWithCurrency as PropertyMetadata,
-)
+from housing_common.property_metadata import PropertyMetadata
 
 from estimator_service.settings import Settings
 

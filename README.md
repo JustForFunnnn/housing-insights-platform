@@ -17,11 +17,11 @@ portal.
 ## Architecture
 
 ```text
-Insights Portal ──> Estimator Service ──> Prediction Service
-                           │
-                           └──> PostgreSQL
-
-Insights Portal ──> Market Service
+Insights Portal ──> Estimator Service ───────────> Prediction Service
+                           │                                ↑
+                           └──> PostgreSQL                  │
+                                                            │
+Insights Portal ──> Market Service ─────────────────────────┘
 ```
 
 ## Notes
@@ -36,10 +36,10 @@ Insights Portal ──> Market Service
    Portal can continue to operate with its own constraints.
 
 3. Each backend accepts or generates an `X-Request-ID`, then returns and logs it.
-   Estimator forwards the same ID to Prediction, making the service call chain
-   traceable and helping locate failures quickly. The Portal logs returned IDs for
-   non-success responses, and public API errors share a consistent `error_code` and
-   `message` shape.
+   Estimator and Market forward the same ID to Prediction, making each service call
+   chain traceable and helping locate failures quickly. The Portal logs returned IDs
+   for non-success responses, and public API errors share a consistent `error_code`
+   and `message` shape.
 
 4. `packages/python/housing-common` centralizes metadata and observability utilities
    for Prediction and Estimator. This avoids duplication and keeps both Python

@@ -6,7 +6,6 @@ import pytest
 from housing_common.property_metadata import (
     PropertyMetadata,
     PropertyMetadataError,
-    PropertyMetadataWithCurrency,
 )
 
 CONTRACT_PATH = (
@@ -33,7 +32,7 @@ def test_loads_shared_contract_as_immutable_startup_snapshot(
     path = tmp_path / "property-metadata.json"
     path.write_text(json.dumps(configured), encoding="utf-8")
 
-    metadata = PropertyMetadataWithCurrency.load(path)
+    metadata = PropertyMetadata.load(path)
     path.write_text("{}", encoding="utf-8")
 
     assert tuple(type(metadata.features).model_fields) == FEATURE_NAMES
@@ -41,17 +40,14 @@ def test_loads_shared_contract_as_immutable_startup_snapshot(
     assert metadata.price_currency == "fixture_currency"
 
 
-def test_currency_is_required_only_by_consumers_that_expose_it(
-    tmp_path: Path,
-) -> None:
+def test_rejects_missing_currency(tmp_path: Path) -> None:
     configured = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
     configured.pop("price_currency")
     path = tmp_path / "property-metadata.json"
     path.write_text(json.dumps(configured), encoding="utf-8")
 
-    assert PropertyMetadata.load(path).features.bedrooms.unit is None
     with pytest.raises(PropertyMetadataError):
-        PropertyMetadataWithCurrency.load(path)
+        PropertyMetadata.load(path)
 
 
 def test_rejects_missing_metadata(tmp_path: Path) -> None:

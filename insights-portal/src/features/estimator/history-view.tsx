@@ -1,10 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 import { ErrorNotice } from "@/components/error-notice";
+import { Pagination } from "@/components/pagination";
 import type {
   FeatureKey,
   EstimatePage,
@@ -61,9 +61,6 @@ export function HistoryView({
   const page = history.data;
   if (!page) return <div className="skeleton" aria-label="Loading history" />;
 
-  const start = page.total === 0 ? 0 : page.offset + 1;
-  const end = Math.min(page.total, page.offset + page.estimates.length);
-
   return (
     <>
       {page.estimates.length === 0 ? (
@@ -118,34 +115,14 @@ export function HistoryView({
         </div>
       )}
 
-      <div
-        className="button-row"
-        style={{ justifyContent: "space-between", marginTop: 18 }}
-      >
-        <span className="measure-label">
-          {start}–{end} of {page.total}
-        </span>
-        <div className="button-row">
-          <button
-            className="button button-secondary"
-            disabled={offset === 0 || history.isFetching}
-            onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
-          >
-            <ChevronLeft size={16} aria-hidden="true" />
-            Previous
-          </button>
-          <button
-            className="button button-secondary"
-            disabled={
-              offset + PAGE_SIZE >= page.total || history.isFetching
-            }
-            onClick={() => setOffset(offset + PAGE_SIZE)}
-          >
-            Next
-            <ChevronRight size={16} aria-hidden="true" />
-          </button>
-        </div>
-      </div>
+      <Pagination
+        offset={page.offset}
+        limit={page.limit}
+        itemCount={page.estimates.length}
+        total={page.total}
+        busy={history.isFetching}
+        onPage={setOffset}
+      />
     </>
   );
 }

@@ -3,11 +3,10 @@
 import {
   ArrowDown,
   ArrowUp,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 
+import { Pagination } from "@/components/pagination";
 import type {
   MarketMetadata,
   PropertyPage,
@@ -113,36 +112,14 @@ export function PropertyTable({
         </table>
       </div>
 
-      <div
-        className="button-row"
-        style={{ justifyContent: "space-between", marginTop: 18 }}
-      >
-        <span className="measure-label">
-          {page.total === 0 ? 0 : page.offset + 1}–
-          {Math.min(page.total, page.offset + page.records.length)} of{" "}
-          {page.total}
-        </span>
-        <div className="button-row">
-          <button
-            className="button button-secondary"
-            disabled={page.offset === 0 || busy}
-            onClick={() => onPage(Math.max(0, page.offset - page.limit))}
-          >
-            <ChevronLeft size={16} aria-hidden="true" />
-            Previous
-          </button>
-          <button
-            className="button button-secondary"
-            disabled={
-              page.offset + page.limit >= page.total || busy
-            }
-            onClick={() => onPage(page.offset + page.limit)}
-          >
-            Next
-            <ChevronRight size={16} aria-hidden="true" />
-          </button>
-        </div>
-      </div>
+      <Pagination
+        offset={page.offset}
+        limit={page.limit}
+        itemCount={page.records.length}
+        total={page.total}
+        busy={busy}
+        onPage={onPage}
+      />
     </>
   );
 }

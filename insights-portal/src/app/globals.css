@@ -263,6 +263,11 @@ a {
   gap: 10px;
 }
 
+.pagination {
+  justify-content: space-between;
+  margin-top: 18px;
+}
+
 .button {
   display: inline-flex;
   width: fit-content;

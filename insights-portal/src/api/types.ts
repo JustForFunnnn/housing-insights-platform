@@ -1,4 +1,6 @@
-// Hand-maintained representations of the Estimator and Market wire contracts.
+import { z } from "zod";
+
+// Runtime representations of the Estimator and Market wire contracts.
 export const FEATURE_KEYS = [
   "square_footage",
   "bedrooms",
@@ -9,151 +11,187 @@ export const FEATURE_KEYS = [
   "school_rating",
 ] as const;
 
-export type FeatureKey = (typeof FEATURE_KEYS)[number];
+export const featureKeySchema = z.enum(FEATURE_KEYS);
+export type FeatureKey = z.infer<typeof featureKeySchema>;
 
-export interface PropertyInput {
-  square_footage: number;
-  bedrooms: number;
-  bathrooms: number;
-  year_built: number;
-  lot_size: number;
-  distance_to_city_center: number;
-  school_rating: number;
-}
+export const propertyInputSchema = z.object({
+  square_footage: z.number(),
+  bedrooms: z.number(),
+  bathrooms: z.number(),
+  year_built: z.number(),
+  lot_size: z.number(),
+  distance_to_city_center: z.number(),
+  school_rating: z.number(),
+});
+export type PropertyInput = z.infer<typeof propertyInputSchema>;
 
-export interface FeatureMetadata {
-  min: number;
-  max: number;
-  unit: string | null;
-}
+export const featureMetadataSchema = z.object({
+  min: z.number(),
+  max: z.number(),
+  unit: z.string().nullable(),
+});
+export type FeatureMetadata = z.infer<typeof featureMetadataSchema>;
 
-export interface PropertyMetadata {
-  features: Record<FeatureKey, FeatureMetadata>;
-  price_currency: string;
-}
+export const propertyMetadataSchema = z.object({
+  features: z.record(featureKeySchema, featureMetadataSchema),
+  price_currency: z.string(),
+});
+export type PropertyMetadata = z.infer<typeof propertyMetadataSchema>;
 
-export interface ErrorResponse {
-  error_code: string;
-  message: string;
-}
+export const errorResponseSchema = z.object({
+  error_code: z.string(),
+  message: z.string(),
+});
+export type ErrorResponse = z.infer<typeof errorResponseSchema>;
 
-export interface EstimateRecord {
-  property: PropertyInput;
-  estimated_price: number;
-  created_at: string;
-}
+export const estimateRecordSchema = z.object({
+  property: propertyInputSchema,
+  estimated_price: z.number(),
+  created_at: z.string(),
+});
+export type EstimateRecord = z.infer<typeof estimateRecordSchema>;
 
-export interface EstimateBatch {
-  estimates: EstimateRecord[];
-}
+export const estimateBatchSchema = z.object({
+  estimates: z.array(estimateRecordSchema),
+});
+export type EstimateBatch = z.infer<typeof estimateBatchSchema>;
 
-export interface EstimatePage extends EstimateBatch {
-  total: number;
-  limit: number;
-  offset: number;
-}
+export const estimatePageSchema = estimateBatchSchema.extend({
+  total: z.number(),
+  limit: z.number(),
+  offset: z.number(),
+});
+export type EstimatePage = z.infer<typeof estimatePageSchema>;
 
-export interface NumberRange {
-  minimum: number;
-  maximum: number;
-}
+export const numberRangeSchema = z.object({
+  minimum: z.number(),
+  maximum: z.number(),
+});
+export type NumberRange = z.infer<typeof numberRangeSchema>;
 
-export interface FilterOptions {
-  square_footage: NumberRange;
-  bedrooms: number[];
-  bathrooms: number[];
-  year_built: NumberRange;
-  lot_size: NumberRange;
-  distance_to_city_center: NumberRange;
-  school_rating: NumberRange;
-  price: NumberRange;
-}
+export const filterOptionsSchema = z.object({
+  square_footage: numberRangeSchema,
+  bedrooms: z.array(z.number()),
+  bathrooms: z.array(z.number()),
+  year_built: numberRangeSchema,
+  lot_size: numberRangeSchema,
+  distance_to_city_center: numberRangeSchema,
+  school_rating: numberRangeSchema,
+  price: numberRangeSchema,
+});
+export type FilterOptions = z.infer<typeof filterOptionsSchema>;
 
-export interface MarketMetadata extends PropertyMetadata {
-  filter_options: FilterOptions;
-}
+export const marketMetadataSchema = propertyMetadataSchema.extend({
+  filter_options: filterOptionsSchema,
+});
+export type MarketMetadata = z.infer<typeof marketMetadataSchema>;
 
-export interface PriceSummary {
-  minimum: number | null;
-  maximum: number | null;
-  average: number | null;
-  median: number | null;
-}
+export const priceSummarySchema = z.object({
+  minimum: z.number().nullable(),
+  maximum: z.number().nullable(),
+  average: z.number().nullable(),
+  median: z.number().nullable(),
+});
+export type PriceSummary = z.infer<typeof priceSummarySchema>;
 
-export interface PriceDistributionBucket {
-  label: string;
-  lower_bound: number;
-  upper_bound: number;
-  count: number;
-}
+export const priceDistributionBucketSchema = z.object({
+  label: z.string(),
+  lower_bound: z.number(),
+  upper_bound: z.number(),
+  count: z.number(),
+});
+export type PriceDistributionBucket = z.infer<
+  typeof priceDistributionBucketSchema
+>;
 
-export interface AveragePriceGroup {
-  label?: string;
-  bedrooms?: number;
-  start_year?: number;
-  end_year?: number;
-  lower_bound?: number;
-  upper_bound_exclusive?: number;
-  average_price: number;
-  count: number;
-}
+export const averagePriceGroupSchema = z.object({
+  label: z.string().optional(),
+  bedrooms: z.number().optional(),
+  start_year: z.number().optional(),
+  end_year: z.number().optional(),
+  lower_bound: z.number().optional(),
+  upper_bound_exclusive: z.number().optional(),
+  average_price: z.number(),
+  count: z.number(),
+});
+export type AveragePriceGroup = z.infer<typeof averagePriceGroupSchema>;
 
-export interface MarketAnalysis {
-  count: number;
-  price_summary: PriceSummary;
-  visualisations: {
-    price_distribution: PriceDistributionBucket[];
-    average_price_by_bedrooms: Array<
-      AveragePriceGroup & { bedrooms: number }
-    >;
-    average_price_by_year_built_decade: Array<
-      AveragePriceGroup & {
-        label: string;
-        start_year: number;
-        end_year: number;
-      }
-    >;
-    average_price_by_square_footage_band: Array<
-      AveragePriceGroup & {
-        label: string;
-        lower_bound: number;
-        upper_bound_exclusive: number;
-      }
-    >;
-  };
-  filter_options: FilterOptions;
-}
+const averagePriceByBedroomsSchema = averagePriceGroupSchema.extend({
+  bedrooms: z.number(),
+});
 
-export interface PropertyRecord extends PropertyInput {
-  id: number;
-  price: number;
-}
+const averagePriceByYearBuiltDecadeSchema = averagePriceGroupSchema.extend({
+  label: z.string(),
+  start_year: z.number(),
+  end_year: z.number(),
+});
 
-export interface PropertyPage {
-  records: PropertyRecord[];
-  total: number;
-  limit: number;
-  offset: number;
-  sort_by: SortField;
-  sort_direction: SortDirection;
-}
+const averagePriceBySquareFootageBandSchema =
+  averagePriceGroupSchema.extend({
+    label: z.string(),
+    lower_bound: z.number(),
+    upper_bound_exclusive: z.number(),
+  });
 
-export type SortField =
-  | "id"
-  | FeatureKey
-  | "price";
-export type SortDirection = "asc" | "desc";
+export const marketAnalysisSchema = z.object({
+  count: z.number(),
+  price_summary: priceSummarySchema,
+  visualisations: z.object({
+    price_distribution: z.array(priceDistributionBucketSchema),
+    average_price_by_bedrooms: z.array(
+      averagePriceByBedroomsSchema,
+    ),
+    average_price_by_year_built_decade: z.array(
+      averagePriceByYearBuiltDecadeSchema,
+    ),
+    average_price_by_square_footage_band: z.array(
+      averagePriceBySquareFootageBandSchema,
+    ),
+  }),
+  filter_options: filterOptionsSchema,
+});
+export type MarketAnalysis = z.infer<typeof marketAnalysisSchema>;
 
-export interface WhatIfRequest {
-  baseline: PropertyInput;
-  scenarios: Array<Partial<PropertyInput>>;
-}
+export const propertyRecordSchema = propertyInputSchema.extend({
+  id: z.number(),
+  price: z.number(),
+});
+export type PropertyRecord = z.infer<typeof propertyRecordSchema>;
 
-export interface WhatIfResponse {
-  baseline_prediction: number;
-  scenarios: Array<{
-    predicted_price: number;
-    price_difference: number;
-    percentage_difference: number;
-  }>;
-}
+export const sortFieldSchema = z.enum([
+  "id",
+  ...FEATURE_KEYS,
+  "price",
+]);
+export type SortField = z.infer<typeof sortFieldSchema>;
+
+export const sortDirectionSchema = z.enum(["asc", "desc"]);
+export type SortDirection = z.infer<typeof sortDirectionSchema>;
+
+export const propertyPageSchema = z.object({
+  records: z.array(propertyRecordSchema),
+  total: z.number(),
+  limit: z.number(),
+  offset: z.number(),
+  sort_by: sortFieldSchema,
+  sort_direction: sortDirectionSchema,
+});
+export type PropertyPage = z.infer<typeof propertyPageSchema>;
+
+export const whatIfRequestSchema = z.object({
+  baseline: propertyInputSchema,
+  scenarios: z.array(propertyInputSchema.partial()),
+});
+export type WhatIfRequest = z.infer<typeof whatIfRequestSchema>;
+
+export const whatIfResponseSchema = z.object({
+  baseline_prediction: z.number(),
+  scenarios: z.array(
+    z.object({
+      predicted_price: z.number(),
+      price_difference: z.number(),
+      percentage_difference: z.number(),
+    }),
+  ),
+});
+export type WhatIfResponse = z.infer<typeof whatIfResponseSchema>;

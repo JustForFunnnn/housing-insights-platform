@@ -128,9 +128,9 @@ def evaluate_model(
             error_score="raise",
         )
         metrics = RegressionMetrics(
-            r2=_metric_summary(scores["test_r2"]),
-            rmse=_metric_summary(-scores["test_rmse"]),
-            mae=_metric_summary(-scores["test_mae"]),
+            r2=_summarize_metric_scores(scores["test_r2"]),
+            rmse=_summarize_metric_scores(-scores["test_rmse"]),
+            mae=_summarize_metric_scores(-scores["test_mae"]),
         )
     except Exception as exc:
         raise TrainingError(f"model evaluation failed: {exc}") from exc
@@ -143,7 +143,7 @@ def evaluate_model(
     )
 
 
-def _metric_summary(values: np.ndarray) -> MetricSummary:
+def _summarize_metric_scores(values: np.ndarray) -> MetricSummary:
     numbers = [float(value) for value in values]
     return MetricSummary(mean=float(fmean(numbers)), std=float(pstdev(numbers)))
 

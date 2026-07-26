@@ -26,7 +26,7 @@ ENV MARKET_DATASET_PATH="/app/data/House Price Dataset.csv" \
     PREDICTION_SERVICE_URL=http://prediction-service:9000 \
     PREDICTION_SERVICE_TIMEOUT_SECONDS=5
 
-COPY --from=build /workspace/target/market-service-0.1.0.jar app.jar
+COPY --from=build /workspace/target/app.jar app.jar
 COPY ["data/House Price Dataset.csv", "data/House Price Dataset.csv"]
 COPY contracts/property-metadata.json contracts/property-metadata.json
 RUN chmod 0444 "data/House Price Dataset.csv"

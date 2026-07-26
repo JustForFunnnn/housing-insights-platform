@@ -1,7 +1,4 @@
-from housing_common.property_metadata import (
-    PropertyFeatureMetadata,
-    PropertyMetadata,
-)
+from housing_common.property_metadata import PropertyMetadata
 
 from prediction_service.settings import Settings
 

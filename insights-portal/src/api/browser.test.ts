@@ -67,4 +67,34 @@ describe("API client", () => {
         "Market analysis is temporarily unavailable. Try again shortly.",
     });
   });
+
+  it.each([
+    ["valid JSON with the wrong shape", "{}"],
+    ["malformed JSON", "not-json"],
+  ])(
+    "maps a successful %s response to an invalid-response error",
+    async (_case, body) => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(() =>
+          Promise.resolve(
+            new Response(body, {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }),
+          ),
+        ),
+      );
+
+      const error = await getMarketAnalysis(
+        new URLSearchParams(),
+      ).catch((reason) => reason);
+
+      expect(error).toMatchObject({ status: 502 });
+      expect(toApiError(error)).toEqual({
+        error_code: "market_invalid_response",
+        message: "Market analysis returned an invalid response.",
+      });
+    },
+  );
 });

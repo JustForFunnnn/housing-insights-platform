@@ -1,15 +1,22 @@
-import type {
-  ErrorResponse,
-  EstimateBatch,
-  EstimatePage,
-  MarketAnalysis,
-  PropertyInput,
-  PropertyPage,
-  WhatIfRequest,
-  WhatIfResponse,
-} from "@/api/types";
+import type { ZodType } from "zod";
 
-type Dependency = "estimator" | "market";
+import {
+  dependencyError,
+  invalidResponseError,
+  normalizeErrorResponse,
+  parseResponseJson,
+  type Dependency,
+} from "@/api/response";
+import {
+  estimateBatchSchema,
+  estimatePageSchema,
+  marketAnalysisSchema,
+  propertyPageSchema,
+  whatIfResponseSchema,
+  type ErrorResponse,
+  type PropertyInput,
+  type WhatIfRequest,
+} from "@/api/types";
 
 const ESTIMATOR_API = (
   process.env.NEXT_PUBLIC_ESTIMATOR_SERVICE_URL ??
@@ -27,14 +34,6 @@ class ApiError extends Error {
   ) {
     super(body.message);
   }
-}
-
-function dependencyError(dependency: Dependency): ErrorResponse {
-  const name = dependency === "estimator" ? "Estimator" : "Market analysis";
-  return {
-    error_code: `${dependency}_service_unavailable`,
-    message: `${name} is temporarily unavailable. Try again shortly.`,
-  };
 }
 
 function logApiError(
@@ -55,6 +54,7 @@ function logApiError(
 async function fetchJson<T>(
   dependency: Dependency,
   input: string,
+  schema: ZodType<T>,
   init?: RequestInit,
 ): Promise<T> {
   const headers = new Headers(init?.headers);
@@ -75,23 +75,22 @@ async function fetchJson<T>(
     logApiError(dependency, response);
     let body = dependencyError(dependency);
     try {
-      const candidate = (await response.json()) as Partial<ErrorResponse>;
-      if (
-        typeof candidate.error_code === "string" &&
-        typeof candidate.message === "string"
-      ) {
-        body = {
-          error_code: candidate.error_code,
-          message: candidate.message,
-        };
-      }
+      body = normalizeErrorResponse(
+        await response.json(),
+        dependency,
+      );
     } catch {
       // Keep the safe dependency error for non-JSON responses.
     }
     throw new ApiError(response.status, body);
   }
 
-  return (await response.json()) as T;
+  try {
+    return await parseResponseJson(response, schema);
+  } catch (error) {
+    if (init?.signal?.aborted) throw error;
+    throw new ApiError(502, invalidResponseError(dependency));
+  }
 }
 
 export function toApiError(error: unknown): ErrorResponse {
@@ -108,9 +107,10 @@ function withQuery(base: string, query: URLSearchParams) {
 }
 
 export function createEstimates(properties: PropertyInput[]) {
-  return fetchJson<EstimateBatch>(
+  return fetchJson(
     "estimator",
     `${ESTIMATOR_API}/api/estimates`,
+    estimateBatchSchema,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -128,9 +128,10 @@ export function getEstimateHistory(
     limit: String(limit),
     offset: String(offset),
   });
-  return fetchJson<EstimatePage>(
+  return fetchJson(
     "estimator",
     withQuery(`${ESTIMATOR_API}/api/estimates`, query),
+    estimatePageSchema,
     { signal },
   );
 }
@@ -139,9 +140,10 @@ export function getMarketAnalysis(
   query: URLSearchParams,
   signal?: AbortSignal,
 ) {
-  return fetchJson<MarketAnalysis>(
+  return fetchJson(
     "market",
     withQuery(`${MARKET_API}/api/analysis`, query),
+    marketAnalysisSchema,
     { signal },
   );
 }
@@ -150,9 +152,10 @@ export function getMarketProperties(
   query: URLSearchParams,
   signal?: AbortSignal,
 ) {
-  return fetchJson<PropertyPage>(
+  return fetchJson(
     "market",
     withQuery(`${MARKET_API}/api/properties`, query),
+    propertyPageSchema,
     { signal },
   );
 }
@@ -166,9 +169,10 @@ export function marketPdfExportUrl(query: URLSearchParams) {
 }
 
 export function runWhatIf(payload: WhatIfRequest) {
-  return fetchJson<WhatIfResponse>(
+  return fetchJson(
     "market",
     `${MARKET_API}/api/what-if`,
+    whatIfResponseSchema,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

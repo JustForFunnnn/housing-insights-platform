@@ -62,6 +62,37 @@ describe("server backend client", () => {
     });
   });
 
+  it.each([
+    ["valid JSON with the wrong shape", "{}"],
+    ["malformed JSON", "not-json"],
+  ])(
+    "maps a successful %s response to an invalid-response error",
+    async (_case, body) => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(() =>
+          Promise.resolve(
+            new Response(body, {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }),
+          ),
+        ),
+      );
+      const backend = await import("@/api/server");
+
+      await expect(
+        backend.getMarketAnalysis(),
+      ).rejects.toMatchObject({
+        status: 502,
+        body: {
+          error_code: "market_invalid_response",
+          message: "Market analysis returned an invalid response.",
+        },
+      });
+    },
+  );
+
   it("keeps the timeout active while reading the response body", async () => {
     vi.useFakeTimers();
     const fetchMock = vi.fn(

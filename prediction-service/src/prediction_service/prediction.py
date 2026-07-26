@@ -91,13 +91,13 @@ class SklearnPredictionService:
                 shuffle=cross_validation["shuffle"],
                 random_state=cross_validation["random_state"],
                 metrics=RegressionMetrics(
-                    r2=_metric_summary(metrics["r2"]),
-                    rmse=_metric_summary(metrics["rmse"]),
-                    mae=_metric_summary(metrics["mae"]),
+                    r2=_metric_summary_from_data(metrics["r2"]),
+                    rmse=_metric_summary_from_data(metrics["rmse"]),
+                    mae=_metric_summary_from_data(metrics["mae"]),
                 ),
             ),
         )
 
 
-def _metric_summary(data: MetricSummaryData) -> MetricSummary:
+def _metric_summary_from_data(data: MetricSummaryData) -> MetricSummary:
     return MetricSummary(mean=data["mean"], std=data["std"])

@@ -3,6 +3,10 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Annotated, Literal
 
+from housing_common.property_metadata import (
+    PropertyFeatureMetadata,
+    PropertyMetadata,
+)
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
 from estimator_service.constants import (
@@ -16,11 +20,7 @@ from estimator_service.models import (
     EstimateRecord,
     PropertyFeatures,
 )
-from estimator_service.property_metadata import (
-    PROPERTY_METADATA,
-    PropertyFeatureMetadata,
-    PropertyMetadata,
-)
+from estimator_service.property_metadata import PROPERTY_METADATA
 
 
 def _validate_signed_int64(value: int) -> int:

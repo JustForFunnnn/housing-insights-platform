@@ -1,7 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { PropertyFields } from "@/components/property-fields";
+import {
+  FeatureNumberInput,
+  PropertyFields,
+} from "@/components/property-fields";
 import type {
   FeatureKey,
   PropertyMetadata,
@@ -70,5 +73,33 @@ describe("metadata property features", () => {
     expect(input).toHaveAccessibleDescription(
       "Bedrooms must be a whole number.",
     );
+  });
+
+  it("supports custom labels while preserving error associations", () => {
+    render(
+      <FeatureNumberInput
+        feature="bathrooms"
+        metadata={metadata}
+        registration={{
+          ...registerField("bathrooms"),
+          name: "scenarios.0.bathrooms",
+        }}
+        error="Bathrooms must be within the supported range."
+        className="field scenario-change-value"
+        labelClassName="sr-only"
+        label="New bathrooms for scenario 1"
+      />,
+    );
+
+    const input = screen.getByLabelText("New bathrooms for scenario 1");
+    expect(input).toHaveAttribute("min", "0");
+    expect(input).toHaveAttribute("max", "10");
+    expect(input).toHaveAttribute("step", "any");
+    expect(input).toHaveAccessibleDescription(
+      "Bathrooms must be within the supported range.",
+    );
+    expect(
+      screen.getByText("New bathrooms for scenario 1"),
+    ).toHaveClass("sr-only");
   });
 });

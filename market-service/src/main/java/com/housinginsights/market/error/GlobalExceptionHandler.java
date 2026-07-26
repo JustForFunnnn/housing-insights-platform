@@ -69,10 +69,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ApiErrorResponse> methodNotAllowed(HttpRequestMethodNotSupportedException exception) {
-        return ResponseEntity.status(exception.getStatusCode())
-                .headers(exception.getHeaders())
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(new ApiErrorResponse(ErrorCode.HTTP_ERROR.value(), "The request could not be completed."));
+        return httpError(ResponseEntity.status(exception.getStatusCode()).headers(exception.getHeaders()));
     }
 
     @ExceptionHandler({HttpMediaTypeNotSupportedException.class, HttpMediaTypeNotAcceptableException.class})
@@ -96,7 +93,11 @@ public class GlobalExceptionHandler {
     }
 
     private static ResponseEntity<ApiErrorResponse> httpError(int status) {
-        return ResponseEntity.status(status)
+        return httpError(ResponseEntity.status(status));
+    }
+
+    private static ResponseEntity<ApiErrorResponse> httpError(ResponseEntity.BodyBuilder builder) {
+        return builder
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new ApiErrorResponse(ErrorCode.HTTP_ERROR.value(), "The request could not be completed."));
     }

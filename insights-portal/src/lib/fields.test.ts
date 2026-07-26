@@ -36,6 +36,28 @@ describe("metadata-driven property validation", () => {
     expect(fieldStep("bathrooms")).toBe("any");
   });
 
+  it("clamps every example field to its metadata range", () => {
+    const constrained: PropertyMetadata = {
+      ...metadata,
+      features: {
+        ...metadata.features,
+        bedrooms: { min: 0, max: 2, unit: null },
+        year_built: { min: 2000, max: 2026, unit: "year" },
+        school_rating: { min: 0, max: 7, unit: null },
+      },
+    };
+
+    expect(exampleProperty(constrained)).toEqual({
+      square_footage: 1850,
+      bedrooms: 2,
+      bathrooms: 2,
+      year_built: 2000,
+      lot_size: 7500,
+      distance_to_city_center: 5.6,
+      school_rating: 7,
+    });
+  });
+
   it.each([
     ["empty", Number.NaN],
     ["NaN", Number.NaN],

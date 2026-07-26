@@ -1,15 +1,22 @@
 import "server-only";
 
-import type {
-  ErrorResponse,
-  EstimatePage,
-  MarketAnalysis,
-  MarketMetadata,
-  PropertyMetadata,
-  PropertyPage,
-} from "@/api/types";
+import type { ZodType } from "zod";
 
-type Dependency = "estimator" | "market";
+import {
+  dependencyError,
+  invalidResponseError,
+  normalizeErrorResponse,
+  parseResponseJson,
+  type Dependency,
+} from "@/api/response";
+import {
+  estimatePageSchema,
+  marketAnalysisSchema,
+  marketMetadataSchema,
+  propertyMetadataSchema,
+  propertyPageSchema,
+  type ErrorResponse,
+} from "@/api/types";
 
 const SERVICE_URLS: Record<Dependency, () => string> = {
   estimator: () =>
@@ -27,30 +34,16 @@ export class BackendError extends Error {
   }
 }
 
-function dependencyError(dependency: Dependency): ErrorResponse {
-  const name = dependency === "estimator" ? "Estimator" : "Market analysis";
-  return {
-    error_code: `${dependency}_service_unavailable`,
-    message: `${name} is temporarily unavailable. Try again shortly.`,
-  };
-}
-
 async function errorBody(
   response: Response,
   dependency: Dependency,
   signal: AbortSignal,
 ): Promise<ErrorResponse> {
   try {
-    const body = (await response.json()) as Partial<ErrorResponse>;
-    if (
-      typeof body.error_code === "string" &&
-      typeof body.message === "string"
-    ) {
-      return {
-        error_code: body.error_code,
-        message: body.message,
-      };
-    }
+    return normalizeErrorResponse(
+      await response.json(),
+      dependency,
+    );
   } catch (error) {
     if (signal.aborted) throw error;
     // The safe dependency error below handles non-JSON responses.
@@ -80,6 +73,7 @@ function logBackendError(
 async function backendJson<T>(
   dependency: Dependency,
   path: string,
+  schema: ZodType<T>,
   init: RequestInit = {},
 ) {
   const controller = new AbortController();
@@ -107,18 +101,13 @@ async function backendJson<T>(
     }
 
     try {
-      return (await response.json()) as T;
+      return await parseResponseJson(response, schema);
     } catch (error) {
       if (controller.signal.aborted) throw error;
-      const body = {
-        error_code: `${dependency}_invalid_response`,
-        message: `${
-          dependency === "estimator"
-            ? "Estimator"
-            : "Market analysis"
-        } returned an invalid response.`,
-      };
-      throw new BackendError(502, body);
+      throw new BackendError(
+        502,
+        invalidResponseError(dependency),
+      );
     }
   } catch (error) {
     if (error instanceof BackendError) throw error;
@@ -129,30 +118,37 @@ async function backendJson<T>(
 }
 
 export function getEstimatorMetadata() {
-  return backendJson<PropertyMetadata>("estimator", "/api/metadata");
+  return backendJson(
+    "estimator",
+    "/api/metadata",
+    propertyMetadataSchema,
+  );
 }
 
 export function getMarketMetadata() {
-  return backendJson<MarketMetadata>("market", "/api/metadata");
+  return backendJson("market", "/api/metadata", marketMetadataSchema);
 }
 
 export function getEstimates(query = "") {
-  return backendJson<EstimatePage>(
+  return backendJson(
     "estimator",
     `/api/estimates${query ? `?${query}` : ""}`,
+    estimatePageSchema,
   );
 }
 
 export function getMarketAnalysis(query = "") {
-  return backendJson<MarketAnalysis>(
+  return backendJson(
     "market",
     `/api/analysis${query ? `?${query}` : ""}`,
+    marketAnalysisSchema,
   );
 }
 
 export function getMarketProperties(query = "") {
-  return backendJson<PropertyPage>(
+  return backendJson(
     "market",
     `/api/properties${query ? `?${query}` : ""}`,
+    propertyPageSchema,
   );
 }

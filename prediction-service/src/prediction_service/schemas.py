@@ -2,15 +2,13 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
+from housing_common.property_metadata import PropertyFeatureMetadata
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
 from prediction_service.constants import MAX_PREDICTION_INSTANCES, MAX_SIGNED_INT64
 from prediction_service.errors import ErrorCode
 from prediction_service.models import HousingFeatures
-from prediction_service.property_metadata import (
-    PROPERTY_METADATA,
-    PropertyFeatureMetadata,
-)
+from prediction_service.property_metadata import PROPERTY_METADATA
 
 
 def _validate_signed_int64(value: int) -> int:

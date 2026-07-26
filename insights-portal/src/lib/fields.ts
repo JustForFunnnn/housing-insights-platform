@@ -159,12 +159,20 @@ export function exampleProperty(metadata: PropertyMetadata): PropertyInput {
     school_rating: 8.2,
   };
 
-  return Object.fromEntries(
-    FEATURE_KEYS.map((key) => {
-      const { min, max } = metadata.features[key];
-      return [key, Math.min(max, Math.max(min, examples[key]))];
-    }),
-  ) as unknown as PropertyInput;
+  function clamp(key: FeatureKey) {
+    const { min, max } = metadata.features[key];
+    return Math.min(max, Math.max(min, examples[key]));
+  }
+
+  return {
+    square_footage: clamp("square_footage"),
+    bedrooms: clamp("bedrooms"),
+    bathrooms: clamp("bathrooms"),
+    year_built: clamp("year_built"),
+    lot_size: clamp("lot_size"),
+    distance_to_city_center: clamp("distance_to_city_center"),
+    school_rating: clamp("school_rating"),
+  };
 }
 
 export function fieldUnit(

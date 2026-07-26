@@ -56,6 +56,7 @@ class PropertyMetadata(BaseModel):
     model_config = ConfigDict(extra="ignore", frozen=True, strict=True)
 
     features: PropertyMetadataFeatures
+    price_currency: str
 
     @classmethod
     def load(cls, path: Path) -> Self:
@@ -65,7 +66,3 @@ class PropertyMetadata(BaseModel):
             raise PropertyMetadataError(
                 f"could not load valid property metadata: {path}"
             ) from exc
-
-
-class PropertyMetadataWithCurrency(PropertyMetadata):
-    price_currency: str

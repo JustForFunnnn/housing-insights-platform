@@ -30,6 +30,7 @@ $RECYCLE.BIN/
 .superpowers/
 .codex/
 .cursor/
+AGENTS.md
 project-requirement.md
 
 # Python / Flask
@@ -94,6 +95,9 @@ node_modules/
 !.yarn/releases
 !.yarn/versions
 .pnpm-store/
+# This frontend uses npm; ignore accidental pnpm workspace metadata.
+/insights-portal/pnpm-lock.yaml
+/insights-portal/pnpm-workspace.yaml
 *.tsbuildinfo
 next-env.d.ts
 npm-debug.log*
