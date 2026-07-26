@@ -1,0 +1,40 @@
+{
+  "features": {
+    "square_footage": {
+      "min": 1,
+      "max": 100000,
+      "unit": "sq_ft"
+    },
+    "bedrooms": {
+      "min": 0,
+      "max": 100,
+      "unit": null
+    },
+    "bathrooms": {
+      "min": 0,
+      "max": 100,
+      "unit": null
+    },
+    "year_built": {
+      "min": 1800,
+      "max": 2026,
+      "unit": "year"
+    },
+    "lot_size": {
+      "min": 1,
+      "max": 100000,
+      "unit": "sq_ft"
+    },
+    "distance_to_city_center": {
+      "min": 0,
+      "max": 400,
+      "unit": "mi"
+    },
+    "school_rating": {
+      "min": 0,
+      "max": 10,
+      "unit": null
+    }
+  },
+  "price_currency": "USD"
+}

@@ -13,24 +13,8 @@ public final class PropertyFieldNames {
     public static final String SCHOOL_RATING = "school_rating";
     public static final String PRICE = "price";
 
-    public static final List<String> FEATURE_COLUMNS = List.of(
-            SQUARE_FOOTAGE,
-            BEDROOMS,
-            BATHROOMS,
-            YEAR_BUILT,
-            LOT_SIZE,
-            DISTANCE_TO_CITY_CENTER,
-            SCHOOL_RATING);
-
-    public static final List<String> METADATA_FIELDS = List.of(
-            SQUARE_FOOTAGE,
-            BEDROOMS,
-            BATHROOMS,
-            YEAR_BUILT,
-            LOT_SIZE,
-            DISTANCE_TO_CITY_CENTER,
-            SCHOOL_RATING,
-            PRICE);
+    public static final List<String> FEATURE_COLUMNS =
+            List.of(SQUARE_FOOTAGE, BEDROOMS, BATHROOMS, YEAR_BUILT, LOT_SIZE, DISTANCE_TO_CITY_CENTER, SCHOOL_RATING);
 
     public static final List<String> CSV_COLUMNS = List.of(
             ID,

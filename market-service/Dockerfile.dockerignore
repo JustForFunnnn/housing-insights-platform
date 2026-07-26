@@ -6,4 +6,4 @@
 !data/
 !data/House Price Dataset.csv
 !contracts/
-!contracts/property-field-metadata.json
+!contracts/property-metadata.json

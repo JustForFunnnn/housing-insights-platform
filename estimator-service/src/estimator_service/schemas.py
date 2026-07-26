@@ -18,7 +18,7 @@ from estimator_service.models import (
 )
 from estimator_service.property_metadata import (
     PROPERTY_METADATA,
-    PropertyFieldMetadata,
+    PropertyFeatureMetadata,
     PropertyMetadata,
 )
 
@@ -37,7 +37,7 @@ PositiveInt64Price = Annotated[
 
 
 def _feature_field(
-    metadata: PropertyFieldMetadata,
+    metadata: PropertyFeatureMetadata,
     example: int | float,
 ):
     return Field(
@@ -52,17 +52,23 @@ class PropertyInput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     square_footage: float = _feature_field(
-        PROPERTY_METADATA.square_footage, 1850
+        PROPERTY_METADATA.features.square_footage, 1850
     )
-    bedrooms: int = _feature_field(PROPERTY_METADATA.bedrooms, 3)
-    bathrooms: float = _feature_field(PROPERTY_METADATA.bathrooms, 2.5)
-    year_built: int = _feature_field(PROPERTY_METADATA.year_built, 1998)
-    lot_size: float = _feature_field(PROPERTY_METADATA.lot_size, 7500)
+    bedrooms: int = _feature_field(PROPERTY_METADATA.features.bedrooms, 3)
+    bathrooms: float = _feature_field(
+        PROPERTY_METADATA.features.bathrooms, 2.5
+    )
+    year_built: int = _feature_field(
+        PROPERTY_METADATA.features.year_built, 1998
+    )
+    lot_size: float = _feature_field(
+        PROPERTY_METADATA.features.lot_size, 7500
+    )
     distance_to_city_center: float = _feature_field(
-        PROPERTY_METADATA.distance_to_city_center, 5.6
+        PROPERTY_METADATA.features.distance_to_city_center, 5.6
     )
     school_rating: float = _feature_field(
-        PROPERTY_METADATA.school_rating, 8.2
+        PROPERTY_METADATA.features.school_rating, 8.2
     )
 
     def to_features(self) -> PropertyFeatures:
@@ -149,25 +155,25 @@ class HealthResponse(ResponseModel):
     status: Literal["ok"]
 
 
-class PropertyFieldMetadataResponse(ResponseModel):
-    min: int | float | None
-    max: int | float | None
+class PropertyFeatureMetadataResponse(ResponseModel):
+    min: int | float
+    max: int | float
     unit: str | None
 
 
-class PropertyMetadataFieldsResponse(ResponseModel):
-    square_footage: PropertyFieldMetadataResponse
-    bedrooms: PropertyFieldMetadataResponse
-    bathrooms: PropertyFieldMetadataResponse
-    year_built: PropertyFieldMetadataResponse
-    lot_size: PropertyFieldMetadataResponse
-    distance_to_city_center: PropertyFieldMetadataResponse
-    school_rating: PropertyFieldMetadataResponse
-    price: PropertyFieldMetadataResponse
+class PropertyMetadataFeaturesResponse(ResponseModel):
+    square_footage: PropertyFeatureMetadataResponse
+    bedrooms: PropertyFeatureMetadataResponse
+    bathrooms: PropertyFeatureMetadataResponse
+    year_built: PropertyFeatureMetadataResponse
+    lot_size: PropertyFeatureMetadataResponse
+    distance_to_city_center: PropertyFeatureMetadataResponse
+    school_rating: PropertyFeatureMetadataResponse
 
 
 class PropertyMetadataResponse(ResponseModel):
-    fields: PropertyMetadataFieldsResponse
+    features: PropertyMetadataFeaturesResponse
+    price_currency: str
 
     @classmethod
     def from_metadata(
@@ -175,7 +181,10 @@ class PropertyMetadataResponse(ResponseModel):
         metadata: PropertyMetadata,
     ) -> PropertyMetadataResponse:
         return cls(
-            fields=PropertyMetadataFieldsResponse.model_validate(metadata),
+            features=PropertyMetadataFeaturesResponse.model_validate(
+                metadata.features
+            ),
+            price_currency=metadata.price_currency,
         )
 
 

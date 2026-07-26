@@ -92,7 +92,7 @@ def test_openapi_exposes_shared_metadata_constraints() -> None:
             "PredictionInstance"
         ]["properties"]
 
-    square_footage = PROPERTY_METADATA.square_footage
+    square_footage = PROPERTY_METADATA.features.square_footage
     if square_footage.min is None:
         assert "minimum" not in schema["square_footage"]
     else:

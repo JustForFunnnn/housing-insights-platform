@@ -9,7 +9,7 @@ from prediction_service.errors import ErrorCode
 from prediction_service.models import HousingFeatures
 from prediction_service.property_metadata import (
     PROPERTY_METADATA,
-    PropertyFieldMetadata,
+    PropertyFeatureMetadata,
 )
 
 
@@ -27,7 +27,7 @@ PositiveInt64Price = Annotated[
 
 
 def _feature_field(
-    metadata: PropertyFieldMetadata,
+    metadata: PropertyFeatureMetadata,
     example: int | float,
 ):
     return Field(
@@ -42,17 +42,23 @@ class HousingFields(BaseModel):
     """Shared feature shape; concrete input models choose their own parsing policy."""
 
     square_footage: float = _feature_field(
-        PROPERTY_METADATA.square_footage, 1850
+        PROPERTY_METADATA.features.square_footage, 1850
     )
-    bedrooms: int = _feature_field(PROPERTY_METADATA.bedrooms, 3)
-    bathrooms: float = _feature_field(PROPERTY_METADATA.bathrooms, 2.5)
-    year_built: int = _feature_field(PROPERTY_METADATA.year_built, 1998)
-    lot_size: float = _feature_field(PROPERTY_METADATA.lot_size, 7500)
+    bedrooms: int = _feature_field(PROPERTY_METADATA.features.bedrooms, 3)
+    bathrooms: float = _feature_field(
+        PROPERTY_METADATA.features.bathrooms, 2.5
+    )
+    year_built: int = _feature_field(
+        PROPERTY_METADATA.features.year_built, 1998
+    )
+    lot_size: float = _feature_field(
+        PROPERTY_METADATA.features.lot_size, 7500
+    )
     distance_to_city_center: float = _feature_field(
-        PROPERTY_METADATA.distance_to_city_center, 5.6
+        PROPERTY_METADATA.features.distance_to_city_center, 5.6
     )
     school_rating: float = _feature_field(
-        PROPERTY_METADATA.school_rating, 8.2
+        PROPERTY_METADATA.features.school_rating, 8.2
     )
 
     def to_features(self) -> HousingFeatures:

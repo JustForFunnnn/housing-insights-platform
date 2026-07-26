@@ -44,7 +44,7 @@ Defaults assume commands run from this directory:
 | Environment variable | Default | Purpose |
 | --- | --- | --- |
 | `MARKET_DATASET_PATH` | `../data/House Price Dataset.csv` | Fixed read-only dataset |
-| `PROPERTY_METADATA_PATH` | `../contracts/property-field-metadata.json` | Shared field contract |
+| `PROPERTY_METADATA_PATH` | `../contracts/property-metadata.json` | Shared property metadata contract |
 | `PREDICTION_SERVICE_URL` | `http://localhost:9000` | Prediction API base URL |
 | `PREDICTION_SERVICE_TIMEOUT_SECONDS` | `5` | Connect and response timeout |
 
@@ -124,9 +124,10 @@ What-if data and downstream predictions are not persisted.
 
 ### Metadata, export, and health
 
-- `GET /api/metadata` returns the shared property fields plus
-  `filter_options` calculated from the complete CSV. Price range and actual
-  bedroom/bathroom options therefore remain dataset-derived.
+- `GET /api/metadata` returns the shared property features plus
+  top-level `price_currency` display metadata and `filter_options` calculated from
+  the complete CSV. Price range and actual bedroom/bathroom options therefore
+  remain dataset-derived.
 - `GET /api/properties/export/csv` accepts the shared filters plus sorting and exports all
   matching records, regardless of table pagination.
 - PDF remains a portal requirement: Next.js calls

@@ -9,13 +9,13 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     MODEL_ARTIFACT_PATH=/app/artifacts/model_pipeline.joblib \
-    PROPERTY_METADATA_PATH=/app/contracts/property-field-metadata.json \
+    PROPERTY_METADATA_PATH=/app/contracts/property-metadata.json \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never
 
 COPY prediction-service/pyproject.toml prediction-service/uv.lock ./
 COPY prediction-service/src/ src/
-COPY contracts/property-field-metadata.json contracts/property-field-metadata.json
+COPY contracts/property-metadata.json contracts/property-metadata.json
 RUN --mount=type=cache,target=/root/.cache/uv,sharing=locked \
     uv sync --locked --no-dev --no-editable
 

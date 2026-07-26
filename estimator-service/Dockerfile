@@ -11,13 +11,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PREDICTION_SERVICE_URL=http://prediction-service:9000 \
     PREDICTION_SERVICE_TIMEOUT_SECONDS=5 \
     ESTIMATOR_DATABASE_URL=postgresql+asyncpg://estimator:estimator@estimator-database:5432/estimator \
-    PROPERTY_METADATA_PATH=/app/contracts/property-field-metadata.json \
+    PROPERTY_METADATA_PATH=/app/contracts/property-metadata.json \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never
 
 COPY estimator-service/pyproject.toml estimator-service/uv.lock ./
 COPY estimator-service/src/ src/
-COPY contracts/property-field-metadata.json contracts/property-field-metadata.json
+COPY contracts/property-metadata.json contracts/property-metadata.json
 RUN --mount=type=cache,target=/root/.cache/uv,sharing=locked \
     uv sync --locked --no-dev --no-editable
 

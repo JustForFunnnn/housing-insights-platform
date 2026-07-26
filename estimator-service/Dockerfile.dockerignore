@@ -6,4 +6,4 @@
 !estimator-service/src/
 !estimator-service/src/**
 !contracts/
-!contracts/property-field-metadata.json
+!contracts/property-metadata.json

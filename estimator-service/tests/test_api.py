@@ -168,14 +168,15 @@ def test_validation_and_http_errors_use_contract(app_factory) -> None:
     }
 
 
-def test_metadata_returns_defined_property_fields(app_factory) -> None:
+def test_metadata_returns_defined_property_features(app_factory) -> None:
     app, _database, _store, _prediction = app_factory()
     with TestClient(app) as client:
         response = client.get("/api/metadata")
 
     assert response.status_code == 200
     assert response.json() == {
-        "fields": PROPERTY_METADATA.model_dump(mode="json")
+        "features": PROPERTY_METADATA.features.model_dump(mode="json"),
+        "price_currency": PROPERTY_METADATA.price_currency,
     }
 
 
@@ -185,7 +186,7 @@ def test_openapi_exposes_shared_metadata_constraints(app_factory) -> None:
         schemas = client.get("/openapi.json").json()["components"]["schemas"]
 
     property_input = schemas["PropertyInput"]["properties"]
-    square_footage = PROPERTY_METADATA.square_footage
+    square_footage = PROPERTY_METADATA.features.square_footage
     if square_footage.min is None:
         assert "minimum" not in property_input["square_footage"]
     else:
@@ -203,17 +204,11 @@ def test_openapi_exposes_shared_metadata_constraints(app_factory) -> None:
     assert "multipleOf" not in property_input["bathrooms"]
     assert "multipleOf" not in property_input["school_rating"]
 
-    metadata_fields = schemas["PropertyMetadataFieldsResponse"]
-    expected_metadata_fields = {*VALID_PROPERTY, "price"}
-    assert set(metadata_fields["properties"]) == expected_metadata_fields
-    assert set(metadata_fields["required"]) == expected_metadata_fields
-    assert metadata_fields["additionalProperties"] is False
-    maximum_schema = schemas["PropertyFieldMetadataResponse"]["properties"][
-        "max"
-    ]
-    assert "null" in {
-        option.get("type") for option in maximum_schema["anyOf"]
-    }
+    metadata_features = schemas["PropertyMetadataFeaturesResponse"]
+    expected_metadata_features = set(VALID_PROPERTY)
+    assert set(metadata_features["properties"]) == expected_metadata_features
+    assert set(metadata_features["required"]) == expected_metadata_features
+    assert metadata_features["additionalProperties"] is False
 
 
 @pytest.mark.parametrize(

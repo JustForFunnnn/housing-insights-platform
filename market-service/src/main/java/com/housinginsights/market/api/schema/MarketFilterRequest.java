@@ -9,14 +9,14 @@ import java.util.List;
 import java.util.TreeSet;
 
 public record MarketFilterRequest(
-        @Positive Double minSquareFootage,
-        @Positive Double maxSquareFootage,
+        Double minSquareFootage,
+        Double maxSquareFootage,
         List<@NotNull Integer> bedrooms,
         List<@NotNull Double> bathrooms,
         Integer minYearBuilt,
         Integer maxYearBuilt,
-        @Positive Double minLotSize,
-        @Positive Double maxLotSize,
+        Double minLotSize,
+        Double maxLotSize,
         Double minDistanceToCityCenter,
         Double maxDistanceToCityCenter,
         Double minSchoolRating,

@@ -16,7 +16,7 @@ def test_settings_read_environment(
         "ESTIMATOR_DATABASE_URL",
         "postgresql+asyncpg://user:pass@database.example:5432/estimator",
     )
-    metadata_path = tmp_path / "property-field-metadata.json"
+    metadata_path = tmp_path / "property-metadata.json"
     monkeypatch.setenv("PROPERTY_METADATA_PATH", str(metadata_path))
 
     settings = Settings()

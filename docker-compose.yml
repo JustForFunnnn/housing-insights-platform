@@ -7,9 +7,9 @@ services:
     ports:
       - "9000:9000"
     environment:
-      PROPERTY_METADATA_PATH: /app/contracts/property-field-metadata.json
+      PROPERTY_METADATA_PATH: /app/contracts/property-metadata.json
     volumes:
-      - ./contracts/property-field-metadata.json:/app/contracts/property-field-metadata.json:ro
+      - ./contracts/property-metadata.json:/app/contracts/property-metadata.json:ro
     healthcheck:
       test:
         - CMD
@@ -35,9 +35,9 @@ services:
       PREDICTION_SERVICE_TIMEOUT_SECONDS: "5"
       ESTIMATOR_DATABASE_URL: >-
         postgresql+asyncpg://${POSTGRES_USER:-estimator}:${POSTGRES_PASSWORD:-estimator}@estimator-database:5432/${POSTGRES_DB:-estimator}
-      PROPERTY_METADATA_PATH: /app/contracts/property-field-metadata.json
+      PROPERTY_METADATA_PATH: /app/contracts/property-metadata.json
     volumes:
-      - ./contracts/property-field-metadata.json:/app/contracts/property-field-metadata.json:ro
+      - ./contracts/property-metadata.json:/app/contracts/property-metadata.json:ro
     depends_on:
       prediction-service:
         condition: service_healthy
@@ -84,11 +84,11 @@ services:
       - "9002:9002"
     environment:
       MARKET_DATASET_PATH: /app/data/House Price Dataset.csv
-      PROPERTY_METADATA_PATH: /app/contracts/property-field-metadata.json
+      PROPERTY_METADATA_PATH: /app/contracts/property-metadata.json
       PREDICTION_SERVICE_URL: http://prediction-service:9000
       PREDICTION_SERVICE_TIMEOUT_SECONDS: "5"
     volumes:
-      - ./contracts/property-field-metadata.json:/app/contracts/property-field-metadata.json:ro
+      - ./contracts/property-metadata.json:/app/contracts/property-metadata.json:ro
     depends_on:
       - prediction-service
     healthcheck:

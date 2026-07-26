@@ -5,7 +5,7 @@ from pathlib import Path
 from pydantic import AnyHttpUrl, Field, PostgresDsn, field_validator
 from pydantic_settings import BaseSettings
 
-DEFAULT_PROPERTY_METADATA_PATH = Path("../contracts/property-field-metadata.json")
+DEFAULT_PROPERTY_METADATA_PATH = Path("../contracts/property-metadata.json")
 
 
 class Settings(BaseSettings):

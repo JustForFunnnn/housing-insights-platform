@@ -9,24 +9,20 @@ from estimator_service.property_metadata import PropertyMetadata
 CONTRACT_PATH = (
     Path(__file__).parents[2]
     / "contracts"
-    / "property-field-metadata.json"
+    / "property-metadata.json"
 )
 
 
 def test_loads_exact_contract_once_as_immutable_snapshot(tmp_path: Path) -> None:
     configured = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
-    configured["price"] = {
-        "min": None,
-        "max": None,
-        "unit": "fixture_currency",
-    }
-    path = tmp_path / "property-field-metadata.json"
+    configured["price_currency"] = "fixture_currency"
+    path = tmp_path / "property-metadata.json"
     path.write_text(json.dumps(configured), encoding="utf-8")
 
     metadata = PropertyMetadata.load(path)
     path.write_text("{}", encoding="utf-8")
 
-    assert set(type(metadata).model_fields) == {
+    assert set(type(metadata.features).model_fields) == {
         "square_footage",
         "bedrooms",
         "bathrooms",
@@ -34,9 +30,8 @@ def test_loads_exact_contract_once_as_immutable_snapshot(tmp_path: Path) -> None
         "lot_size",
         "distance_to_city_center",
         "school_rating",
-        "price",
     }
-    assert metadata.price.model_dump() == configured["price"]
+    assert metadata.price_currency == configured["price_currency"]
 
 
 def test_rejects_missing_or_invalid_metadata(tmp_path: Path) -> None:
@@ -44,7 +39,7 @@ def test_rejects_missing_or_invalid_metadata(tmp_path: Path) -> None:
         PropertyMetadata.load(tmp_path / "missing.json")
 
     invalid = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
-    invalid["school_rating"]["max"] = float("inf")
+    invalid["features"]["school_rating"]["max"] = float("inf")
     path = tmp_path / "invalid.json"
     path.write_text(json.dumps(invalid), encoding="utf-8")
     with pytest.raises(PropertyMetadataError):

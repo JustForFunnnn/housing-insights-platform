@@ -79,7 +79,7 @@ integer prices; OpenAPI exposes each prediction as an `int64` value.
 ### Housing Feature Inputs
 
 The prediction, estimator, and market services load the same
-`contracts/property-field-metadata.json` once at startup. Field constraints and
+`contracts/property-metadata.json` once at startup. Feature constraints and
 units are intentionally not duplicated in this README. They are exposed to portal
 clients by each application's `GET /api/metadata` endpoint.
 

@@ -22,22 +22,16 @@ class PropertyMetadataTest {
     void loadsOnceAsImmutableStartupSnapshot(@TempDir Path directory)
             throws IOException {
         ObjectNode root = contract();
-        field(root, PropertyFieldNames.PRICE)
-                .putNull("min")
-                .putNull("max")
-                .put("unit", "fixture_currency");
-        Path path = directory.resolve("property-field-metadata.json");
+        root.put("price_currency", "fixture_currency");
+        Path path = directory.resolve("property-metadata.json");
         objectMapper.writeValue(path.toFile(), root);
 
         PropertyMetadata metadata = PropertyMetadata.load(path, objectMapper);
         Files.writeString(path, "{}");
 
-        assertThat(metadata.fields().keySet())
-                .containsExactlyElementsOf(PropertyFieldNames.METADATA_FIELDS);
-        assertThat(metadata.fields().get("price").min()).isNull();
-        assertThat(metadata.fields().get("price").max()).isNull();
-        assertThat(metadata.fields().get("price").unit())
-                .isEqualTo("fixture_currency");
+        assertThat(metadata.features().keySet())
+                .containsExactlyElementsOf(PropertyFieldNames.FEATURE_COLUMNS);
+        assertThat(metadata.priceCurrency()).isEqualTo("fixture_currency");
     }
 
     @Test
@@ -49,7 +43,7 @@ class PropertyMetadataTest {
                 .isInstanceOf(PropertyMetadataException.class);
 
         ObjectNode root = contract();
-        field(root, PropertyFieldNames.BATHROOMS)
+        feature(root, PropertyFieldNames.BATHROOMS)
                 .put("min", 2)
                 .put("max", 1);
         Path invalid = directory.resolve("invalid.json");
@@ -59,52 +53,41 @@ class PropertyMetadataTest {
                 .isInstanceOf(PropertyMetadataException.class);
 
         ObjectNode coercible = contract();
-        field(coercible, PropertyFieldNames.BATHROOMS).put("min", "0");
+        feature(coercible, PropertyFieldNames.BATHROOMS).put("min", "0");
         objectMapper.writeValue(invalid.toFile(), coercible);
         assertThatThrownBy(() -> PropertyMetadata.load(invalid, objectMapper))
                 .isInstanceOf(PropertyMetadataException.class);
 
         ObjectNode extraField = contract();
-        field(extraField, PropertyFieldNames.BEDROOMS).put("unexpected", 1);
+        feature(extraField, PropertyFieldNames.BEDROOMS).put("unexpected", 1);
         extraField.put("unexpected", true);
         objectMapper.writeValue(invalid.toFile(), extraField);
         assertThat(PropertyMetadata.load(invalid, objectMapper)
-                        .fields()
+                        .features()
                         .keySet())
-                .containsExactlyElementsOf(PropertyFieldNames.METADATA_FIELDS);
+                .containsExactlyElementsOf(PropertyFieldNames.FEATURE_COLUMNS);
     }
 
     @Test
-    void validatorAppliesOnlyConfiguredBounds() {
-        var minimumOnly =
-                new PropertyFieldMetadata(BigDecimal.ONE, null, null);
-        minimumOnly.validate("price", 2);
-        assertThatThrownBy(() -> minimumOnly.validate("price", 0))
+    void validatorAppliesConfiguredBounds() {
+        var bounded =
+                new PropertyFeatureMetadata(BigDecimal.ONE, BigDecimal.TEN, null);
+        bounded.validate("bathrooms", 2);
+        assertThatThrownBy(() -> bounded.validate("bathrooms", 11))
                 .isInstanceOf(InvalidRequestException.class)
                 .hasMessageContaining("range");
-
-        var maximumOnly =
-                new PropertyFieldMetadata(null, BigDecimal.TEN, null);
-        maximumOnly.validate("price", 9);
-        assertThatThrownBy(() -> maximumOnly.validate("price", 11))
-                .isInstanceOf(InvalidRequestException.class)
-                .hasMessageContaining("range");
-
-        var unbounded = new PropertyFieldMetadata(null, null, null);
-        unbounded.validate("price", Long.MIN_VALUE);
-        unbounded.validate("price", Long.MAX_VALUE);
     }
 
     private ObjectNode contract() throws IOException {
         return (ObjectNode) objectMapper.readTree(contractPath().toFile());
     }
 
-    private static ObjectNode field(ObjectNode root, String name) {
-        return (ObjectNode) root.get(name);
+    private static ObjectNode feature(ObjectNode root, String name) {
+        return (ObjectNode) root.get("features").get(name);
     }
 
     private static Path contractPath() {
         return Path.of(
-                "..", "contracts", "property-field-metadata.json");
+                "..", "contracts", "property-metadata.json");
     }
 }

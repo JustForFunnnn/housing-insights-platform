@@ -5,7 +5,7 @@ A monorepo for the housing model API and the applications that consume it.
 ## Repository layout
 
 - `data/` — shared training and prediction CSV files
-- `contracts/` — shared property field metadata loaded by all three backends
+- `contracts/` — shared property metadata loaded by all three backends
 - `prediction-service/` — scikit-learn housing price prediction API
 - `estimator-service/` — property value estimator backend
 - `market-service/` — property market analysis backend
@@ -16,13 +16,13 @@ Copy `.env.example` to `.env` to override the PostgreSQL settings; without it, t
 defaults in `docker-compose.yml` are used.
 
 All three backend images include
-`contracts/property-field-metadata.json`. Compose also mounts the repository copy
-read-only at `/app/contracts/property-field-metadata.json`, so a normal
+`contracts/property-metadata.json`. Compose also mounts the repository copy
+read-only at `/app/contracts/property-metadata.json`, so a normal
 `docker compose up` starts with the current shared contract. Each service reads it
 once at startup; restart the affected containers after changing it.
-Metadata `min` and `max` values may be `null`, meaning that side has no configured
-limit. `year_built` uses the configured bounds without a runtime override. The
-contract also includes `price` metadata with the `USD` unit.
+Feature metadata always includes finite `min` and `max` values. `year_built` uses
+the configured bounds without a runtime override. The contract also includes the
+top-level `price_currency` value used for price formatting.
 
 ## Prediction service
 

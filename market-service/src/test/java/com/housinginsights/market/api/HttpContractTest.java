@@ -33,7 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(
         properties = {
             "market.dataset-path=src/test/resources/test-dataset.csv",
-            "market.property-metadata-path=../contracts/property-field-metadata.json",
+            "market.property-metadata-path=../contracts/property-metadata.json",
             "market.prediction.base-url=http://prediction.test",
             "market.prediction.timeout=1s"
         })
@@ -135,7 +135,7 @@ class HttpContractTest {
     }
 
     @Test
-    void metadataReturnsSharedFieldsAndFullDatasetFilterOptions()
+    void metadataReturnsSharedFeaturesAndFullDatasetFilterOptions()
             throws Exception {
         String response = mockMvc.perform(get("/api/metadata"))
                 .andExpect(status().isOk())
@@ -145,15 +145,16 @@ class HttpContractTest {
                         .value(150000))
                 .andExpect(jsonPath("$.filter_options.price.maximum")
                         .value(450000))
+                .andExpect(jsonPath("$.price_currency").value("USD"))
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
 
-        JsonNode fields = objectMapper.readTree(response).get("fields");
-        JsonNode expectedFields = objectMapper.readTree(
-                Path.of("..", "contracts", "property-field-metadata.json")
-                        .toFile());
-        assertThat(fields).isEqualTo(expectedFields);
+        JsonNode features = objectMapper.readTree(response).get("features");
+        JsonNode expectedFeatures = objectMapper
+                .readTree(Path.of("..", "contracts", "property-metadata.json").toFile())
+                .get("features");
+        assertThat(features).isEqualTo(expectedFeatures);
     }
 
     @Test
@@ -242,13 +243,13 @@ class HttpContractTest {
                 .getResponse()
                 .getContentAsString();
 
-        JsonNode metadataFields = objectMapper
+        JsonNode metadataFeatures = objectMapper
                 .readTree(openApi)
-                .at("/components/schemas/PropertyMetadataFieldsResponse/properties");
-        assertThat(metadataFields.size())
-                .isEqualTo(PropertyFieldNames.METADATA_FIELDS.size());
-        for (String fieldName : PropertyFieldNames.METADATA_FIELDS) {
-            assertThat(metadataFields.has(fieldName)).isTrue();
+                .at("/components/schemas/PropertyMetadataFeaturesResponse/properties");
+        assertThat(metadataFeatures.size())
+                .isEqualTo(PropertyFieldNames.FEATURE_COLUMNS.size());
+        for (String fieldName : PropertyFieldNames.FEATURE_COLUMNS) {
+            assertThat(metadataFeatures.has(fieldName)).isTrue();
         }
     }
 

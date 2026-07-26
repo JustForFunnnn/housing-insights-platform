@@ -15,7 +15,7 @@ public final class TestProperties {
 
     public static PropertyMetadata propertyMetadata() {
         return PropertyMetadata.load(
-                Path.of("..", "contracts", "property-field-metadata.json"),
+                Path.of("..", "contracts", "property-metadata.json"),
                 new ObjectMapper());
     }
 

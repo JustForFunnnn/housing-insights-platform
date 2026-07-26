@@ -18,41 +18,42 @@ from prediction_service.settings import Settings
 MetadataNumber = StrictInt | StrictFloat
 
 
-class PropertyFieldMetadata(BaseModel):
+class PropertyFeatureMetadata(BaseModel):
     model_config = ConfigDict(extra="ignore", frozen=True, strict=True)
 
-    min: MetadataNumber | None
-    max: MetadataNumber | None
+    min: MetadataNumber
+    max: MetadataNumber
     unit: str | None
 
     @model_validator(mode="after")
-    def validate_values(self) -> PropertyFieldMetadata:
-        values = (value for value in (self.min, self.max) if value is not None)
+    def validate_values(self) -> PropertyFeatureMetadata:
+        values = (self.min, self.max)
         if not all(
             isinstance(value, int) or math.isfinite(value)
             for value in values
         ):
             raise ValueError("min and max must be finite")
-        if (
-            self.min is not None
-            and self.max is not None
-            and self.min > self.max
-        ):
+        if self.min > self.max:
             raise ValueError("min must not exceed max")
         return self
+
+
+class PropertyMetadataFeatures(BaseModel):
+    model_config = ConfigDict(extra="ignore", frozen=True, strict=True)
+
+    square_footage: PropertyFeatureMetadata
+    bedrooms: PropertyFeatureMetadata
+    bathrooms: PropertyFeatureMetadata
+    year_built: PropertyFeatureMetadata
+    lot_size: PropertyFeatureMetadata
+    distance_to_city_center: PropertyFeatureMetadata
+    school_rating: PropertyFeatureMetadata
 
 
 class PropertyMetadata(BaseModel):
     model_config = ConfigDict(extra="ignore", frozen=True, strict=True)
 
-    square_footage: PropertyFieldMetadata
-    bedrooms: PropertyFieldMetadata
-    bathrooms: PropertyFieldMetadata
-    year_built: PropertyFieldMetadata
-    lot_size: PropertyFieldMetadata
-    distance_to_city_center: PropertyFieldMetadata
-    school_rating: PropertyFieldMetadata
-    price: PropertyFieldMetadata
+    features: PropertyMetadataFeatures
 
     @classmethod
     def load(cls, path: Path) -> PropertyMetadata:

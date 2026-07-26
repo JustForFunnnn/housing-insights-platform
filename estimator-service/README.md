@@ -76,8 +76,10 @@ Use `GET /api/metadata` for the current form constraints and units.
 
 - `GET /api/estimates?limit=20&offset=0` returns newest records first and includes the
   total record count.
-- `GET /api/metadata` returns `{"fields": {...}}` for form
-  generation and client-side validation.
+- `GET /api/metadata` returns `{"features": {...}}` for form
+  generation and client-side validation, plus `"price_currency": "USD"`
+  for price formatting. Feature `min`, `max`, and `unit` values come from the
+  shared property metadata contract.
 
 An offset at or beyond the total returns `200` with an empty list.
 
