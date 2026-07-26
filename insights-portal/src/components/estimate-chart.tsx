@@ -65,6 +65,7 @@ export function EstimateChart({
               </>
             )}
             <Tooltip
+              shared={false}
               formatter={(value) => formatPrice(Number(value), unit)}
               contentStyle={{
                 border: "1px solid #91A2B8",
@@ -75,6 +76,7 @@ export function EstimateChart({
               dataKey="value"
               fill="#1D5FD1"
               radius={[2, 2, 0, 0]}
+              activeBar={{ stroke: "#13233A", strokeWidth: 3 }}
             />
           </BarChart>
         </ResponsiveContainer>

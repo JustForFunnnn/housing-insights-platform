@@ -107,20 +107,21 @@ Content-Type: application/json
   "scenarios": [
     {
       "square_footage": 2100,
-      "bedrooms": 4,
-      "bathrooms": 2.5,
-      "year_built": 2005,
-      "lot_size": 9200,
-      "distance_to_city_center": 7.3,
-      "school_rating": 8.5
+      "bedrooms": 4
+    },
+    {
+      "distance_to_city_center": 3.2
     }
   ]
 }
 ```
 
-Baseline and scenarios are sent in one ordered `/api/predict` batch. The response includes
-the baseline prediction and signed absolute/percentage differences for every scenario.
-What-if data and downstream predictions are not persisted.
+Each scenario contains only the features that change; omitted values inherit from the
+baseline. A scenario must change at least one of the seven known property features. The
+merged properties and baseline are validated, then sent in one ordered `/api/predict`
+batch. The response includes the baseline prediction and signed absolute/percentage
+differences for every scenario. What-if data and downstream predictions are not
+persisted.
 
 ### Metadata, export, and health
 

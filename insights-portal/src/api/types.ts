@@ -146,7 +146,7 @@ export type SortDirection = "asc" | "desc";
 
 export interface WhatIfRequest {
   baseline: PropertyInput;
-  scenarios: PropertyInput[];
+  scenarios: Array<Partial<PropertyInput>>;
 }
 
 export interface WhatIfResponse {

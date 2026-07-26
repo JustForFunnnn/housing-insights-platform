@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.housinginsights.market.domain.PropertyFieldNames;
+import com.housinginsights.market.domain.PropertyFeatures;
 import com.housinginsights.market.error.PredictionServiceUnavailableException;
 import com.housinginsights.market.observability.RequestCorrelation;
 import com.housinginsights.market.prediction.PredictionClient;
@@ -265,6 +266,11 @@ class HttpContractTest {
         when(predictionClient.predict(anyList())).thenAnswer(invocation -> {
             org.assertj.core.api.Assertions.assertThat(RequestCorrelation.currentOrCreate())
                     .isEqualTo(HYPHENATED_REQUEST_ID);
+            List<PropertyFeatures> batch = invocation.getArgument(0);
+            assertThat(batch).hasSize(2);
+            assertThat(batch.get(1).squareFootage()).isEqualTo(2100);
+            assertThat(batch.get(1).bedrooms()).isEqualTo(batch.getFirst().bedrooms());
+            assertThat(batch.get(1).lotSize()).isEqualTo(batch.getFirst().lotSize());
             return List.of(200000L, 220000L);
         });
 
@@ -277,6 +283,15 @@ class HttpContractTest {
                 .andExpect(jsonPath("$.baseline_prediction").value(200000))
                 .andExpect(jsonPath("$.scenarios[0].price_difference").value(20000))
                 .andExpect(jsonPath("$.scenarios").isArray());
+    }
+
+    @Test
+    void whatIfRejectsAnEmptyScenario() throws Exception {
+        mockMvc.perform(post("/api/what-if")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validWhatIfJson().replace("\"square_footage\": 2100", "")))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.error_code").value("validation_error"));
     }
 
     @Test
@@ -311,13 +326,7 @@ class HttpContractTest {
                   },
                   "scenarios": [
                     {
-                      "square_footage": 2100,
-                      "bedrooms": 3,
-                      "bathrooms": 2,
-                      "year_built": 1998,
-                      "lot_size": 7500,
-                      "distance_to_city_center": 5.6,
-                      "school_rating": 8.2
+                      "square_footage": 2100
                     }
                   ]
                 }

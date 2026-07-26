@@ -9,7 +9,8 @@ import java.util.List;
 public record WhatIfRequest(
         @NotNull @Valid PropertyFeaturesRequest baseline,
 
-        @NotEmpty @Size(max = WhatIfRequest.MAX_SCENARIOS) List<@NotNull @Valid PropertyFeaturesRequest> scenarios) {
+        @NotEmpty @Size(max = WhatIfRequest.MAX_SCENARIOS)
+                List<@NotNull @Valid ScenarioChangesRequest> scenarios) {
     public static final int MAX_SCENARIOS = 19;
 
     public WhatIfRequest {

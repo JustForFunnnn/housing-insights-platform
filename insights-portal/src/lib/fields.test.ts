@@ -115,7 +115,35 @@ describe("metadata-driven property validation", () => {
     expect(
       createWhatIfSchema(metadata).safeParse({
         baseline: property,
-        scenarios: Array.from({ length: 5 }, () => property),
+        scenarios: [{}],
+      }).success,
+    ).toBe(false);
+    expect(
+      createWhatIfSchema(metadata).safeParse({
+        baseline: property,
+        scenarios: [{ bedrooms: 2.5 }],
+      }).success,
+    ).toBe(false);
+    expect(
+      createWhatIfSchema(metadata).safeParse({
+        baseline: property,
+        scenarios: [{ bedrooms: 4, square_footage: 2100 }],
+      }).success,
+    ).toBe(true);
+    expect(
+      createWhatIfSchema(metadata).safeParse({
+        baseline: property,
+        scenarios: Array.from({ length: 7 }, () => ({
+          square_footage: property.square_footage,
+        })),
+      }).success,
+    ).toBe(true);
+    expect(
+      createWhatIfSchema(metadata).safeParse({
+        baseline: property,
+        scenarios: Array.from({ length: 8 }, () => ({
+          square_footage: property.square_footage,
+        })),
       }).success,
     ).toBe(false);
   });

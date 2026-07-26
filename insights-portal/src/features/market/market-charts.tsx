@@ -81,6 +81,7 @@ function ChartPanel({
               tick={{ fill: "#52647C", fontSize: 11 }}
             />
             <Tooltip
+              shared={false}
               formatter={(value) =>
                 priceValues
                   ? formatPrice(Number(value), unit)
@@ -100,7 +101,12 @@ function ChartPanel({
                 dot={{ r: 4, fill: "#6ED3C1", stroke: "#13233A" }}
               />
             ) : (
-              <Bar dataKey="value" fill="#1D5FD1" radius={[2, 2, 0, 0]} />
+              <Bar
+                dataKey="value"
+                fill="#1D5FD1"
+                radius={[2, 2, 0, 0]}
+                activeBar={{ stroke: "#13233A", strokeWidth: 3 }}
+              />
             )}
           </Chart>
         </ResponsiveContainer>

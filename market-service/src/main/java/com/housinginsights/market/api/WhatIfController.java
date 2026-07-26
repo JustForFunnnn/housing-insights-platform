@@ -1,6 +1,5 @@
 package com.housinginsights.market.api;
 
-import com.housinginsights.market.api.schema.PropertyFeaturesRequest;
 import com.housinginsights.market.api.schema.WhatIfRequest;
 import com.housinginsights.market.api.schema.WhatIfResponse;
 import com.housinginsights.market.application.WhatIfService;
@@ -23,10 +22,11 @@ public class WhatIfController {
 
     @PostMapping("/what-if")
     public WhatIfResponse whatIf(@Valid @RequestBody WhatIfRequest request) {
+        var baseline = request.baseline().toFeatures(propertyMetadata);
         var result = whatIfService.compare(
-                request.baseline().toFeatures(propertyMetadata),
+                baseline,
                 request.scenarios().stream()
-                        .map(item -> item.toFeatures(propertyMetadata))
+                        .map(item -> item.applyTo(baseline, propertyMetadata))
                         .toList());
         return WhatIfResponse.from(result);
     }

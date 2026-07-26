@@ -7,6 +7,8 @@ import {
   type PropertyMetadata,
 } from "@/api/types";
 
+export const MAX_WHAT_IF_SCENARIOS = 7;
+
 const PROPERTY_NUMBER_KINDS = {
   square_footage: "number",
   bedrooms: "integer",
@@ -116,12 +118,33 @@ export function createComparisonSchema(metadata: PropertyMetadata) {
 }
 
 export function createWhatIfSchema(metadata: PropertyMetadata) {
+  const scenario = z
+    .object(
+      Object.fromEntries(
+        FEATURE_KEYS.map((key) => [
+          key,
+          propertyNumber(metadata, key).optional(),
+        ]),
+      ) as Record<
+        FeatureKey,
+        z.ZodOptional<ReturnType<typeof propertyNumber>>
+      >,
+    )
+    .strict()
+    .refine(
+      (value) => FEATURE_KEYS.some((key) => value[key] !== undefined),
+      "Change at least one feature.",
+    );
+
   return z.object({
     baseline: createPropertySchema(metadata),
     scenarios: z
-      .array(createPropertySchema(metadata))
+      .array(scenario)
       .min(1, "Add at least one scenario.")
-      .max(4, "Add no more than four scenarios."),
+      .max(
+        MAX_WHAT_IF_SCENARIOS,
+        `Add no more than ${MAX_WHAT_IF_SCENARIOS} scenarios.`,
+      ),
   });
 }
 

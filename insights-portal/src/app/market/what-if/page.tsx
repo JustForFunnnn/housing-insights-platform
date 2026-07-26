@@ -21,8 +21,8 @@ export default async function WhatIfPage({
     <>
       <PageHeader
         eyebrow="Market prediction instrument"
-        title="Move one variable. Read the value shift."
-        description="Set a baseline and up to four alternative properties. The market service sends one ordered batch to the shared prediction model and reports every change."
+        title="Change the inputs. Measure the price shift."
+        description="Set a baseline and define up to seven scenarios by changing only the features that matter. Every merged property is evaluated in one ordered prediction batch."
       />
       <WhatIfForm
         initialMetadata={metadata}

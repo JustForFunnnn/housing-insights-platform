@@ -104,10 +104,43 @@ test("runs what-if validation and displays signed differences", async ({
   ).toBeVisible();
 
   await baselineBedrooms.fill("3");
+  const scenario = page.locator('section[data-coordinate^="SCN"]').first();
+  await scenario.getByRole("button", { name: "Add feature" }).click();
+  const featureSelects = scenario.getByRole("combobox");
+  await expect(featureSelects).toHaveCount(2);
+  await expect(
+    featureSelects
+      .nth(1)
+      .locator('option[value="square_footage"]'),
+  ).toHaveCount(0);
+  await featureSelects.nth(0).selectOption("school_rating");
+  await expect(featureSelects.nth(0)).toHaveValue("school_rating");
+  await expect(featureSelects.nth(1)).toHaveValue("bedrooms");
+  await scenario
+    .getByLabel("New school rating for scenario 1")
+    .fill("8.5");
+  await scenario
+    .getByLabel("New bedrooms for scenario 1")
+    .fill("4");
+
   await page.getByRole("button", { name: "Run what-if" }).click();
   await expect(page.getByText("Scenario readings")).toBeVisible();
   await expect(
+    page.getByRole("heading", { name: "Scenario prices" }),
+  ).toBeVisible();
+  await expect(
     page.getByRole("heading", { name: "Difference from baseline" }),
+  ).toHaveCount(0);
+  const priceBars = page.locator(
+    ".what-if-price-chart .recharts-bar-rectangle",
+  );
+  await expect(priceBars).toHaveCount(2);
+  await priceBars.nth(1).hover();
+  const tooltip = page.locator(".chart-tooltip");
+  await expect(tooltip.getByText("Price", { exact: true })).toBeVisible();
+  await expect(tooltip.getByText("Change", { exact: true })).toBeVisible();
+  await expect(
+    tooltip.getByText("Percentage", { exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("table", { name: "What-if scenario results" }),
