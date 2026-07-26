@@ -6,7 +6,7 @@ import com.housinginsights.market.api.schema.MarketMetadataResponse;
 import com.housinginsights.market.api.schema.MarketPageRequest;
 import com.housinginsights.market.api.schema.MarketSortRequest;
 import com.housinginsights.market.api.schema.PropertyPageResponse;
-import com.housinginsights.market.application.MarketAnalysisService;
+import com.housinginsights.market.application.MarketAnalysisCalculator;
 import com.housinginsights.market.application.PropertyQueryService;
 import com.housinginsights.market.metadata.PropertyMetadata;
 import jakarta.validation.Valid;
@@ -16,15 +16,15 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 
 @MarketApiController
 public class MarketController {
-    private final MarketAnalysisService analysisService;
+    private final MarketAnalysisCalculator analysisCalculator;
     private final PropertyQueryService propertyQueryService;
     private final PropertyMetadata propertyMetadata;
 
     public MarketController(
-            MarketAnalysisService analysisService,
+            MarketAnalysisCalculator analysisCalculator,
             PropertyQueryService propertyQueryService,
             PropertyMetadata propertyMetadata) {
-        this.analysisService = analysisService;
+        this.analysisCalculator = analysisCalculator;
         this.propertyQueryService = propertyQueryService;
         this.propertyMetadata = propertyMetadata;
     }
@@ -32,13 +32,12 @@ public class MarketController {
     @GetMapping("/metadata")
     public MarketMetadataResponse metadata() {
         return MarketMetadataResponse.from(
-                propertyMetadata, analysisService.filterOptions());
+                propertyMetadata, analysisCalculator.filterOptions());
     }
 
     @GetMapping("/analysis")
     public MarketAnalysisResponse analysis(@Valid @ParameterObject @ModelAttribute MarketFilterRequest filters) {
-        var analysis =
-                analysisService.analyse(filters.toFilter(propertyMetadata));
+        var analysis = analysisCalculator.calculate(filters.toFilter(propertyMetadata));
         return MarketAnalysisResponse.from(analysis);
     }
 
