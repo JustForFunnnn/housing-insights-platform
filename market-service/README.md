@@ -1,45 +1,59 @@
 # Market Service
 
-Spring Boot backend for read-only property market analysis. It loads the supplied
-housing CSV at startup and calls `prediction-service` only for what-if analysis.
+Spring Boot service for read-only property market analysis and what-if price
+comparisons.
 
 ## Responsibilities
 
 - Filter, sort, and page the fixed property dataset.
 - Calculate aggregate market statistics and chart data.
 - Export filtered property records as CSV.
-- Run what-if scenarios through `prediction-service`.
+- Run what-if scenarios through Prediction Service.
 - Provide metadata used by the Market Portal.
-
-The dataset and property metadata are loaded into immutable memory. Missing,
-unreadable, empty, or invalid input prevents startup. Prediction availability does
-not affect startup, market analysis, property browsing, export, or health checks.
+- Report application and dataset health.
 
 ## Structure
 
-- `api` and `api.schema` define the HTTP boundary.
-- `application` coordinates queries, analysis, caching, and what-if use cases.
-- `domain` owns market models and rules.
-- `data` and `metadata` load and validate repository data.
-- `prediction` owns the prediction-service boundary.
-- `export` produces CSV output.
-- `config`, `error`, and `observability` provide application infrastructure.
-
-## Local development
-
-Prerequisite: JDK 21. The Maven Wrapper downloads Maven when first used.
-
-Run commands from `market-service/`:
-
-```powershell
-.\mvnw.cmd test
-.\mvnw.cmd package
-.\mvnw.cmd spring-boot:run
+```text
+src/main/java/com/housinginsights/market/
+├── api/             # REST controllers and API schemas
+├── application/     # Analysis, query, caching, and what-if workflows
+├── config/          # Application configuration
+├── data/            # Housing dataset loading and validation
+├── domain/          # Market models and business rules
+├── error/           # API errors and exception handling
+├── export/          # CSV export generation
+├── metadata/        # Shared property metadata loading
+├── observability/   # Request correlation and logging
+├── prediction/      # Prediction Service client
+└── MarketServiceApplication.java # Spring Boot application entry point
 ```
 
-The API is available at <http://localhost:9002>. Use Swagger UI at
-<http://localhost:9002/docs> for filters, sorting, pagination, request fields,
-response fields, validation rules, and error responses.
+## API
+
+- `GET /api/analysis` — retrieve filtered aggregate analysis and chart data.
+- `GET /api/properties` — retrieve filtered, sorted, pageable property records.
+- `POST /api/what-if` — compare baseline and modified property predictions.
+- `GET /api/metadata` — retrieve Market constraints and filter options.
+- `GET /api/properties/export/csv` — export all matching property records.
+- `GET /api/health` — verify the application and local dataset are ready.
+
+The complete request fields, response fields, filters, sorting, pagination,
+validation rules, and error responses are available in Swagger UI at
+<http://localhost:9002/docs>.
+
+## Notes
+
+- The dataset and property metadata are loaded into immutable memory. Missing,
+  unreadable, empty, or invalid input prevents application startup.
+- Prediction Service is required only for what-if requests. Its availability does
+  not affect startup, market analysis, property browsing, CSV export, or health
+  checks.
+- Caffeine caches immutable filtered result sets for analysis, pagination, and CSV
+  export. What-if results and failures are not cached.
+- PDF export belongs to Insights Portal; Market Service supplies the analysis data
+  but does not expose a PDF endpoint.
+- API responses use `snake_case` JSON and support `X-Request-ID` correlation.
 
 ## Configuration
 
@@ -53,30 +67,9 @@ Defaults assume commands run from `market-service/`:
 | `PREDICTION_SERVICE_TIMEOUT_SECONDS` | `5` | Prediction request timeout |
 | `SERVER_PORT` | `9002` | HTTP port |
 
-Configuration and metadata changes require a restart.
+Configuration and metadata changes require a service restart.
 
-## API
-
-- `GET /api/analysis` — retrieve filtered aggregate analysis and chart data.
-- `GET /api/properties` — retrieve filtered, sorted, pageable property records.
-- `POST /api/what-if` — compare baseline and modified property predictions.
-- `GET /api/metadata` — retrieve Market constraints and filter options.
-- `GET /api/properties/export/csv` — export all matching property records.
-- `GET /api/health` — verify the application and local dataset are ready.
-
-All JSON uses `snake_case`. Every endpoint supports `X-Request-ID` correlation. See
-<http://localhost:9002/docs> for the complete API contract.
-
-PDF export belongs to `insights-portal`; Market supplies the analysis data but does
-not expose a PDF endpoint.
-
-## Caching
-
-Caffeine caches immutable filtered result sets so analysis, property pagination, and
-CSV export can reuse the same filtering work. What-if results, failures, and rendered
-output are not cached.
-
-## Docker
+## Start
 
 Run from the repository root:
 
@@ -84,5 +77,17 @@ Run from the repository root:
 docker compose up --build market-service
 ```
 
-Compose also starts `prediction-service`. If Prediction later becomes unavailable,
-only what-if requests are affected.
+Docker Compose also starts Prediction Service. The API is available at
+<http://localhost:9002> and Swagger UI is available at
+<http://localhost:9002/docs>.
+
+## Testing
+
+Prerequisite: JDK 21. The Maven Wrapper downloads Maven when first used.
+
+Run from `market-service/`:
+
+```powershell
+.\mvnw.cmd test
+.\mvnw.cmd package
+```

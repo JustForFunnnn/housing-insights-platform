@@ -31,20 +31,6 @@ src/
 └── test/                    # Shared Vitest and DOM test setup
 ```
 
-## Configuration
-
-Copy `.env.example` to `.env.local` to override local backend URLs.
-
-| Environment variable | Default | Purpose |
-| --- | --- | --- |
-| `ESTIMATOR_SERVICE_URL` | `http://localhost:9001` | Server-side Estimator requests |
-| `MARKET_SERVICE_URL` | `http://localhost:9002` | Server-side Market requests and reports |
-| `NEXT_PUBLIC_ESTIMATOR_SERVICE_URL` | `http://localhost:9001` | Browser-side Estimator requests |
-| `NEXT_PUBLIC_MARKET_SERVICE_URL` | `http://localhost:9002` | Browser-side Market requests |
-
-`NEXT_PUBLIC_*` values are included in the browser bundle at build time. Rebuild
-the Portal after changing them.
-
 ## API
 
 Application pages:
@@ -76,6 +62,20 @@ backend Swagger documentation for complete API details:
   backend returns a non-success response.
 - The production image uses the Next.js standalone server output.
 
+## Configuration
+
+Copy `.env.example` to `.env.local` to override local backend URLs.
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `ESTIMATOR_SERVICE_URL` | `http://localhost:9001` | Server-side Estimator requests |
+| `MARKET_SERVICE_URL` | `http://localhost:9002` | Server-side Market requests and reports |
+| `NEXT_PUBLIC_ESTIMATOR_SERVICE_URL` | `http://localhost:9001` | Browser-side Estimator requests |
+| `NEXT_PUBLIC_MARKET_SERVICE_URL` | `http://localhost:9002` | Browser-side Market requests |
+
+`NEXT_PUBLIC_*` values are included in the browser bundle at build time. Rebuild
+the Portal after changing them.
+
 ## Start
 
 Run from the repository root:
@@ -89,6 +89,8 @@ Docker Compose starts the required backend services. Open
 
 ## Testing
 
+Prerequisite: Node.js 22 and npm.
+
 Run the unit tests and static checks from `insights-portal/`:
 
 ```bash
@@ -96,10 +98,11 @@ npm ci
 npm test
 npm run typecheck
 npm run lint
+npm run build
 ```
 
-End-to-end tests require the full application stack at
-<http://localhost:9100>:
+End-to-end tests require the full application stack to be running in another
+terminal at <http://localhost:9100>:
 
 ```bash
 npx playwright install chromium

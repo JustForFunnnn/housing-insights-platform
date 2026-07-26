@@ -14,45 +14,51 @@ portal.
 - `market-service/` — Spring Boot service for housing market analysis and what-if scenarios.
 - `insights-portal/` — Next.js frontend for the Estimator and Market applications.
 
+## Architecture
+
+```text
+Insights Portal ──> Estimator Service ──> Prediction Service
+                           │
+                           └──> PostgreSQL
+
+Insights Portal ──> Market Service
+```
+
 ## Notes
 
-1. For this task, all backends load the same
-   `contracts/property-metadata.json` file to keep feature constraints consistent.
-   In a multi-region production deployment, this file could be replaced by a
-   versioned online configuration service. Each regional deployment would retrieve
-   only the configuration applicable to its region, avoiding complex
-   multi-region branching inside individual services while keeping frontend and
-   backend constraints consistent.
+1. All backends load `contracts/property-metadata.json` to keep feature constraints
+   consistent. It is the single source of truth for property feature constraints in
+   this project. In a production system, it could be replaced by an online
+   configuration service or API that provides region-specific settings.
 
-2. Both `estimator-service` and `market-service` expose their own metadata API. This
-   avoids unnecessary availability coupling: if only one service owned the metadata
-   API, an outage in that service would also make the other Portal application
-   unusable because its feature constraints would be unavailable. Keeping metadata
-   at both application boundaries allows Estimator and Market features to operate
-   independently.
+2. Estimator and Market each expose their own metadata API, avoiding a runtime
+   dependency between them. If one service is unavailable, the other area of the
+   Portal can continue to operate with its own constraints.
 
-3. Distributed request correlation uses `X-Request-ID`. The entry service and its
-   downstream services reuse the same identifier and include it in structured logs.
-   This makes it possible to reconstruct the request path across the service chain
-   and quickly identify the failing service and related error information. The
-   active identifier is returned in API responses, and public API errors use a
-   consistent `error_code` and `message` response shape.
+3. Each backend accepts or generates an `X-Request-ID`, then returns and logs it.
+   Estimator forwards the same ID to Prediction, making the service call chain
+   traceable and helping locate failures quickly. The Portal logs returned IDs for
+   non-success responses, and public API errors share a consistent `error_code` and
+   `message` shape.
 
-4. `packages/python/housing-common` is a shared Python package used by
-   `prediction-service` and `estimator-service`. It centralizes property metadata
-   models and loading, logging configuration, and request observability middleware.
-   Keeping these cross-cutting concerns in one tested package avoids duplicated
-   implementations and keeps behavior consistent between the two Python services.
+4. `packages/python/housing-common` centralizes metadata and observability utilities
+   for Prediction and Estimator. This avoids duplication and keeps both Python
+   services consistent.
 
 ## Start Housing Insights Platform
 
-Docker Compose reads environment overrides from a `.env` file in the repository
-root. Copy the provided example and adjust the PostgreSQL credentials or public
-backend URLs when needed:
+Docker and Docker Compose v2 are required.
+
+The platform can run with the defaults in `docker-compose.yml`. To override the
+PostgreSQL credentials or public backend URLs, copy the optional `.env.example`
+file to `.env` in the repository root and adjust its values:
 
 ```bash
 cp .env.example .env
 ```
+
+`NEXT_PUBLIC_*` values are included in the Portal browser bundle at build time,
+so the Portal must be rebuilt after they change.
 
 Build and start the complete platform from the repository root:
 

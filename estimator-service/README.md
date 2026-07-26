@@ -31,17 +31,6 @@ src/estimator_service/
 └── tables.py             # SQLAlchemy table definitions
 ```
 
-## Configuration
-
-| Environment variable | Default | Purpose |
-| --- | --- | --- |
-| `PREDICTION_SERVICE_URL` | `http://localhost:9000` | Prediction API base URL |
-| `PREDICTION_SERVICE_TIMEOUT_SECONDS` | `5` | Prediction request timeout |
-| `ESTIMATOR_DATABASE_URL` | `postgresql+asyncpg://estimator:estimator@localhost:15432/estimator` | PostgreSQL connection |
-| `PROPERTY_METADATA_PATH` | `../contracts/property-metadata.json` | Shared property metadata |
-
-Configuration and metadata changes require a service restart.
-
 ## API
 
 - `POST /api/estimates` — create and persist one or more property estimates.
@@ -61,6 +50,17 @@ parameters, and error responses are available in Swagger UI at
   existing objects.
 - PostgreSQL data is stored in the `estimator-database-data` Docker volume.
 
+## Configuration
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `PREDICTION_SERVICE_URL` | `http://localhost:9000` | Prediction API base URL |
+| `PREDICTION_SERVICE_TIMEOUT_SECONDS` | `5` | Prediction request timeout |
+| `ESTIMATOR_DATABASE_URL` | `postgresql+asyncpg://estimator:estimator@localhost:15432/estimator` | PostgreSQL connection |
+| `PROPERTY_METADATA_PATH` | `../contracts/property-metadata.json` | Shared property metadata |
+
+Configuration and metadata changes require a service restart.
+
 ## Start
 
 Run from the repository root:
@@ -73,6 +73,8 @@ The API is available at <http://localhost:9001> and Swagger UI is available at
 <http://localhost:9001/docs>.
 
 ## Testing
+
+Prerequisite: Python 3.12 and uv.
 
 Run the default test suite from `estimator-service/`:
 

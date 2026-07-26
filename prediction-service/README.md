@@ -28,15 +28,6 @@ src/prediction_service/
 └── training.py           # CSV loading, evaluation, and model training
 ```
 
-## Configuration
-
-| Environment variable | Default | Purpose |
-| --- | --- | --- |
-| `MODEL_ARTIFACT_PATH` | `artifacts/model_pipeline.joblib` | Trained model artifact |
-| `PROPERTY_METADATA_PATH` | `../contracts/property-metadata.json` | Shared feature metadata |
-
-Configuration and metadata changes require a service restart.
-
 ## API
 
 - `POST /api/predict` — generate price predictions for a property batch.
@@ -62,6 +53,15 @@ uv sync
 uv run housing-train "../data/House Price Dataset.csv"
 ```
 
+## Configuration
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `MODEL_ARTIFACT_PATH` | `artifacts/model_pipeline.joblib` | Trained model artifact |
+| `PROPERTY_METADATA_PATH` | `../contracts/property-metadata.json` | Shared feature metadata |
+
+Configuration and metadata changes require a service restart.
+
 ## Start
 
 Run from the repository root:
@@ -74,6 +74,8 @@ The API is available at <http://localhost:9000> and Swagger UI is available at
 <http://localhost:9000/docs>.
 
 ## Testing
+
+Prerequisite: Python 3.12 and uv.
 
 Run from `prediction-service/`:
 
