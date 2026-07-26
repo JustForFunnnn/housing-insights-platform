@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/page-header";
 import { WhatIfForm } from "@/features/market/what-if-form";
-import { getMarketMetadata } from "@/server/backend";
+import { getMarketMetadata } from "@/api/server";
 
 export const dynamic = "force-dynamic";
 

@@ -3,7 +3,7 @@ import { HistoryView } from "@/features/estimator/history-view";
 import {
   getEstimates,
   getEstimatorMetadata,
-} from "@/server/backend";
+} from "@/api/server";
 
 export const dynamic = "force-dynamic";
 

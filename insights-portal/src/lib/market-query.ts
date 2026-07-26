@@ -1,4 +1,4 @@
-import type { SortDirection, SortField } from "@/lib/api/types";
+import type { SortDirection, SortField } from "@/api/types";
 
 export const FILTER_KEYS = [
   "min_square_footage",

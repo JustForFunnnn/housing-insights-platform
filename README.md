@@ -12,8 +12,9 @@ A monorepo for the housing model API and the applications that consume it.
 - `insights-portal/` — shared web portal
 
 Docker Compose automatically reads an optional `.env` file from the repository root.
-Copy `.env.example` to `.env` to override the PostgreSQL settings; without it, the
-defaults in `docker-compose.yml` are used.
+Copy `.env.example` to `.env` to override the PostgreSQL settings or the public
+backend URLs compiled into the portal; without it, the defaults in
+`docker-compose.yml` are used.
 
 All three backend images include
 `contracts/property-metadata.json`. Compose also mounts the repository copy
@@ -110,14 +111,14 @@ Start the complete interview environment from the repository root:
 docker compose up --build
 ```
 
-Open the portal at <http://localhost:9100>. The portal container talks to the
-Estimator and Market services over the Compose network; their host ports remain
-available for API inspection.
+Open the portal at <http://localhost:9100>. Browser interactions call the
+Estimator and Market services through their published ports. Server-rendered
+pages and PDF generation use the Compose network.
 
 For local portal development, copy `insights-portal/.env.example` to
-`insights-portal/.env.local` and run the application on port 9100. The repository
-does not require Node on the host because linting, tests, and production builds
-can run through the portal Dockerfile.
+`insights-portal/.env.local` and run the application on port 9100. The
+`NEXT_PUBLIC_*` variables configure browser requests; the corresponding
+server-only variables are used for initial rendering and PDF reports.
 
 ## Backend routes
 
@@ -128,3 +129,4 @@ can run through the portal Dockerfile.
 - Market: `GET /api/metadata`, `GET /api/properties`,
   `GET /api/analysis`, `POST /api/what-if`,
   `GET /api/properties/export/csv`, `GET /api/health`
+- Portal: `GET /api/health`

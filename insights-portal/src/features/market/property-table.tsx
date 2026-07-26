@@ -7,7 +7,7 @@ import type {
   PropertyPage,
   SortDirection,
   SortField,
-} from "@/lib/api/types";
+} from "@/api/types";
 import { fieldUnit } from "@/lib/fields";
 import { formatNumber, formatPrice } from "@/lib/format";
 

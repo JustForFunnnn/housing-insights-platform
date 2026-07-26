@@ -2,7 +2,7 @@
 
 import type { FormEvent } from "react";
 
-import type { MarketMetadata } from "@/lib/api/types";
+import type { MarketMetadata } from "@/api/types";
 import { fieldUnit } from "@/lib/fields";
 import { FILTER_KEYS } from "@/lib/market-query";
 

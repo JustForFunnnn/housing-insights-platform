@@ -2,16 +2,8 @@ import { ArrowUpRight, BarChart3, Calculator } from "lucide-react";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/page-header";
-import { dependencyHealth } from "@/server/backend";
 
-export const dynamic = "force-dynamic";
-
-export default async function PortalPage() {
-  const [estimator, market] = await Promise.all([
-    dependencyHealth("estimator"),
-    dependencyHealth("market"),
-  ]);
-
+export default function PortalPage() {
   return (
     <>
       <PageHeader
@@ -38,14 +30,11 @@ export default async function PortalPage() {
             Enter one property, review previous estimates, or compare up to
             four scenarios on the same scale.
           </p>
-          <div
-            className={`status-line status-${estimator.status}`}
-            style={{ margin: "26px 0" }}
+          <Link
+            className="button"
+            href="/estimator"
+            style={{ marginTop: 26 }}
           >
-            <span className="status-dot" aria-hidden="true" />
-            Estimator {estimator.status}
-          </div>
-          <Link className="button" href="/estimator">
             Open estimator <ArrowUpRight size={16} aria-hidden="true" />
           </Link>
         </article>
@@ -67,14 +56,11 @@ export default async function PortalPage() {
             Filter the supplied dataset, inspect price structure, export the
             current segment, and test future scenarios.
           </p>
-          <div
-            className={`status-line status-${market.status}`}
-            style={{ margin: "26px 0" }}
+          <Link
+            className="button"
+            href="/market"
+            style={{ marginTop: 26 }}
           >
-            <span className="status-dot" aria-hidden="true" />
-            Market {market.status}
-          </div>
-          <Link className="button" href="/market">
             Open market <ArrowUpRight size={16} aria-hidden="true" />
           </Link>
         </article>

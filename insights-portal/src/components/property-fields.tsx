@@ -11,7 +11,7 @@ import {
   FEATURE_KEYS,
   type FeatureKey,
   type PropertyMetadata,
-} from "@/lib/api/types";
+} from "@/api/types";
 
 export function PropertyFields({
   metadata,

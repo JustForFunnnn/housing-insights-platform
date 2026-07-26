@@ -1,7 +1,5 @@
 import "server-only";
 
-import { unstable_cache } from "next/cache";
-
 import type {
   ErrorResponse,
   EstimatePage,
@@ -9,9 +7,9 @@ import type {
   MarketMetadata,
   PropertyMetadata,
   PropertyPage,
-} from "@/lib/api/types";
+} from "@/api/types";
 
-export type Dependency = "estimator" | "market";
+type Dependency = "estimator" | "market";
 
 const SERVICE_URLS: Record<Dependency, () => string> = {
   estimator: () =>
@@ -58,15 +56,36 @@ async function errorBody(
   return dependencyError(dependency);
 }
 
-export async function backendFetch(
+function logBackendError(
+  dependency: Dependency,
+  path: string,
+  init: RequestInit,
+  response: Response,
+  body: ErrorResponse,
+) {
+  const requestId = response.headers.get("x-request-id");
+  console.error(
+    JSON.stringify({
+      event: "backend_request_failed",
+      dependency,
+      method: (init.method ?? "GET").toUpperCase(),
+      path: path.split("?", 1)[0],
+      status: response.status,
+      error_code: body.error_code,
+      ...(requestId ? { request_id: requestId } : {}),
+    }),
+  );
+}
+
+async function backendFetch(
   dependency: Dependency,
   path: string,
   init: RequestInit = {},
 ) {
-  const method = init.method ?? "GET";
-  const pathname = path.split("?")[0];
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 8_000);
+  const timer = setTimeout(() => controller.abort(), 8000);
+  const headers = new Headers(init.headers);
+  if (!headers.has("Accept")) headers.set("Accept", "application/json");
 
   let response: Response;
   try {
@@ -74,23 +93,9 @@ export async function backendFetch(
       ...init,
       cache: "no-store",
       signal: controller.signal,
-      headers: {
-        Accept: "application/json",
-        ...init.headers,
-      },
+      headers,
     });
-  } catch (error) {
-    console.error(
-      JSON.stringify({
-        event: "dependency_request_failed",
-        dependency,
-        method,
-        path: pathname,
-        status: 503,
-        error_code: `${dependency}_service_unavailable`,
-        reason: error instanceof Error ? error.name : "unknown",
-      }),
-    );
+  } catch {
     throw new BackendError(503, dependencyError(dependency));
   } finally {
     clearTimeout(timer);
@@ -98,45 +103,38 @@ export async function backendFetch(
 
   if (!response.ok) {
     const body = await errorBody(response, dependency);
-    const requestId = response.headers.get("X-Request-ID");
-    console.error(
-      JSON.stringify({
-        event: "dependency_response_failed",
-        dependency,
-        method,
-        path: pathname,
-        status: response.status,
-        error_code: body.error_code,
-        ...(requestId ? { request_id: requestId } : {}),
-      }),
-    );
+    logBackendError(dependency, path, init, response, body);
     throw new BackendError(response.status, body);
   }
 
   return response;
 }
 
-export async function backendJson<T>(
+async function backendJson<T>(
   dependency: Dependency,
   path: string,
   init: RequestInit = {},
 ) {
   const response = await backendFetch(dependency, path, init);
-  return (await response.json()) as T;
+  try {
+    return (await response.json()) as T;
+  } catch {
+    throw new BackendError(502, {
+      error_code: `${dependency}_invalid_response`,
+      message: `${
+        dependency === "estimator" ? "Estimator" : "Market analysis"
+      } returned an invalid response.`,
+    });
+  }
 }
 
-export const getEstimatorMetadata = unstable_cache(
-  () =>
-    backendJson<PropertyMetadata>("estimator", "/api/metadata"),
-  ["estimator-metadata-v1"],
-  { revalidate: 300 },
-);
+export function getEstimatorMetadata() {
+  return backendJson<PropertyMetadata>("estimator", "/api/metadata");
+}
 
-export const getMarketMetadata = unstable_cache(
-  () => backendJson<MarketMetadata>("market", "/api/metadata"),
-  ["market-metadata-v1"],
-  { revalidate: 300 },
-);
+export function getMarketMetadata() {
+  return backendJson<MarketMetadata>("market", "/api/metadata");
+}
 
 export function getEstimates(query = "") {
   return backendJson<EstimatePage>(
@@ -157,13 +155,4 @@ export function getMarketProperties(query = "") {
     "market",
     `/api/properties${query ? `?${query}` : ""}`,
   );
-}
-
-export async function dependencyHealth(dependency: Dependency) {
-  try {
-    await backendJson<{ status: "ok" }>(dependency, "/api/health");
-    return { status: "online" as const };
-  } catch {
-    return { status: "offline" as const };
-  }
 }

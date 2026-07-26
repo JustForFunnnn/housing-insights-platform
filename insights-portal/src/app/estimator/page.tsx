@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/page-header";
 import { EstimatorForm } from "@/features/estimator/estimator-form";
-import { getEstimatorMetadata } from "@/server/backend";
+import { getEstimatorMetadata } from "@/api/server";
 
 export const dynamic = "force-dynamic";
 

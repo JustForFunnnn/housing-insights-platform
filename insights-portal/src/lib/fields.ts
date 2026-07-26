@@ -5,7 +5,7 @@ import {
   type FeatureKey,
   type PropertyInput,
   type PropertyMetadata,
-} from "@/lib/api/types";
+} from "@/api/types";
 
 const PROPERTY_NUMBER_KINDS = {
   square_footage: "number",
@@ -29,6 +29,16 @@ export const FIELD_DEFINITIONS: Record<
   distance_to_city_center: { label: "Distance to city center" },
   school_rating: { label: "School rating" },
 };
+
+export function fieldErrorMessages(
+  errors:
+    | Partial<Record<FeatureKey, { message?: string }>>
+    | undefined,
+) {
+  return Object.fromEntries(
+    FEATURE_KEYS.map((key) => [key, errors?.[key]?.message]),
+  ) as Partial<Record<FeatureKey, string>>;
+}
 
 function propertyNumber(
   metadata: PropertyMetadata,

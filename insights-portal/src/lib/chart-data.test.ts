@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { MarketAnalysis } from "@/lib/api/types";
+import type { MarketAnalysis } from "@/api/types";
 import { marketChartSeries } from "@/lib/chart-data";
 
 const analysis: MarketAnalysis = {

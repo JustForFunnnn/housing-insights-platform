@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { BackendError } from "@/server/backend";
+import { BackendError } from "@/api/server";
 
 export function routeError(error: unknown) {
   if (error instanceof BackendError) {

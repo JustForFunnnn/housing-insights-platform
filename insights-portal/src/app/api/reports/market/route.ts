@@ -5,7 +5,7 @@ import { allowedMarketQuery } from "@/lib/market-query";
 import {
   getMarketAnalysis,
   getMarketMetadata,
-} from "@/server/backend";
+} from "@/api/server";
 import { renderMarketReport } from "@/server/market-report";
 import { routeError } from "@/server/route-response";
 

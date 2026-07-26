@@ -8,12 +8,12 @@ import { ErrorNotice } from "@/components/error-notice";
 import type {
   EstimatePage,
   PropertyMetadata,
-} from "@/lib/api/types";
-import {
-  errorResponse,
-  portalFetch,
-} from "@/lib/browser-api";
+} from "@/api/types";
 import { formatDate, formatNumber, formatPrice } from "@/lib/format";
+import {
+  getEstimateHistory,
+  toApiError,
+} from "@/api/browser";
 
 const PAGE_SIZE = 20;
 
@@ -27,17 +27,15 @@ export function HistoryView({
   const [offset, setOffset] = useState(initialPage.offset);
   const history = useQuery({
     queryKey: ["estimate-history", PAGE_SIZE, offset],
-    queryFn: () =>
-      portalFetch<EstimatePage>(
-        `/api/estimator/estimates?limit=${PAGE_SIZE}&offset=${offset}`,
-      ),
+    queryFn: ({ signal }) =>
+      getEstimateHistory(PAGE_SIZE, offset, signal),
     initialData: offset === initialPage.offset ? initialPage : undefined,
   });
 
   if (history.isError) {
     return (
       <ErrorNotice
-        error={errorResponse(history.error)}
+        error={toApiError(history.error)}
         onRetry={() => history.refetch()}
       />
     );

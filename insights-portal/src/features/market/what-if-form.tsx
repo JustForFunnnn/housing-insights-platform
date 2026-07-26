@@ -1,33 +1,26 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { useFieldArray, useForm } from "react-hook-form";
 
 import { ErrorNotice } from "@/components/error-notice";
-import { EstimateChart } from "@/components/estimate-chart";
 import { PropertyFields } from "@/components/property-fields";
 import {
-  FEATURE_KEYS,
-  type FeatureKey,
   type MarketMetadata,
   type PropertyInput,
-  type WhatIfResponse,
-} from "@/lib/api/types";
+  type WhatIfRequest,
+} from "@/api/types";
 import {
-  errorResponse,
-  portalFetch,
-} from "@/lib/browser-api";
-import { createWhatIfSchema } from "@/lib/fields";
-import { formatPrice } from "@/lib/format";
-
-import { DifferenceChart } from "./difference-chart";
-
-interface WhatIfValues {
-  baseline: PropertyInput;
-  scenarios: PropertyInput[];
-}
+  createWhatIfSchema,
+  fieldErrorMessages,
+} from "@/lib/fields";
+import {
+  runWhatIf,
+  toApiError,
+} from "@/api/browser";
+import { WhatIfResults } from "./what-if-results";
 
 function marketExample(
   metadata: MarketMetadata,
@@ -77,15 +70,8 @@ export function WhatIfForm({
 }: {
   initialMetadata: MarketMetadata;
 }) {
-  const metadataQuery = useQuery({
-    queryKey: ["market-metadata"],
-    queryFn: () =>
-      portalFetch<MarketMetadata>("/api/market/metadata"),
-    initialData: initialMetadata,
-    staleTime: 300_000,
-  });
-  const metadata = metadataQuery.data;
-  const form = useForm<WhatIfValues>({
+  const metadata = initialMetadata;
+  const form = useForm<WhatIfRequest>({
     resolver: zodResolver(createWhatIfSchema(metadata)),
     defaultValues: {
       baseline: marketExample(metadata),
@@ -97,23 +83,8 @@ export function WhatIfForm({
     name: "scenarios",
   });
   const whatIf = useMutation({
-    mutationFn: (payload: WhatIfValues) =>
-      portalFetch<WhatIfResponse>("/api/market/what-if", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }),
+    mutationFn: runWhatIf,
   });
-
-  function errorMap(
-    errors:
-      | Record<string, { message?: string } | undefined>
-      | undefined,
-  ) {
-    return Object.fromEntries(
-      FEATURE_KEYS.map((key) => [key, errors?.[key]?.message]),
-    ) as Partial<Record<FeatureKey, string>>;
-  }
 
   return (
     <>
@@ -139,10 +110,8 @@ export function WhatIfForm({
                   valueAsNumber: true,
                 })
               }
-              errors={errorMap(
-                form.formState.errors.baseline as
-                  | Record<string, { message?: string }>
-                  | undefined,
+              errors={fieldErrorMessages(
+                form.formState.errors.baseline,
               )}
             />
           </section>
@@ -175,10 +144,8 @@ export function WhatIfForm({
                     valueAsNumber: true,
                   })
                 }
-                errors={errorMap(
-                  form.formState.errors.scenarios?.[index] as
-                    | Record<string, { message?: string }>
-                    | undefined,
+                errors={fieldErrorMessages(
+                  form.formState.errors.scenarios?.[index],
                 )}
               />
             </section>
@@ -212,7 +179,7 @@ export function WhatIfForm({
       {whatIf.isError ? (
         <div style={{ marginTop: 24 }}>
           <ErrorNotice
-            error={errorResponse(whatIf.error)}
+            error={toApiError(whatIf.error)}
             onRetry={() =>
               form.handleSubmit((value) => whatIf.mutate(value))()
             }
@@ -221,72 +188,10 @@ export function WhatIfForm({
       ) : null}
 
       {whatIf.data ? (
-        <section style={{ marginTop: 34 }}>
-          <p className="measure-label">Scenario readings</p>
-          <h2 className="instrument-title">Change from baseline</h2>
-          <EstimateChart
-            unit={metadata.price_currency}
-            values={[
-              {
-                label: "Baseline",
-                value: whatIf.data.baseline_prediction,
-              },
-              ...whatIf.data.scenarios.map((scenario, index) => ({
-                label: `Scenario ${index + 1}`,
-                value: scenario.predicted_price,
-              })),
-            ]}
-          />
-          <h3 className="instrument-title" style={{ marginTop: 28 }}>
-            Difference from baseline
-          </h3>
-          <DifferenceChart
-            unit={metadata.price_currency}
-            values={whatIf.data.scenarios.map((scenario, index) => ({
-              label: `Scenario ${index + 1}`,
-              value: scenario.price_difference,
-            }))}
-          />
-          <div className="data-table-wrap" style={{ marginTop: 22 }}>
-            <table className="data-table">
-              <caption className="sr-only">
-                What-if scenario results
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Scenario</th>
-                  <th scope="col">Predicted price</th>
-                  <th scope="col">Absolute change</th>
-                  <th scope="col">Percentage change</th>
-                </tr>
-              </thead>
-              <tbody>
-                {whatIf.data.scenarios.map((scenario, index) => (
-                  <tr key={index}>
-                    <th scope="row">Scenario {index + 1}</th>
-                    <td className="mono">
-                      {formatPrice(
-                        scenario.predicted_price,
-                        metadata.price_currency,
-                      )}
-                    </td>
-                    <td className="mono">
-                      {scenario.price_difference >= 0 ? "+" : ""}
-                      {formatPrice(
-                        scenario.price_difference,
-                        metadata.price_currency,
-                      )}
-                    </td>
-                    <td className="mono">
-                      {scenario.percentage_difference >= 0 ? "+" : ""}
-                      {scenario.percentage_difference.toFixed(2)}%
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        <WhatIfResults
+          result={whatIf.data}
+          priceCurrency={metadata.price_currency}
+        />
       ) : null}
     </>
   );

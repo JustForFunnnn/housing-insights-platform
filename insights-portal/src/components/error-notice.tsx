@@ -1,4 +1,4 @@
-import type { ErrorResponse } from "@/lib/api/types";
+import type { ErrorResponse } from "@/api/types";
 
 export function ErrorNotice({
   error,

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type {
   MarketAnalysis,
   MarketMetadata,
-} from "@/lib/api/types";
+} from "@/api/types";
 import { buildMarketReportData } from "@/lib/market-report-data";
 
 const analysis: MarketAnalysis = {

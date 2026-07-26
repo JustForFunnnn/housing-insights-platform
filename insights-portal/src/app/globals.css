@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+/* Design tokens */
 :root {
   --survey-paper: #f4f7fa;
   --paper-white: #ffffff;
@@ -19,6 +20,7 @@
   box-sizing: border-box;
 }
 
+/* Base elements and accessibility */
 html {
   background: var(--survey-paper);
   color: var(--deep-ink);
@@ -64,6 +66,7 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
+/* Application shell and navigation */
 .app-shell {
   min-height: 100vh;
   display: grid;
@@ -155,6 +158,7 @@ a {
   font: 0.72rem/1.6 var(--font-mono), ui-monospace, monospace;
 }
 
+/* Page layout and parcel grid */
 .page-canvas {
   min-width: 0;
   padding: 38px clamp(20px, 4vw, 64px) 72px;
@@ -257,6 +261,7 @@ a {
   line-height: 1.55;
 }
 
+/* Actions and form controls */
 .button-row {
   display: flex;
   flex-wrap: wrap;
@@ -387,6 +392,7 @@ a {
   background: rgba(255, 255, 255, 0.62);
 }
 
+/* Feedback, metrics, charts, and tables */
 .error-notice,
 .empty-state {
   padding: 18px;
@@ -410,30 +416,6 @@ a {
 .empty-state p {
   margin: 0;
   color: var(--muted-ink);
-}
-
-.status-line {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font: 0.76rem var(--font-mono), ui-monospace, monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-}
-
-.status-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--line-strong);
-}
-
-.status-online .status-dot {
-  background: var(--success);
-}
-
-.status-offline .status-dot {
-  background: var(--danger);
 }
 
 .metric-grid {
@@ -515,6 +497,7 @@ a {
   border-bottom: 0;
 }
 
+/* Feature layouts */
 .subnav {
   grid-auto-flow: column;
   grid-auto-columns: max-content;
@@ -574,6 +557,7 @@ details.filter-details summary {
   font-weight: 650;
 }
 
+/* Motion and responsive adjustments */
 @keyframes survey-reveal {
   from {
     clip-path: inset(0 100% 100% 0);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { PropertyMetadata } from "@/lib/api/types";
+import type { PropertyMetadata } from "@/api/types";
 import {
   createComparisonSchema,
   createPropertySchema,

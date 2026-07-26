@@ -1,3 +1,4 @@
+// Hand-maintained representations of the Estimator and Market wire contracts.
 export const FEATURE_KEYS = [
   "square_footage",
   "bedrooms",
@@ -142,6 +143,11 @@ export type SortField =
   | FeatureKey
   | "price";
 export type SortDirection = "asc" | "desc";
+
+export interface WhatIfRequest {
+  baseline: PropertyInput;
+  scenarios: PropertyInput[];
+}
 
 export interface WhatIfResponse {
   baseline_prediction: number;

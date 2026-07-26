@@ -12,7 +12,7 @@ import {
 import type {
   MarketAnalysis,
   MarketMetadata,
-} from "@/lib/api/types";
+} from "@/api/types";
 import type { ChartDatum } from "@/lib/chart-data";
 import { buildMarketReportData } from "@/lib/market-report-data";
 

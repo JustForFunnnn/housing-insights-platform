@@ -1,7 +1,7 @@
 import type {
   MarketAnalysis,
   MarketMetadata,
-} from "@/lib/api/types";
+} from "@/api/types";
 import { marketChartSeries } from "@/lib/chart-data";
 import { formatPrice } from "@/lib/format";
 

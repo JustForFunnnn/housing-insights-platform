@@ -108,6 +108,11 @@ services:
     build:
       context: ./insights-portal
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_ESTIMATOR_SERVICE_URL: >-
+          ${NEXT_PUBLIC_ESTIMATOR_SERVICE_URL:-http://localhost:9001}
+        NEXT_PUBLIC_MARKET_SERVICE_URL: >-
+          ${NEXT_PUBLIC_MARKET_SERVICE_URL:-http://localhost:9002}
     image: housing-insights/insights-portal:local
     ports:
       - "9100:9100"

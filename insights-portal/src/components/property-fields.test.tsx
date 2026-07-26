@@ -5,7 +5,7 @@ import { PropertyFields } from "@/components/property-fields";
 import type {
   FeatureKey,
   PropertyMetadata,
-} from "@/lib/api/types";
+} from "@/api/types";
 
 const metadata: PropertyMetadata = {
   features: {

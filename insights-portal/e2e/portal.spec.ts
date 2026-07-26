@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
 
+const marketServiceUrl =
+  process.env.MARKET_SERVICE_URL ?? "http://localhost:9002";
+
 test("moves between both applications", async ({ page }) => {
   await page.goto("/");
   await expect(
@@ -115,7 +118,7 @@ test("exports the current market segment as CSV and PDF", async ({
   request,
 }) => {
   const csv = await request.get(
-    "/api/market/export/csv?bedrooms=3&sort_by=price&sort_direction=desc",
+    `${marketServiceUrl}/api/properties/export/csv?bedrooms=3&sort_by=price&sort_direction=desc`,
   );
   expect(csv.ok()).toBeTruthy();
   expect(csv.headers()["content-type"]).toContain("text/csv");
@@ -123,7 +126,7 @@ test("exports the current market segment as CSV and PDF", async ({
   expect((await csv.body()).byteLength).toBeGreaterThan(20);
 
   const pdf = await request.get(
-    "/api/market/export/pdf?bedrooms=3",
+    "/api/reports/market?bedrooms=3",
   );
   expect(pdf.ok()).toBeTruthy();
   expect(pdf.headers()["content-type"]).toContain("application/pdf");

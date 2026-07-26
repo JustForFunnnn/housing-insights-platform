@@ -1,105 +1,53 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { Download, FileText } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
 
 import { ErrorNotice } from "@/components/error-notice";
 import type {
   MarketAnalysis,
   MarketMetadata,
   PropertyPage,
-  SortDirection,
-  SortField,
-} from "@/lib/api/types";
-import {
-  errorResponse,
-  portalFetch,
-} from "@/lib/browser-api";
+} from "@/api/types";
 import { formatPrice } from "@/lib/format";
 import {
-  applyMarketFilters,
-  applyMarketPage,
-  applyMarketSort,
-  allowedMarketQuery,
-  withMarketDefaults,
-} from "@/lib/market-query";
+  marketCsvExportUrl,
+  marketPdfExportUrl,
+  toApiError,
+} from "@/api/browser";
 
 import { MarketCharts } from "./market-charts";
 import { MarketFilters } from "./market-filters";
 import { PropertyTable } from "./property-table";
+import { useMarketDashboard } from "./use-market-dashboard";
 
 export function MarketDashboard({
   initialMetadata,
   initialAnalysis,
   initialProperties,
+  initialFilterQuery,
+  initialPropertyQuery,
 }: {
   initialMetadata: MarketMetadata;
   initialAnalysis: MarketAnalysis;
   initialProperties: PropertyPage;
+  initialFilterQuery: string;
+  initialPropertyQuery: string;
 }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const current = withMarketDefaults(
-    new URLSearchParams(searchParams.toString()),
-  );
-
-  const filterQuery = allowedMarketQuery(current);
-  const propertyQuery = allowedMarketQuery(current, {
-    includePage: true,
-    includeSort: true,
-  });
-  const metadata = useQuery({
-    queryKey: ["market-metadata"],
-    queryFn: () =>
-      portalFetch<MarketMetadata>("/api/market/metadata"),
-    initialData: initialMetadata,
-    staleTime: 300_000,
-  });
-  const analysis = useQuery({
-    queryKey: ["market-analysis", filterQuery.toString()],
-    queryFn: () =>
-      portalFetch<MarketAnalysis>(
-        `/api/market/analysis?${filterQuery}`,
-      ),
-    initialData: initialAnalysis,
-  });
-  const properties = useQuery({
-    queryKey: ["market-properties", propertyQuery.toString()],
-    queryFn: () =>
-      portalFetch<PropertyPage>(
-        `/api/market/properties?${propertyQuery}`,
-      ),
-    initialData: initialProperties,
-  });
-
-  function navigate(next: URLSearchParams) {
-    router.replace(`/market?${next.toString()}`, { scroll: false });
-  }
-
-  function applyFilters(filters: URLSearchParams) {
-    navigate(applyMarketFilters(current, filters));
-  }
-
-  function sort(field: SortField, direction: SortDirection) {
-    navigate(applyMarketSort(current, field, direction));
-  }
-
-  function page(offset: number) {
-    navigate(applyMarketPage(current, offset));
-  }
-
-  if (metadata.isError) {
-    return (
-      <ErrorNotice
-        error={errorResponse(metadata.error)}
-        onRetry={() => metadata.refetch()}
-      />
-    );
-  }
-
-  const exportQuery = allowedMarketQuery(current, {
-    includeSort: true,
+  const {
+    analysis,
+    properties,
+    current,
+    filterQuery,
+    exportQuery,
+    applyFilters,
+    resetFilters,
+    sort,
+    page,
+  } = useMarketDashboard({
+    analysis: initialAnalysis,
+    properties: initialProperties,
+    filterQuery: initialFilterQuery,
+    propertyQuery: initialPropertyQuery,
   });
 
   return (
@@ -116,14 +64,14 @@ export function MarketDashboard({
           <div className="button-row">
             <a
               className="button button-secondary"
-              href={`/api/market/export/csv?${exportQuery}`}
+              href={marketCsvExportUrl(exportQuery)}
             >
               <Download size={16} aria-hidden="true" />
               Export CSV
             </a>
             <a
               className="button button-secondary"
-              href={`/api/market/export/pdf?${filterQuery}`}
+              href={marketPdfExportUrl(filterQuery)}
             >
               <FileText size={16} aria-hidden="true" />
               Export PDF
@@ -131,17 +79,17 @@ export function MarketDashboard({
           </div>
         </div>
         <MarketFilters
-          metadata={metadata.data}
+          metadata={initialMetadata}
           current={current}
           onApply={applyFilters}
-          onReset={() => navigate(new URLSearchParams())}
+          onReset={resetFilters}
         />
       </section>
 
       {analysis.isError ? (
         <div style={{ marginTop: 24 }}>
           <ErrorNotice
-            error={errorResponse(analysis.error)}
+            error={toApiError(analysis.error)}
             onRetry={() => analysis.refetch()}
           />
         </div>
@@ -177,7 +125,7 @@ export function MarketDashboard({
                   <strong className="metric-value">
                     {formatPrice(
                       value as number | null,
-                      metadata.data.price_currency,
+                      initialMetadata.price_currency,
                     )}
                   </strong>
                 </div>
@@ -186,7 +134,7 @@ export function MarketDashboard({
           </section>
           <MarketCharts
             analysis={analysis.data}
-            unit={metadata.data.price_currency}
+            unit={initialMetadata.price_currency}
           />
         </>
       ) : (
@@ -206,7 +154,7 @@ export function MarketDashboard({
         </p>
         {properties.isError ? (
           <ErrorNotice
-            error={errorResponse(properties.error)}
+            error={toApiError(properties.error)}
             onRetry={() => properties.refetch()}
           />
         ) : properties.data ? (
@@ -218,7 +166,7 @@ export function MarketDashboard({
           ) : (
             <PropertyTable
               page={properties.data}
-              metadata={metadata.data}
+              metadata={initialMetadata}
               onSort={sort}
               onPage={page}
               busy={properties.isFetching}

@@ -1,4 +1,4 @@
-import type { MarketAnalysis } from "@/lib/api/types";
+import type { MarketAnalysis } from "@/api/types";
 
 export interface ChartDatum {
   label: string;

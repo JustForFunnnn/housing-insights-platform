@@ -8,7 +8,7 @@ import {
   getMarketAnalysis,
   getMarketMetadata,
   getMarketProperties,
-} from "@/server/backend";
+} from "@/api/server";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +60,8 @@ export default async function MarketPage({
         initialMetadata={metadata}
         initialAnalysis={analysis}
         initialProperties={properties}
+        initialFilterQuery={filterQuery}
+        initialPropertyQuery={propertyQuery}
       />
     </>
   );

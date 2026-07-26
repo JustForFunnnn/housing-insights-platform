@@ -12,7 +12,7 @@ import {
   YAxis,
 } from "recharts";
 
-import type { MarketAnalysis } from "@/lib/api/types";
+import type { MarketAnalysis } from "@/api/types";
 import {
   marketChartSeries,
   type ChartDatum,

@@ -30,7 +30,7 @@ def test_configured_feature_bounds_are_enforced() -> None:
     tested_bound = False
 
     for field_name in VALID_PROPERTY:
-        metadata = getattr(PROPERTY_METADATA, field_name)
+        metadata = getattr(PROPERTY_METADATA.features, field_name)
         if metadata.min is not None:
             tested_bound = True
             invalid = {

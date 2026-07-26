@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { ArrowRight, RotateCcw } from "lucide-react";
 import { useForm } from "react-hook-form";
 
@@ -9,54 +9,37 @@ import { ErrorNotice } from "@/components/error-notice";
 import { EstimateChart } from "@/components/estimate-chart";
 import { PropertyFields } from "@/components/property-fields";
 import type {
-  EstimateBatch,
-  FeatureKey,
   PropertyInput,
   PropertyMetadata,
-} from "@/lib/api/types";
-import {
-  errorResponse,
-  portalFetch,
-} from "@/lib/browser-api";
+} from "@/api/types";
 import {
   createPropertySchema,
   exampleProperty,
+  fieldErrorMessages,
 } from "@/lib/fields";
 import { formatPrice } from "@/lib/format";
+import {
+  createEstimates,
+  toApiError,
+} from "@/api/browser";
 
 export function EstimatorForm({
   initialMetadata,
 }: {
   initialMetadata: PropertyMetadata;
 }) {
-  const metadataQuery = useQuery({
-    queryKey: ["estimator-metadata"],
-    queryFn: () =>
-      portalFetch<PropertyMetadata>("/api/estimator/metadata"),
-    initialData: initialMetadata,
-    staleTime: 300_000,
-  });
-  const metadata = metadataQuery.data;
+  const metadata = initialMetadata;
   const form = useForm<PropertyInput>({
     resolver: zodResolver(createPropertySchema(metadata)),
     defaultValues: exampleProperty(metadata),
   });
   const estimate = useMutation({
     mutationFn: (property: PropertyInput) =>
-      portalFetch<EstimateBatch>("/api/estimator/estimates", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ properties: [property] }),
-      }),
+      createEstimates([property]),
   });
 
   const result = estimate.data?.estimates[0];
-  const errors = Object.fromEntries(
-    Object.entries(form.formState.errors).map(([key, value]) => [
-      key,
-      value?.message,
-    ]),
-  ) as Partial<Record<FeatureKey, string>>;
+  const errors = fieldErrorMessages(form.formState.errors);
 
   return (
     <div className="parcel-grid">
@@ -114,7 +97,7 @@ export function EstimatorForm({
         <h2 className="instrument-title">Estimated value</h2>
         {estimate.isError ? (
           <ErrorNotice
-            error={errorResponse(estimate.error)}
+            error={toApiError(estimate.error)}
             onRetry={() => form.handleSubmit((v) => estimate.mutate(v))()}
           />
         ) : result ? (
