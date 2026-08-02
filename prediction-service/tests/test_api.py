@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Sequence
+from dataclasses import replace
 from pathlib import Path
 from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
 
+from prediction_service import domain
 from prediction_service.app import create_app
 from prediction_service.artifact import save_artifact
 from prediction_service.constants import (
@@ -17,16 +19,9 @@ from prediction_service.constants import (
     TARGET_TRANSFORM,
 )
 from prediction_service.errors import ArtifactError
-from prediction_service.models import (
-    CrossValidationInfo,
-    HousingFeatures,
-    MetricSummary,
-    ModelInfo,
-    RegressionMetrics,
-)
 from prediction_service.property_metadata import PROPERTY_METADATA
 
-VALID_INSTANCE = {
+VALID_PROPERTY = {
     "square_footage": 1850,
     "bedrooms": 3,
     "bathrooms": 2,
@@ -43,28 +38,28 @@ INVALID_REQUEST_ID = "upstream-request-123"
 class StubPredictionService:
     def __init__(self, error: Exception | None = None) -> None:
         self.error = error
-        self.seen: list[list[HousingFeatures]] = []
+        self.seen: list[list[domain.PropertyFeatures]] = []
 
-    def predict(self, instances: Sequence[HousingFeatures]) -> list[int]:
-        self.seen.append(list(instances))
+    def predict(self, properties: Sequence[domain.PropertyFeatures]) -> list[int]:
+        self.seen.append(list(properties))
         if self.error is not None:
             raise self.error
-        return [round(instance.square_footage) for instance in instances]
+        return [round(property_features.square_footage) for property_features in properties]
 
-    def model_info(self) -> ModelInfo:
-        summary = MetricSummary(mean=1.0, std=0.1)
-        return ModelInfo(
-            training_timestamp="2026-07-21T12:00:00+00:00",
+    def model_info(self) -> domain.ModelInfo:
+        summary = domain.MetricSummary(mean=1.0, std=0.1)
+        return domain.ModelInfo(
+            trained_at="2026-07-21T12:00:00+00:00",
             algorithm=ALGORITHM_NAME,
             target_transform=TARGET_TRANSFORM,
             features=FEATURE_NAMES,
             intercept=1000,
             coefficients={name: 1.0 for name in FEATURE_NAMES},
-            cross_validation=CrossValidationInfo(
+            cross_validation=domain.CrossValidationResult(
                 folds=5,
                 shuffle=True,
                 random_state=42,
-                metrics=RegressionMetrics(
+                metrics=domain.RegressionMetrics(
                     r2=summary,
                     rmse=summary,
                     mae=summary,
@@ -81,7 +76,7 @@ def test_health_and_model_info_contract() -> None:
     assert health.status_code == 200
     assert health.json() == {"status": "ok"}
     assert info.status_code == 200
-    assert info.json()["training_timestamp"] == "2026-07-21T12:00:00+00:00"
+    assert info.json()["trained_at"] == "2026-07-21T12:00:00+00:00"
     assert info.json()["algorithm"] == ALGORITHM_NAME
     assert info.json()["target_transform"] == TARGET_TRANSFORM
     assert info.json()["cross_validation"]["folds"] == 5
@@ -89,7 +84,7 @@ def test_health_and_model_info_contract() -> None:
 
 def test_openapi_exposes_shared_metadata_constraints() -> None:
     with TestClient(create_app(prediction_service=StubPredictionService())) as client:
-        schema = client.get("/openapi.json").json()["components"]["schemas"]["PredictionInstance"]["properties"]
+        schema = client.get("/openapi.json").json()["components"]["schemas"]["PropertyFeaturesInput"]["properties"]
 
     square_footage = PROPERTY_METADATA.features.square_footage
     if square_footage.min is None:
@@ -150,26 +145,26 @@ def test_single_and_batch_predictions_always_use_list_envelope() -> None:
     with TestClient(create_app(prediction_service=service)) as client:
         single = client.post(
             "/api/predict",
-            json={"instances": [VALID_INSTANCE]},
+            json={"properties": [VALID_PROPERTY]},
         )
         batch = client.post(
             "/api/predict",
             json={
-                "instances": [
-                    {**VALID_INSTANCE, "square_footage": 2100},
-                    {**VALID_INSTANCE, "square_footage": 900},
+                "properties": [
+                    {**VALID_PROPERTY, "square_footage": 2100},
+                    {**VALID_PROPERTY, "square_footage": 900},
                 ]
             },
         )
         bare = client.post(
             "/api/predict",
-            json={"instances": VALID_INSTANCE},
+            json={"properties": VALID_PROPERTY},
         )
 
     assert single.json() == {"predictions": [1850]}
     assert batch.json() == {"predictions": [2100, 900]}
     assert bare.status_code == 422
-    assert service.seen[0][0] == HousingFeatures(**VALID_INSTANCE)
+    assert service.seen[0][0] == domain.PropertyFeatures(**VALID_PROPERTY)
 
 
 def test_validation_error_uses_standard_response_and_request_id() -> None:
@@ -190,7 +185,7 @@ def test_validation_error_uses_standard_response_and_request_id() -> None:
 
 def test_non_finite_request_returns_serializable_422() -> None:
     body = (
-        '{"instances":[{"square_footage":1850,"bedrooms":3,'
+        '{"properties":[{"square_footage":1850,"bedrooms":3,'
         '"bathrooms":2,"year_built":1998,"lot_size":7500,'
         '"distance_to_city_center":5.6,"school_rating":NaN}]}'
     )
@@ -243,7 +238,7 @@ def test_failure_is_logged_and_returns_standard_response(
     with TestClient(app, raise_server_exceptions=False) as client:
         response = client.post(
             "/api/predict",
-            json={"instances": [VALID_INSTANCE]},
+            json={"properties": [VALID_PROPERTY]},
             headers={REQUEST_ID_HEADER: request_id},
         )
 
@@ -266,15 +261,14 @@ def test_app_loads_explicit_artifact_path(
     artifact_factory,
 ) -> None:
     path = tmp_path / "configured.joblib"
-    artifact = artifact_factory()
-    artifact["trained_at"] = "2001-02-03T04:05:06+00:00"
+    artifact = replace(artifact_factory(), trained_at="2001-02-03T04:05:06+00:00")
     save_artifact(artifact, path)
 
     with TestClient(create_app(artifact_path=str(path))) as client:
         response = client.get("/api/model-info")
 
     assert response.status_code == 200
-    assert response.json()["training_timestamp"] == artifact["trained_at"]
+    assert response.json()["trained_at"] == artifact.trained_at
 
 
 def test_app_loads_default_artifact(

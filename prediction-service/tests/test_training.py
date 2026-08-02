@@ -21,10 +21,10 @@ def test_training_writes_loadable_model(write_dataset, tmp_path: Path) -> None:
     info = SklearnPredictionService(load_artifact(output)).model_info()
 
     assert output.is_file()
-    assert isinstance(artifact["model"], TransformedTargetRegressor)
-    assert isinstance(artifact["model"].regressor_, LinearRegression)
-    assert artifact["algorithm"] == ALGORITHM_NAME
-    assert artifact["features"] == list(FEATURE_NAMES)
+    assert isinstance(artifact.model, TransformedTargetRegressor)
+    assert isinstance(artifact.model.regressor_, LinearRegression)
+    assert artifact.algorithm == ALGORITHM_NAME
+    assert artifact.features == FEATURE_NAMES
     assert set(info.coefficients) == set(FEATURE_NAMES)
     assert info.cross_validation.folds == 5
     assert info.cross_validation.shuffle is True
@@ -52,7 +52,7 @@ def test_metadata_and_unrelated_columns_are_ignored(
 
     artifact = train(dataset, tmp_path / "model.joblib")
 
-    assert artifact["features"] == list(FEATURE_NAMES)
+    assert artifact.features == FEATURE_NAMES
 
 
 def test_too_few_rows_are_rejected(write_dataset, valid_rows, tmp_path: Path) -> None:

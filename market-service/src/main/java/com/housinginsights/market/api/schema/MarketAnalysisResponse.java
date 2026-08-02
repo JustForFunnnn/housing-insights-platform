@@ -4,12 +4,10 @@ import com.housinginsights.market.domain.MarketAnalysis;
 import java.math.BigDecimal;
 import java.util.List;
 
-public record MarketAnalysisResponse(long count, PriceSummary priceSummary, Visualisations visualisations) {
+public record MarketAnalysisResponse(long count, PriceSummary priceSummary, ChartData chartData) {
     public static MarketAnalysisResponse from(MarketAnalysis analysis) {
         return new MarketAnalysisResponse(
-                analysis.count(),
-                PriceSummary.from(analysis.priceSummary()),
-                Visualisations.from(analysis.visualisations()));
+                analysis.count(), PriceSummary.from(analysis.priceSummary()), ChartData.from(analysis.chartData()));
     }
 
     public record PriceSummary(Long minimum, Long maximum, BigDecimal average, BigDecimal median) {
@@ -18,30 +16,30 @@ public record MarketAnalysisResponse(long count, PriceSummary priceSummary, Visu
         }
     }
 
-    public record Visualisations(
+    public record ChartData(
             List<PriceDistributionBucket> priceDistribution,
             List<BedroomPriceGroup> averagePriceByBedrooms,
-            List<YearDecadePriceGroup> averagePriceByYearBuiltDecade,
+            List<YearBuiltDecadePriceGroup> averagePriceByYearBuiltDecade,
             List<SquareFootagePriceGroup> averagePriceBySquareFootageBand) {
-        public Visualisations {
+        public ChartData {
             priceDistribution = List.copyOf(priceDistribution);
             averagePriceByBedrooms = List.copyOf(averagePriceByBedrooms);
             averagePriceByYearBuiltDecade = List.copyOf(averagePriceByYearBuiltDecade);
             averagePriceBySquareFootageBand = List.copyOf(averagePriceBySquareFootageBand);
         }
 
-        private static Visualisations from(MarketAnalysis.Visualisations visualisations) {
-            return new Visualisations(
-                    visualisations.priceDistribution().stream()
+        private static ChartData from(MarketAnalysis.ChartData chartData) {
+            return new ChartData(
+                    chartData.priceDistribution().stream()
                             .map(PriceDistributionBucket::from)
                             .toList(),
-                    visualisations.averagePriceByBedrooms().stream()
+                    chartData.averagePriceByBedrooms().stream()
                             .map(BedroomPriceGroup::from)
                             .toList(),
-                    visualisations.averagePriceByYearBuiltDecade().stream()
-                            .map(YearDecadePriceGroup::from)
+                    chartData.averagePriceByYearBuiltDecade().stream()
+                            .map(YearBuiltDecadePriceGroup::from)
                             .toList(),
-                    visualisations.averagePriceBySquareFootageBand().stream()
+                    chartData.averagePriceBySquareFootageBand().stream()
                             .map(SquareFootagePriceGroup::from)
                             .toList());
         }
@@ -59,9 +57,9 @@ public record MarketAnalysisResponse(long count, PriceSummary priceSummary, Visu
         }
     }
 
-    public record YearDecadePriceGroup(int startYear, int endYear, BigDecimal averagePrice, long count) {
-        private static YearDecadePriceGroup from(MarketAnalysis.YearDecadePriceGroup group) {
-            return new YearDecadePriceGroup(
+    public record YearBuiltDecadePriceGroup(int startYear, int endYear, BigDecimal averagePrice, long count) {
+        private static YearBuiltDecadePriceGroup from(MarketAnalysis.YearBuiltDecadePriceGroup group) {
+            return new YearBuiltDecadePriceGroup(
                     group.startYear(), group.endYear(), group.averagePrice(), group.count());
         }
     }

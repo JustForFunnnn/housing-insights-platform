@@ -5,7 +5,7 @@ import com.housinginsights.market.domain.PropertyFeatures;
 import com.housinginsights.market.metadata.PropertyMetadata;
 import jakarta.validation.constraints.AssertTrue;
 
-public record ScenarioChangesRequest(
+public record ScenarioChanges(
         Double squareFootage,
         Integer bedrooms,
         Double bathrooms,

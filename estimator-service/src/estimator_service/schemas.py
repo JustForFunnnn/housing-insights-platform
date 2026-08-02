@@ -3,23 +3,16 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Annotated, Literal
 
-from housing_common.property_metadata import (
-    PropertyFeatureMetadata,
-    PropertyMetadata,
-)
+from housing_common import property_metadata
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
+from estimator_service import domain
 from estimator_service.constants import (
     MAX_ESTIMATE_PROPERTIES,
     MAX_PAGE_LIMIT,
     MAX_SIGNED_INT64,
 )
 from estimator_service.errors import ErrorCode
-from estimator_service.models import (
-    EstimatePage,
-    EstimateRecord,
-    PropertyFeatures,
-)
 from estimator_service.property_metadata import PROPERTY_METADATA
 
 
@@ -37,7 +30,7 @@ PositiveInt64Price = Annotated[
 
 
 def _feature_field(
-    metadata: PropertyFeatureMetadata,
+    metadata: property_metadata.FeatureMetadata,
     example: int | float,
 ):
     return Field(
@@ -48,7 +41,7 @@ def _feature_field(
     )
 
 
-class PropertyInput(BaseModel):
+class PropertyFeaturesInput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     square_footage: float = _feature_field(PROPERTY_METADATA.features.square_footage, 1850)
@@ -59,26 +52,20 @@ class PropertyInput(BaseModel):
     distance_to_city_center: float = _feature_field(PROPERTY_METADATA.features.distance_to_city_center, 5.6)
     school_rating: float = _feature_field(PROPERTY_METADATA.features.school_rating, 8.2)
 
-    def to_features(self) -> PropertyFeatures:
-        return PropertyFeatures(**self.model_dump())
+    def to_features(self) -> domain.PropertyFeatures:
+        return domain.PropertyFeatures(**self.model_dump())
 
 
-class EstimateRequest(BaseModel):
+class EstimateBatchRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    properties: list[PropertyInput] = Field(
+    properties: list[PropertyFeaturesInput] = Field(
         min_length=1,
         max_length=MAX_ESTIMATE_PROPERTIES,
     )
 
 
-class PredictionResponse(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
-
-    predictions: list[PositiveInt64Price]
-
-
-class ResponseModel(BaseModel):
+class ApiOutputModel(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
         allow_inf_nan=False,
@@ -86,7 +73,7 @@ class ResponseModel(BaseModel):
     )
 
 
-class PropertyResponse(ResponseModel):
+class PropertyFeatures(ApiOutputModel):
     square_footage: float
     bedrooms: int
     bathrooms: float
@@ -96,26 +83,26 @@ class PropertyResponse(ResponseModel):
     school_rating: float
 
 
-class EstimateRecordResponse(ResponseModel):
-    property: PropertyResponse
+class Estimate(ApiOutputModel):
+    property_features: PropertyFeatures
     estimated_price: PositiveInt64Price
     created_at: datetime
 
     @classmethod
-    def from_record(cls, record: EstimateRecord) -> EstimateRecordResponse:
-        return cls.model_validate(record)
+    def from_domain(cls, estimate: domain.Estimate) -> Estimate:
+        return cls.model_validate(estimate)
 
 
-class EstimateBatchResponse(ResponseModel):
-    estimates: list[EstimateRecordResponse]
+class EstimateBatchResponse(ApiOutputModel):
+    estimates: list[Estimate]
 
     @classmethod
-    def from_records(
+    def from_estimates(
         cls,
-        records: tuple[EstimateRecord, ...],
+        estimates: tuple[domain.Estimate, ...],
     ) -> EstimateBatchResponse:
         return cls(
-            estimates=[EstimateRecordResponse.from_record(record) for record in records],
+            estimates=[Estimate.from_domain(estimate) for estimate in estimates],
         )
 
 
@@ -125,50 +112,69 @@ class EstimatePageResponse(EstimateBatchResponse):
     offset: int = Field(ge=0)
 
     @classmethod
-    def from_page(cls, page: EstimatePage) -> EstimatePageResponse:
+    def from_page(cls, page: domain.EstimatePage) -> EstimatePageResponse:
         return cls(
-            estimates=[EstimateRecordResponse.from_record(record) for record in page.estimates],
+            estimates=[Estimate.from_domain(estimate) for estimate in page.estimates],
             total=page.total,
             limit=page.limit,
             offset=page.offset,
         )
 
 
-class HealthResponse(ResponseModel):
+class HealthResponse(ApiOutputModel):
     status: Literal["ok"]
 
 
-class PropertyFeatureMetadataResponse(ResponseModel):
+class FeatureMetadata(ApiOutputModel):
     min: int | float
     max: int | float
     unit: str | None
 
-
-class PropertyMetadataFeaturesResponse(ResponseModel):
-    square_footage: PropertyFeatureMetadataResponse
-    bedrooms: PropertyFeatureMetadataResponse
-    bathrooms: PropertyFeatureMetadataResponse
-    year_built: PropertyFeatureMetadataResponse
-    lot_size: PropertyFeatureMetadataResponse
-    distance_to_city_center: PropertyFeatureMetadataResponse
-    school_rating: PropertyFeatureMetadataResponse
+    @classmethod
+    def from_metadata(cls, metadata: property_metadata.FeatureMetadata) -> FeatureMetadata:
+        return cls(min=metadata.min, max=metadata.max, unit=metadata.unit)
 
 
-class PropertyMetadataResponse(ResponseModel):
-    features: PropertyMetadataFeaturesResponse
+class PropertyFeaturesMetadata(ApiOutputModel):
+    square_footage: FeatureMetadata
+    bedrooms: FeatureMetadata
+    bathrooms: FeatureMetadata
+    year_built: FeatureMetadata
+    lot_size: FeatureMetadata
+    distance_to_city_center: FeatureMetadata
+    school_rating: FeatureMetadata
+
+    @classmethod
+    def from_metadata(
+        cls,
+        metadata: property_metadata.PropertyFeaturesMetadata,
+    ) -> PropertyFeaturesMetadata:
+        return cls(
+            square_footage=FeatureMetadata.from_metadata(metadata.square_footage),
+            bedrooms=FeatureMetadata.from_metadata(metadata.bedrooms),
+            bathrooms=FeatureMetadata.from_metadata(metadata.bathrooms),
+            year_built=FeatureMetadata.from_metadata(metadata.year_built),
+            lot_size=FeatureMetadata.from_metadata(metadata.lot_size),
+            distance_to_city_center=FeatureMetadata.from_metadata(metadata.distance_to_city_center),
+            school_rating=FeatureMetadata.from_metadata(metadata.school_rating),
+        )
+
+
+class PropertyMetadataResponse(ApiOutputModel):
+    features: PropertyFeaturesMetadata
     price_currency: str
 
     @classmethod
     def from_metadata(
         cls,
-        metadata: PropertyMetadata,
+        metadata: property_metadata.PropertyMetadata,
     ) -> PropertyMetadataResponse:
         return cls(
-            features=PropertyMetadataFeaturesResponse.model_validate(metadata.features),
+            features=PropertyFeaturesMetadata.from_metadata(metadata.features),
             price_currency=metadata.price_currency,
         )
 
 
-class ErrorResponse(ResponseModel):
+class ErrorResponse(ApiOutputModel):
     error_code: ErrorCode
     message: str

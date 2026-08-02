@@ -1,12 +1,12 @@
 package com.housinginsights.market.application;
 
-import static com.housinginsights.market.TestProperties.RECORDS;
+import static com.housinginsights.market.TestProperties.PROPERTIES;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.housinginsights.market.data.PropertyDataset;
 import com.housinginsights.market.domain.MarketFilter;
+import com.housinginsights.market.domain.Property;
 import com.housinginsights.market.domain.PropertyPage;
-import com.housinginsights.market.domain.PropertyRecord;
 import com.housinginsights.market.domain.SortDirection;
 import com.housinginsights.market.domain.SortField;
 import java.util.Collections;
@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 
 class PropertyQueryServiceTest {
     private final PropertyQueryService service =
-            new PropertyQueryService(new CachedPropertyFilter(new PropertyDataset(RECORDS)));
+            new PropertyQueryService(new CachedPropertyFilter(new PropertyDataset(PROPERTIES)));
 
     @Test
     void filtersSortsAndLimitsWithStableOrder() {
@@ -37,7 +37,7 @@ class PropertyQueryServiceTest {
 
         PropertyPage page = service.findPage(filter, SortField.PRICE, SortDirection.DESC, 1, 0);
 
-        assertThat(page.records()).extracting(PropertyRecord::id).containsExactly(3L);
+        assertThat(page.properties()).extracting(Property::id).containsExactly(3L);
         assertThat(page.total()).isEqualTo(2);
         assertThat(page.limit()).isEqualTo(1);
         assertThat(page.offset()).isZero();
@@ -47,7 +47,7 @@ class PropertyQueryServiceTest {
     void offsetPastTotalIsEmptyAndKeepsPaginationMetadata() {
         PropertyPage page = service.findPage(MarketFilter.empty(), SortField.ID, SortDirection.ASC, 2, 20);
 
-        assertThat(page.records()).isEmpty();
+        assertThat(page.properties()).isEmpty();
         assertThat(page.total()).isEqualTo(4);
         assertThat(page.limit()).isEqualTo(2);
         assertThat(page.offset()).isEqualTo(20);

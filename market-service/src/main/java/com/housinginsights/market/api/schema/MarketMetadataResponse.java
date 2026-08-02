@@ -5,16 +5,16 @@ import com.housinginsights.market.metadata.PropertyMetadata;
 import java.util.List;
 
 public record MarketMetadataResponse(
-        PropertyMetadataFeaturesResponse features, String priceCurrency, FilterOptions filterOptions) {
+        PropertyFeaturesMetadata features, String priceCurrency, AvailableFilters availableFilters) {
     public static MarketMetadataResponse from(
-            PropertyMetadata propertyMetadata, MarketAnalysis.FilterOptions filterOptions) {
+            PropertyMetadata propertyMetadata, MarketAnalysis.AvailableFilters availableFilters) {
         return new MarketMetadataResponse(
-                PropertyMetadataFeaturesResponse.from(propertyMetadata),
+                PropertyFeaturesMetadata.from(propertyMetadata),
                 propertyMetadata.priceCurrency(),
-                FilterOptions.from(filterOptions));
+                AvailableFilters.from(availableFilters));
     }
 
-    public record FilterOptions(
+    public record AvailableFilters(
             DoubleRange squareFootage,
             List<Integer> bedrooms,
             List<Double> bathrooms,
@@ -23,13 +23,13 @@ public record MarketMetadataResponse(
             DoubleRange distanceToCityCenter,
             DoubleRange schoolRating,
             LongRange price) {
-        public FilterOptions {
+        public AvailableFilters {
             bedrooms = List.copyOf(bedrooms);
             bathrooms = List.copyOf(bathrooms);
         }
 
-        private static FilterOptions from(MarketAnalysis.FilterOptions options) {
-            return new FilterOptions(
+        private static AvailableFilters from(MarketAnalysis.AvailableFilters options) {
+            return new AvailableFilters(
                     DoubleRange.from(options.squareFootage()),
                     options.bedrooms(),
                     options.bathrooms(),

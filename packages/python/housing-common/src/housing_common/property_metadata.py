@@ -20,7 +20,7 @@ class PropertyMetadataError(RuntimeError):
     """Raised when property field metadata cannot be loaded safely."""
 
 
-class PropertyFeatureMetadata(BaseModel):
+class FeatureMetadata(BaseModel):
     model_config = ConfigDict(extra="ignore", frozen=True, strict=True)
 
     min: MetadataNumber
@@ -28,7 +28,7 @@ class PropertyFeatureMetadata(BaseModel):
     unit: str | None
 
     @model_validator(mode="after")
-    def validate_values(self) -> PropertyFeatureMetadata:
+    def validate_values(self) -> FeatureMetadata:
         values = (self.min, self.max)
         if not all(isinstance(value, int) or math.isfinite(value) for value in values):
             raise ValueError("min and max must be finite")
@@ -37,22 +37,22 @@ class PropertyFeatureMetadata(BaseModel):
         return self
 
 
-class PropertyMetadataFeatures(BaseModel):
+class PropertyFeaturesMetadata(BaseModel):
     model_config = ConfigDict(extra="ignore", frozen=True, strict=True)
 
-    square_footage: PropertyFeatureMetadata
-    bedrooms: PropertyFeatureMetadata
-    bathrooms: PropertyFeatureMetadata
-    year_built: PropertyFeatureMetadata
-    lot_size: PropertyFeatureMetadata
-    distance_to_city_center: PropertyFeatureMetadata
-    school_rating: PropertyFeatureMetadata
+    square_footage: FeatureMetadata
+    bedrooms: FeatureMetadata
+    bathrooms: FeatureMetadata
+    year_built: FeatureMetadata
+    lot_size: FeatureMetadata
+    distance_to_city_center: FeatureMetadata
+    school_rating: FeatureMetadata
 
 
 class PropertyMetadata(BaseModel):
     model_config = ConfigDict(extra="ignore", frozen=True, strict=True)
 
-    features: PropertyMetadataFeatures
+    features: PropertyFeaturesMetadata
     price_currency: str
 
     @classmethod

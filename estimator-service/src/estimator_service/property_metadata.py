@@ -1,6 +1,5 @@
-from housing_common.property_metadata import PropertyMetadata
+from housing_common import property_metadata
 
 from estimator_service.settings import Settings
 
-
-PROPERTY_METADATA = PropertyMetadata.load(Settings().property_metadata_path)
+PROPERTY_METADATA = property_metadata.PropertyMetadata.load(Settings().property_metadata_path)

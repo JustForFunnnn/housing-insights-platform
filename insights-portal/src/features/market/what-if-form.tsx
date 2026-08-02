@@ -11,16 +11,16 @@ import { FeatureNumberInput, PropertyFields } from "@/components/property-fields
 import {
   FEATURE_KEYS,
   type FeatureKey,
-  type MarketMetadata,
-  type PropertyInput,
+  type MarketMetadataResponse,
+  type PropertyFeaturesInput,
   type WhatIfRequest,
 } from "@/api/types";
 import { createWhatIfSchema, FIELD_DEFINITIONS, fieldErrorMessages, MAX_WHAT_IF_SCENARIOS } from "@/lib/fields";
 import { runWhatIf, toApiError } from "@/api/browser";
 import { WhatIfResults } from "./what-if-results";
 
-function marketExample(metadata: MarketMetadata): PropertyInput {
-  const options = metadata.filter_options;
+function marketExample(metadata: MarketMetadataResponse): PropertyFeaturesInput {
+  const options = metadata.available_filters;
   const midpoint = (minimum: number, maximum: number) => minimum + (maximum - minimum) * 0.45;
   return {
     square_footage: Math.round(midpoint(options.square_footage.minimum, options.square_footage.maximum)),
@@ -43,7 +43,7 @@ function ScenarioEditor({
   onRemove,
 }: {
   form: UseFormReturn<WhatIfRequest>;
-  metadata: MarketMetadata;
+  metadata: MarketMetadataResponse;
   index: number;
   canRemove: boolean;
   onRemove: () => void;
@@ -176,8 +176,8 @@ export function WhatIfForm({
   initialMetadata,
   initialBaseline,
 }: {
-  initialMetadata: MarketMetadata;
-  initialBaseline?: PropertyInput;
+  initialMetadata: MarketMetadataResponse;
+  initialBaseline?: PropertyFeaturesInput;
 }) {
   const metadata = initialMetadata;
   const form = useForm<WhatIfRequest>({

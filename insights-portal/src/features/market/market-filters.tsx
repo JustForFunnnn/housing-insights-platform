@@ -2,7 +2,7 @@
 
 import type { FormEvent } from "react";
 
-import type { MarketMetadata } from "@/api/types";
+import type { MarketMetadataResponse } from "@/api/types";
 import { fieldUnit } from "@/lib/fields";
 import { FILTER_KEYS } from "@/lib/market-query";
 
@@ -67,7 +67,7 @@ export function MarketFilters({
   onApply,
   onReset,
 }: {
-  metadata: MarketMetadata;
+  metadata: MarketMetadataResponse;
   current: URLSearchParams;
   onApply: (query: URLSearchParams) => void;
   onReset: () => void;
@@ -90,7 +90,7 @@ export function MarketFilters({
     onApply(query);
   }
 
-  const options = metadata.filter_options;
+  const options = metadata.available_filters;
   return (
     <form id="market-filters" onSubmit={submit} key={current.toString()}>
       <input type="hidden" name="sort_by" value={current.get("sort_by") ?? "id"} />

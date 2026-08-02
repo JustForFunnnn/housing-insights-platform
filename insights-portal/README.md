@@ -39,7 +39,7 @@ Application pages:
 - `/estimator` — create a property estimate.
 - `/estimator/compare` — compare multiple properties.
 - `/estimator/history` — browse saved estimate history.
-- `/market` — explore market analysis and property records.
+- `/market` — explore market analysis and properties.
 - `/market/what-if` — compare property scenarios.
 
 Portal-owned endpoints:

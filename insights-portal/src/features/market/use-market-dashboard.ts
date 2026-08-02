@@ -3,8 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 
-import { getMarketAnalysis, getMarketProperties } from "@/api/browser";
-import type { MarketAnalysis, PropertyPage, SortDirection, SortField } from "@/api/types";
+import { getMarketAnalysis, listMarketProperties } from "@/api/browser";
+import type { MarketAnalysisResponse, PropertyPageResponse, SortDirection, SortField } from "@/api/types";
 import {
   allowedMarketQuery,
   applyMarketFilters,
@@ -16,8 +16,8 @@ import {
 const STALE_TIME = 30000;
 
 interface InitialMarketData {
-  analysis: MarketAnalysis;
-  properties: PropertyPage;
+  analysis: MarketAnalysisResponse;
+  propertyPage: PropertyPageResponse;
   filterQuery: string;
   propertyQuery: string;
 }
@@ -33,16 +33,16 @@ export function useMarketDashboard(initial: InitialMarketData) {
   const filterQueryKey = filterQuery.toString();
   const propertyQueryKey = propertyQuery.toString();
 
-  const analysis = useQuery({
+  const analysisQuery = useQuery({
     queryKey: ["market-analysis", filterQueryKey],
     queryFn: ({ signal }) => getMarketAnalysis(filterQuery, signal),
     initialData: filterQueryKey === initial.filterQuery ? initial.analysis : undefined,
     staleTime: STALE_TIME,
   });
-  const properties = useQuery({
+  const propertyPageQuery = useQuery({
     queryKey: ["market-properties", propertyQueryKey],
-    queryFn: ({ signal }) => getMarketProperties(propertyQuery, signal),
-    initialData: propertyQueryKey === initial.propertyQuery ? initial.properties : undefined,
+    queryFn: ({ signal }) => listMarketProperties(propertyQuery, signal),
+    initialData: propertyQueryKey === initial.propertyQuery ? initial.propertyPage : undefined,
     staleTime: STALE_TIME,
   });
 
@@ -52,8 +52,8 @@ export function useMarketDashboard(initial: InitialMarketData) {
   }
 
   return {
-    analysis,
-    properties,
+    analysisQuery,
+    propertyPageQuery,
     current,
     applyFilters(filters: URLSearchParams) {
       navigate(applyMarketFilters(current, filters));

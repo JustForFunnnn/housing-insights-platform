@@ -3,13 +3,8 @@ package com.housinginsights.market.domain;
 import java.util.List;
 
 public record PropertyPage(
-        List<PropertyRecord> records,
-        long total,
-        int limit,
-        int offset,
-        SortField sortBy,
-        SortDirection sortDirection) {
+        List<Property> properties, long total, int limit, int offset, SortField sortBy, SortDirection sortDirection) {
     public PropertyPage {
-        records = List.copyOf(records);
+        properties = List.copyOf(properties);
     }
 }

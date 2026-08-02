@@ -28,7 +28,7 @@ public record MarketFilter(
         return new MarketFilter(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
-    public boolean matches(PropertyRecord property) {
+    public boolean matches(Property property) {
         return within(property.squareFootage(), minSquareFootage, maxSquareFootage)
                 && (bedrooms.isEmpty() || bedrooms.contains(property.bedrooms()))
                 && (bathrooms.isEmpty() || bathrooms.contains(property.bathrooms()))

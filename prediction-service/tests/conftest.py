@@ -10,6 +10,7 @@ import pytest
 from sklearn.compose import TransformedTargetRegressor
 from sklearn.linear_model import LinearRegression
 
+from prediction_service import domain
 from prediction_service.artifact import ModelArtifact
 from prediction_service.constants import ALGORITHM_NAME, FEATURE_NAMES
 
@@ -82,25 +83,25 @@ def artifact_factory(
     def build() -> ModelArtifact:
         features = [[float(row[name]) for name in FEATURE_NAMES] for row in valid_rows]
         prices = [float(row["price"]) for row in valid_rows]
-        return {
-            "model": TransformedTargetRegressor(
+        return ModelArtifact(
+            model=TransformedTargetRegressor(
                 regressor=LinearRegression(),
                 func=np.log,
                 inverse_func=np.exp,
             ).fit(features, prices),
-            "trained_at": datetime.now(UTC).isoformat(),
-            "algorithm": ALGORITHM_NAME,
-            "features": list(FEATURE_NAMES),
-            "cross_validation": {
-                "folds": 5,
-                "shuffle": True,
-                "random_state": 42,
-                "metrics": {
-                    "r2": {"mean": 0.95, "std": 0.02},
-                    "rmse": {"mean": 12000.0, "std": 1000.0},
-                    "mae": {"mean": 9000.0, "std": 750.0},
-                },
-            },
-        }
+            trained_at=datetime.now(UTC).isoformat(),
+            algorithm=ALGORITHM_NAME,
+            features=FEATURE_NAMES,
+            cross_validation=domain.CrossValidationResult(
+                folds=5,
+                shuffle=True,
+                random_state=42,
+                metrics=domain.RegressionMetrics(
+                    r2=domain.MetricSummary(mean=0.95, std=0.02),
+                    rmse=domain.MetricSummary(mean=12000.0, std=1000.0),
+                    mae=domain.MetricSummary(mean=9000.0, std=750.0),
+                ),
+            ),
+        )
 
     return build

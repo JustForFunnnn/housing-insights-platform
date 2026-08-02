@@ -100,7 +100,7 @@ API endpoints, startup, and testing.
 
 ### Market Service
 
-Spring Boot service that provides market aggregates, property records, what-if
+Spring Boot service that provides market aggregates, properties, what-if
 analysis, and CSV exports.
 
 See [market-service/README.md](market-service/README.md) for configuration, API

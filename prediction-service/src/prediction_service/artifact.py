@@ -3,8 +3,8 @@ from __future__ import annotations
 import math
 import os
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
-from typing import TypedDict
 
 import joblib
 import numpy as np
@@ -12,34 +12,18 @@ from sklearn.compose import TransformedTargetRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.utils.validation import check_is_fitted
 
+from prediction_service import domain
 from prediction_service.constants import ALGORITHM_NAME, FEATURE_NAMES
 from prediction_service.errors import ArtifactError
 
 
-class MetricSummaryData(TypedDict):
-    mean: float
-    std: float
-
-
-class RegressionMetricsData(TypedDict):
-    r2: MetricSummaryData
-    rmse: MetricSummaryData
-    mae: MetricSummaryData
-
-
-class CrossValidationData(TypedDict):
-    folds: int
-    shuffle: bool
-    random_state: int
-    metrics: RegressionMetricsData
-
-
-class ModelArtifact(TypedDict):
+@dataclass(frozen=True, slots=True)
+class ModelArtifact:
     model: TransformedTargetRegressor
     trained_at: str
     algorithm: str
-    features: list[str]
-    cross_validation: CrossValidationData
+    features: tuple[str, ...]
+    cross_validation: domain.CrossValidationResult
 
 
 def _finite_number(value: object, label: str) -> float:
@@ -80,7 +64,7 @@ def _parse_metric_summary(
     summary: object,
     label: str,
     non_negative_mean: bool = False,
-) -> MetricSummaryData:
+) -> domain.MetricSummary:
     if not isinstance(summary, dict):
         raise ArtifactError(f"{label} must be a mapping")
     mean = _finite_number(summary.get("mean"), f"{label}.mean")
@@ -89,10 +73,10 @@ def _parse_metric_summary(
         raise ArtifactError(f"{label}.std must be non-negative")
     if non_negative_mean and mean < 0:
         raise ArtifactError(f"{label}.mean must be non-negative")
-    return {"mean": mean, "std": std}
+    return domain.MetricSummary(mean=mean, std=std)
 
 
-def _parse_cross_validation(validation: object) -> CrossValidationData:
+def _parse_cross_validation(validation: object) -> domain.CrossValidationResult:
     if not isinstance(validation, dict):
         raise ArtifactError("cross_validation must be a mapping")
 
@@ -112,24 +96,24 @@ def _parse_cross_validation(validation: object) -> CrossValidationData:
     if not isinstance(metrics, dict):
         raise ArtifactError("metrics must be a mapping")
 
-    return {
-        "folds": folds,
-        "shuffle": shuffle,
-        "random_state": random_state,
-        "metrics": {
-            "r2": _parse_metric_summary(metrics.get("r2"), "r2"),
-            "rmse": _parse_metric_summary(
+    return domain.CrossValidationResult(
+        folds=folds,
+        shuffle=shuffle,
+        random_state=random_state,
+        metrics=domain.RegressionMetrics(
+            r2=_parse_metric_summary(metrics.get("r2"), "r2"),
+            rmse=_parse_metric_summary(
                 metrics.get("rmse"),
                 "rmse",
                 non_negative_mean=True,
             ),
-            "mae": _parse_metric_summary(
+            mae=_parse_metric_summary(
                 metrics.get("mae"),
                 "mae",
                 non_negative_mean=True,
             ),
-        },
-    }
+        ),
+    )
 
 
 def load_artifact(path: Path) -> ModelArtifact:
@@ -167,17 +151,38 @@ def parse_artifact(artifact: object) -> ModelArtifact:
     if not isinstance(trained_at, str):
         raise ArtifactError("artifact trained_at must be a string")
 
+    return ModelArtifact(
+        model=_parse_model(artifact["model"]),
+        trained_at=trained_at,
+        algorithm=ALGORITHM_NAME,
+        features=FEATURE_NAMES,
+        cross_validation=_parse_cross_validation(artifact["cross_validation"]),
+    )
+
+
+def _artifact_payload(artifact: ModelArtifact) -> dict[str, object]:
+    validation = artifact.cross_validation
+    metrics = validation.metrics
     return {
-        "model": _parse_model(artifact["model"]),
-        "trained_at": trained_at,
-        "algorithm": ALGORITHM_NAME,
-        "features": list(FEATURE_NAMES),
-        "cross_validation": _parse_cross_validation(artifact["cross_validation"]),
+        "model": artifact.model,
+        "trained_at": artifact.trained_at,
+        "algorithm": artifact.algorithm,
+        "features": list(artifact.features),
+        "cross_validation": {
+            "folds": validation.folds,
+            "shuffle": validation.shuffle,
+            "random_state": validation.random_state,
+            "metrics": {
+                "r2": {"mean": metrics.r2.mean, "std": metrics.r2.std},
+                "rmse": {"mean": metrics.rmse.mean, "std": metrics.rmse.std},
+                "mae": {"mean": metrics.mae.mean, "std": metrics.mae.std},
+            },
+        },
     }
 
 
 def save_artifact(artifact: ModelArtifact, path: Path) -> None:
-    parsed_artifact = parse_artifact(artifact)
+    parsed_artifact = parse_artifact(_artifact_payload(artifact))
     temporary_path: Path | None = None
 
     try:
@@ -189,7 +194,7 @@ def save_artifact(artifact: ModelArtifact, path: Path) -> None:
             delete=False,
         ) as temporary:
             temporary_path = Path(temporary.name)
-        joblib.dump(parsed_artifact, temporary_path)
+        joblib.dump(_artifact_payload(parsed_artifact), temporary_path)
         os.replace(temporary_path, path)
         temporary_path = None
     except Exception as exc:

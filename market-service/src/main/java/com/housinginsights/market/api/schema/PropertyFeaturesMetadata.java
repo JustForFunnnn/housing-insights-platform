@@ -5,17 +5,17 @@ import com.housinginsights.market.metadata.PropertyFeatureMetadata;
 import com.housinginsights.market.metadata.PropertyMetadata;
 import java.util.Map;
 
-public record PropertyMetadataFeaturesResponse(
-        PropertyFeatureMetadataResponse squareFootage,
-        PropertyFeatureMetadataResponse bedrooms,
-        PropertyFeatureMetadataResponse bathrooms,
-        PropertyFeatureMetadataResponse yearBuilt,
-        PropertyFeatureMetadataResponse lotSize,
-        PropertyFeatureMetadataResponse distanceToCityCenter,
-        PropertyFeatureMetadataResponse schoolRating) {
-    public static PropertyMetadataFeaturesResponse from(PropertyMetadata metadata) {
+public record PropertyFeaturesMetadata(
+        FeatureMetadata squareFootage,
+        FeatureMetadata bedrooms,
+        FeatureMetadata bathrooms,
+        FeatureMetadata yearBuilt,
+        FeatureMetadata lotSize,
+        FeatureMetadata distanceToCityCenter,
+        FeatureMetadata schoolRating) {
+    public static PropertyFeaturesMetadata from(PropertyMetadata metadata) {
         Map<String, PropertyFeatureMetadata> features = metadata.features();
-        return new PropertyMetadataFeaturesResponse(
+        return new PropertyFeaturesMetadata(
                 feature(features, PropertyFieldNames.SQUARE_FOOTAGE),
                 feature(features, PropertyFieldNames.BEDROOMS),
                 feature(features, PropertyFieldNames.BATHROOMS),
@@ -25,7 +25,7 @@ public record PropertyMetadataFeaturesResponse(
                 feature(features, PropertyFieldNames.SCHOOL_RATING));
     }
 
-    private static PropertyFeatureMetadataResponse feature(Map<String, PropertyFeatureMetadata> features, String name) {
-        return PropertyFeatureMetadataResponse.from(features.get(name));
+    private static FeatureMetadata feature(Map<String, PropertyFeatureMetadata> features, String name) {
+        return FeatureMetadata.from(features.get(name));
     }
 }

@@ -7,17 +7,17 @@ import { useFieldArray, useForm } from "react-hook-form";
 
 import { ErrorNotice } from "@/components/error-notice";
 import { PropertyFields } from "@/components/property-fields";
-import { type PropertyInput, type PropertyMetadata } from "@/api/types";
+import { type PropertyFeaturesInput, type PropertyMetadataResponse } from "@/api/types";
 import { createComparisonSchema, exampleProperty, fieldErrorMessages } from "@/lib/fields";
 import { createEstimates, toApiError } from "@/api/browser";
 
 import { ComparisonResults } from "./comparison-results";
 
 interface ComparisonValues {
-  properties: PropertyInput[];
+  properties: PropertyFeaturesInput[];
 }
 
-export function ComparisonForm({ metadata }: { metadata: PropertyMetadata }) {
+export function ComparisonForm({ metadata }: { metadata: PropertyMetadataResponse }) {
   const form = useForm<ComparisonValues>({
     resolver: zodResolver(createComparisonSchema(metadata)),
     defaultValues: {

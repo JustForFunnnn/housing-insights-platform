@@ -1,6 +1,6 @@
 package com.housinginsights.market.domain;
 
-public record PropertyRecord(
+public record Property(
         long id,
         double squareFootage,
         int bedrooms,

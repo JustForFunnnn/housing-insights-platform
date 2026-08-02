@@ -2,9 +2,9 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { FeatureNumberInput, PropertyFields } from "@/components/property-fields";
-import type { FeatureKey, PropertyMetadata } from "@/api/types";
+import type { FeatureKey, PropertyMetadataResponse } from "@/api/types";
 
-const metadata: PropertyMetadata = {
+const metadata: PropertyMetadataResponse = {
   features: {
     square_footage: { min: 400, max: 5000, unit: "sq_ft" },
     bedrooms: { min: 0, max: 10, unit: null },

@@ -14,8 +14,8 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from estimator_service import domain
 from estimator_service.errors import StorageError, StorageUnavailableError
-from estimator_service.models import EstimateRecord, PropertyFeatures
 from estimator_service.tables import Base, EstimateRow
 
 
@@ -32,13 +32,13 @@ class Database(Protocol):
 
 
 class EstimateStore(Protocol):
-    async def insert_many(self, records: Sequence[EstimateRecord]) -> None: ...
+    async def insert_many(self, estimates: Sequence[domain.Estimate]) -> None: ...
 
     async def list_page(
         self,
         limit: int,
         offset: int,
-    ) -> tuple[tuple[EstimateRecord, ...], int]: ...
+    ) -> tuple[tuple[domain.Estimate, ...], int]: ...
 
 
 class PostgresDatabase:
@@ -93,8 +93,8 @@ class PostgresEstimateStore:
     def __init__(self, database: Database) -> None:
         self._database = database
 
-    async def insert_many(self, records: Sequence[EstimateRecord]) -> None:
-        rows = [self._row_from_record(record) for record in records]
+    async def insert_many(self, estimates: Sequence[domain.Estimate]) -> None:
+        rows = [self._row_from_estimate(estimate) for estimate in estimates]
         if not rows:
             return
 
@@ -112,7 +112,7 @@ class PostgresEstimateStore:
         self,
         limit: int,
         offset: int,
-    ) -> tuple[tuple[EstimateRecord, ...], int]:
+    ) -> tuple[tuple[domain.Estimate, ...], int]:
         try:
             async with self._database.session() as session:
                 result = await session.scalars(
@@ -124,30 +124,31 @@ class PostgresEstimateStore:
                     .limit(limit)
                     .offset(offset)
                 )
-                records = tuple(self._record_from_row(row) for row in result.all())
+                estimates = tuple(self._estimate_from_row(row) for row in result.all())
                 total = await session.scalar(select(func.count()).select_from(EstimateRow))
         except SQLAlchemyError as exc:
             raise StorageUnavailableError("database read failed") from exc
-        return records, int(total or 0)
+        return estimates, int(total or 0)
 
     @staticmethod
-    def _row_from_record(record: EstimateRecord) -> EstimateRow:
+    def _row_from_estimate(estimate: domain.Estimate) -> EstimateRow:
+        property_features = estimate.property_features
         return EstimateRow(
-            square_footage=record.property.square_footage,
-            bedrooms=record.property.bedrooms,
-            bathrooms=record.property.bathrooms,
-            year_built=record.property.year_built,
-            lot_size=record.property.lot_size,
-            distance_to_city_center=record.property.distance_to_city_center,
-            school_rating=record.property.school_rating,
-            estimated_price=record.estimated_price,
-            created_at=record.created_at,
+            square_footage=property_features.square_footage,
+            bedrooms=property_features.bedrooms,
+            bathrooms=property_features.bathrooms,
+            year_built=property_features.year_built,
+            lot_size=property_features.lot_size,
+            distance_to_city_center=property_features.distance_to_city_center,
+            school_rating=property_features.school_rating,
+            estimated_price=estimate.estimated_price,
+            created_at=estimate.created_at,
         )
 
     @staticmethod
-    def _record_from_row(row: EstimateRow) -> EstimateRecord:
-        return EstimateRecord(
-            property=PropertyFeatures(
+    def _estimate_from_row(row: EstimateRow) -> domain.Estimate:
+        return domain.Estimate(
+            property_features=domain.PropertyFeatures(
                 square_footage=row.square_footage,
                 bedrooms=row.bedrooms,
                 bathrooms=row.bathrooms,

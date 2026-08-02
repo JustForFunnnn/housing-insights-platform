@@ -2,7 +2,7 @@
 
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import type { MarketAnalysis } from "@/api/types";
+import type { MarketAnalysisResponse } from "@/api/types";
 import { MARKET_CHART_DEFINITIONS, marketChartSeries, type ChartDatum } from "@/lib/chart-data";
 import { formatPrice } from "@/lib/format";
 
@@ -86,7 +86,7 @@ function ChartPanel({
   );
 }
 
-export function MarketCharts({ analysis, unit }: { analysis: MarketAnalysis; unit: string }) {
+export function MarketCharts({ analysis, unit }: { analysis: MarketAnalysisResponse; unit: string }) {
   const series = marketChartSeries(analysis);
   return (
     <div className="parcel-grid" style={{ marginTop: 28 }}>

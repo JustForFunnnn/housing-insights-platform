@@ -67,7 +67,7 @@ class HttpPredictionClientTest {
                 .andExpect(header(RequestCorrelation.HEADER_NAME, REQUEST_ID))
                 .andExpect(content().json("""
                         {
-                          "instances": [
+                          "properties": [
                             {
                               "square_footage": 1850.0,
                               "bedrooms": 3,

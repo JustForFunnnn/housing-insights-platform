@@ -1,7 +1,7 @@
 package com.housinginsights.market.export;
 
+import com.housinginsights.market.domain.Property;
 import com.housinginsights.market.domain.PropertyFieldNames;
-import com.housinginsights.market.domain.PropertyRecord;
 import com.housinginsights.market.error.ExportGenerationException;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -18,10 +18,10 @@ public class CsvExportService {
             .setHeader(PropertyFieldNames.CSV_COLUMNS.toArray(String[]::new))
             .get();
 
-    public byte[] export(List<PropertyRecord> properties) {
+    public byte[] export(List<Property> properties) {
         try (var writer = new StringWriter();
                 var printer = new CSVPrinter(writer, EXPORT_FORMAT)) {
-            for (PropertyRecord property : properties) {
+            for (Property property : properties) {
                 printer.printRecord(
                         property.id(),
                         property.squareFootage(),

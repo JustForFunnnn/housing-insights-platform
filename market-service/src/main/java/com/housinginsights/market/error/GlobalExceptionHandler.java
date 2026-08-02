@@ -1,6 +1,6 @@
 package com.housinginsights.market.error;
 
-import com.housinginsights.market.api.schema.ApiErrorResponse;
+import com.housinginsights.market.api.schema.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
         InvalidRequestException.class,
         BindException.class
     })
-    public ResponseEntity<ApiErrorResponse> validationError(HttpServletRequest request, Exception exception) {
+    public ResponseEntity<ErrorResponse> validationError(HttpServletRequest request, Exception exception) {
         logger.info(
                 "request_validation_failed method={} path={} error={}",
                 request.getMethod(),
@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(PredictionServiceUnavailableException.class)
-    public ResponseEntity<ApiErrorResponse> predictionUnavailable(PredictionServiceUnavailableException exception) {
+    public ResponseEntity<ErrorResponse> predictionUnavailable(PredictionServiceUnavailableException exception) {
         logger.error("prediction_unavailable error={}", exception.getMessage(), exception);
         return response(
                 HttpStatus.SERVICE_UNAVAILABLE,
@@ -54,7 +54,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(PredictionServiceInvalidResponseException.class)
-    public ResponseEntity<ApiErrorResponse> predictionInvalid(PredictionServiceInvalidResponseException exception) {
+    public ResponseEntity<ErrorResponse> predictionInvalid(PredictionServiceInvalidResponseException exception) {
         logger.error("prediction_invalid_response error={}", exception.getMessage(), exception);
         return response(
                 HttpStatus.BAD_GATEWAY,
@@ -63,17 +63,17 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ApiErrorResponse> notFound(NoResourceFoundException exception) {
+    public ResponseEntity<ErrorResponse> notFound(NoResourceFoundException exception) {
         return httpError(exception.getStatusCode().value());
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ApiErrorResponse> methodNotAllowed(HttpRequestMethodNotSupportedException exception) {
+    public ResponseEntity<ErrorResponse> methodNotAllowed(HttpRequestMethodNotSupportedException exception) {
         return httpError(ResponseEntity.status(exception.getStatusCode()).headers(exception.getHeaders()));
     }
 
     @ExceptionHandler({HttpMediaTypeNotSupportedException.class, HttpMediaTypeNotAcceptableException.class})
-    public ResponseEntity<ApiErrorResponse> mediaTypeError(Exception exception) {
+    public ResponseEntity<ErrorResponse> mediaTypeError(Exception exception) {
         if (exception instanceof HttpMediaTypeNotSupportedException unsupported) {
             return httpError(unsupported.getStatusCode().value());
         }
@@ -81,7 +81,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiErrorResponse> unexpectedError(HttpServletRequest request, Exception exception) {
+    public ResponseEntity<ErrorResponse> unexpectedError(HttpServletRequest request, Exception exception) {
         logger.error(
                 "request_failed method={} path={} status=500 error_type={}",
                 request.getMethod(),
@@ -92,18 +92,18 @@ public class GlobalExceptionHandler {
                 HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_ERROR, "An unexpected server error occurred.");
     }
 
-    private static ResponseEntity<ApiErrorResponse> httpError(int status) {
+    private static ResponseEntity<ErrorResponse> httpError(int status) {
         return httpError(ResponseEntity.status(status));
     }
 
-    private static ResponseEntity<ApiErrorResponse> httpError(ResponseEntity.BodyBuilder builder) {
+    private static ResponseEntity<ErrorResponse> httpError(ResponseEntity.BodyBuilder builder) {
         return builder.contentType(MediaType.APPLICATION_JSON)
-                .body(new ApiErrorResponse(ErrorCode.HTTP_ERROR.value(), "The request could not be completed."));
+                .body(new ErrorResponse(ErrorCode.HTTP_ERROR.value(), "The request could not be completed."));
     }
 
-    private static ResponseEntity<ApiErrorResponse> response(HttpStatus status, ErrorCode errorCode, String message) {
+    private static ResponseEntity<ErrorResponse> response(HttpStatus status, ErrorCode errorCode, String message) {
         return ResponseEntity.status(status)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new ApiErrorResponse(errorCode.value(), message));
+                .body(new ErrorResponse(errorCode.value(), message));
     }
 }

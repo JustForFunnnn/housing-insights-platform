@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Positive;
 import java.util.List;
 import java.util.TreeSet;
 
-public record MarketFilterRequest(
+public record MarketFilterQuery(
         Double minSquareFootage,
         Double maxSquareFootage,
         List<@NotNull Integer> bedrooms,
@@ -23,7 +23,7 @@ public record MarketFilterRequest(
         Double maxSchoolRating,
         @Positive Long minPrice,
         @Positive Long maxPrice) {
-    public MarketFilterRequest {
+    public MarketFilterQuery {
         bedrooms = bedrooms == null ? List.of() : List.copyOf(bedrooms);
         bathrooms = bathrooms == null ? List.of() : List.copyOf(bathrooms);
     }
@@ -52,7 +52,7 @@ public record MarketFilterRequest(
     public boolean isValid() {
         return finite(minSquareFootage)
                 && finite(maxSquareFootage)
-                && bathrooms.stream().allMatch(MarketFilterRequest::finite)
+                && bathrooms.stream().allMatch(MarketFilterQuery::finite)
                 && finite(minLotSize)
                 && finite(maxLotSize)
                 && finite(minDistanceToCityCenter)

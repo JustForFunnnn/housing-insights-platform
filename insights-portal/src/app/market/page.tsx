@@ -1,7 +1,7 @@
 import { PageHeader } from "@/components/page-header";
 import { MarketDashboard } from "@/features/market/market-dashboard";
 import { allowedMarketQuery, withMarketDefaults } from "@/lib/market-query";
-import { getMarketAnalysis, getMarketMetadata, getMarketProperties } from "@/api/server";
+import { getMarketAnalysis, getMarketMetadata, listMarketProperties } from "@/api/server";
 
 export const dynamic = "force-dynamic";
 
@@ -27,10 +27,10 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
     includeSort: true,
   }).toString();
 
-  const [metadata, analysis, properties] = await Promise.all([
+  const [metadata, analysis, propertyPage] = await Promise.all([
     getMarketMetadata(),
     getMarketAnalysis(filterQuery),
-    getMarketProperties(propertyQuery),
+    listMarketProperties(propertyQuery),
   ]);
 
   return (
@@ -43,7 +43,7 @@ export default async function MarketPage({ searchParams }: { searchParams: Promi
       <MarketDashboard
         initialMetadata={metadata}
         initialAnalysis={analysis}
-        initialProperties={properties}
+        initialPropertyPage={propertyPage}
         initialFilterQuery={filterQuery}
         initialPropertyQuery={propertyQuery}
       />

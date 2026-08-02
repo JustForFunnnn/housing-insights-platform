@@ -1,11 +1,11 @@
 import { PageHeader } from "@/components/page-header";
 import { HistoryView } from "@/features/estimator/history-view";
-import { getEstimates, getEstimatorMetadata } from "@/api/server";
+import { getEstimatorMetadata, listEstimates } from "@/api/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function HistoryPage() {
-  const [metadata, page] = await Promise.all([getEstimatorMetadata(), getEstimates("limit=20&offset=0")]);
+  const [metadata, page] = await Promise.all([getEstimatorMetadata(), listEstimates("limit=20&offset=0")]);
   return (
     <>
       <PageHeader

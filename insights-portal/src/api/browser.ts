@@ -8,13 +8,13 @@ import {
   type Dependency,
 } from "@/api/response";
 import {
-  estimateBatchSchema,
-  estimatePageSchema,
-  marketAnalysisSchema,
-  propertyPageSchema,
+  estimateBatchResponseSchema,
+  estimatePageResponseSchema,
+  marketAnalysisResponseSchema,
+  propertyPageResponseSchema,
   whatIfResponseSchema,
   type ErrorResponse,
-  type PropertyInput,
+  type PropertyFeaturesInput,
   type WhatIfRequest,
 } from "@/api/types";
 
@@ -89,28 +89,30 @@ function withQuery(base: string, query: URLSearchParams) {
   return `${base}${value ? `?${value}` : ""}`;
 }
 
-export function createEstimates(properties: PropertyInput[]) {
-  return fetchJson("estimator", `${ESTIMATOR_API}/api/estimates`, estimateBatchSchema, {
+export function createEstimates(properties: PropertyFeaturesInput[]) {
+  return fetchJson("estimator", `${ESTIMATOR_API}/api/estimates`, estimateBatchResponseSchema, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ properties }),
   });
 }
 
-export function getEstimateHistory(limit: number, offset: number, signal?: AbortSignal) {
+export function listEstimates(limit: number, offset: number, signal?: AbortSignal) {
   const query = new URLSearchParams({
     limit: String(limit),
     offset: String(offset),
   });
-  return fetchJson("estimator", withQuery(`${ESTIMATOR_API}/api/estimates`, query), estimatePageSchema, { signal });
+  return fetchJson("estimator", withQuery(`${ESTIMATOR_API}/api/estimates`, query), estimatePageResponseSchema, {
+    signal,
+  });
 }
 
 export function getMarketAnalysis(query: URLSearchParams, signal?: AbortSignal) {
-  return fetchJson("market", withQuery(`${MARKET_API}/api/analysis`, query), marketAnalysisSchema, { signal });
+  return fetchJson("market", withQuery(`${MARKET_API}/api/analysis`, query), marketAnalysisResponseSchema, { signal });
 }
 
-export function getMarketProperties(query: URLSearchParams, signal?: AbortSignal) {
-  return fetchJson("market", withQuery(`${MARKET_API}/api/properties`, query), propertyPageSchema, { signal });
+export function listMarketProperties(query: URLSearchParams, signal?: AbortSignal) {
+  return fetchJson("market", withQuery(`${MARKET_API}/api/properties`, query), propertyPageResponseSchema, { signal });
 }
 
 export function marketCsvExportUrl(query: URLSearchParams) {

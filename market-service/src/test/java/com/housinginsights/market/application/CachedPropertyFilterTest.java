@@ -1,6 +1,6 @@
 package com.housinginsights.market.application;
 
-import static com.housinginsights.market.TestProperties.RECORDS;
+import static com.housinginsights.market.TestProperties.PROPERTIES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -26,8 +26,9 @@ class CachedPropertyFilterTest {
             var second = cachedFilter.filter(MarketFilter.empty());
 
             assertThat(second).isSameAs(first);
-            assertThat(first).containsExactlyElementsOf(RECORDS);
-            assertThatThrownBy(() -> first.add(RECORDS.getFirst())).isInstanceOf(UnsupportedOperationException.class);
+            assertThat(first).containsExactlyElementsOf(PROPERTIES);
+            assertThatThrownBy(() -> first.add(PROPERTIES.getFirst()))
+                    .isInstanceOf(UnsupportedOperationException.class);
         }
     }
 
@@ -36,7 +37,7 @@ class CachedPropertyFilterTest {
     static class TestConfiguration {
         @Bean
         PropertyDataset dataset() {
-            return new PropertyDataset(RECORDS);
+            return new PropertyDataset(PROPERTIES);
         }
 
         @Bean

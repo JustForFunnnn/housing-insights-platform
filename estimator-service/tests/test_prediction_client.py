@@ -6,15 +6,15 @@ import httpx2
 import pytest
 from asgi_correlation_id import correlation_id
 
+from estimator_service import domain
 from estimator_service.errors import (
     PredictionServiceInvalidResponseError,
     PredictionServiceUnavailableError,
 )
-from estimator_service.models import PropertyFeatures
 from estimator_service.prediction_client import HttpPredictionClient
 from tests.conftest import VALID_PROPERTY
 
-VALID_PROPERTY_FEATURES = PropertyFeatures(**VALID_PROPERTY)
+VALID_PROPERTY_FEATURES = domain.PropertyFeatures(**VALID_PROPERTY)
 SUPPLIED_REQUEST_ID = "123e4567-e89b-42d3-a456-426614174000"
 
 
@@ -32,7 +32,7 @@ async def test_prediction_client_sends_contract_and_request_id() -> None:
     async def handler(request: httpx2.Request) -> httpx2.Response:
         assert request.url.path == "/api/predict"
         assert request.headers["X-Request-ID"] == SUPPLIED_REQUEST_ID
-        assert json.loads(request.read()) == {"instances": [VALID_PROPERTY]}
+        assert json.loads(request.read()) == {"properties": [VALID_PROPERTY]}
         return httpx2.Response(200, json={"predictions": [265000]})
 
     async with httpx2.AsyncClient(

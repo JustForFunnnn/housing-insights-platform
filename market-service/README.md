@@ -7,7 +7,7 @@ comparisons.
 
 - Filter, sort, and page the fixed property dataset.
 - Calculate aggregate market statistics and chart data.
-- Export filtered property records as CSV.
+- Export filtered properties as CSV.
 - Run what-if scenarios through Prediction Service.
 - Provide metadata used by the Market Portal.
 - Report application and dataset health.
@@ -32,10 +32,10 @@ src/main/java/com/housinginsights/market/
 ## API
 
 - `GET /api/analysis` — retrieve filtered aggregate analysis and chart data.
-- `GET /api/properties` — retrieve filtered, sorted, pageable property records.
+- `GET /api/properties` — retrieve filtered, sorted, pageable properties.
 - `POST /api/what-if` — compare baseline and modified property predictions.
-- `GET /api/metadata` — retrieve Market constraints and filter options.
-- `GET /api/properties/export/csv` — export all matching property records.
+- `GET /api/metadata` — retrieve Market constraints and available filters.
+- `GET /api/properties/export/csv` — export all matching properties.
 - `GET /api/health` — verify the application and local dataset are ready.
 
 The complete request fields, response fields, filters, sorting, pagination,

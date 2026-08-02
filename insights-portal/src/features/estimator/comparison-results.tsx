@@ -1,13 +1,19 @@
 import { EstimateChart } from "@/components/estimate-chart";
-import { FEATURE_KEYS, type EstimateBatch, type PropertyMetadata } from "@/api/types";
+import { FEATURE_KEYS, type EstimateBatchResponse, type PropertyMetadataResponse } from "@/api/types";
 import { FIELD_DEFINITIONS } from "@/lib/fields";
 import { formatNumber, formatPrice } from "@/lib/format";
 
-export function ComparisonResults({ result, metadata }: { result: EstimateBatch; metadata: PropertyMetadata }) {
+export function ComparisonResults({
+  result,
+  metadata,
+}: {
+  result: EstimateBatchResponse;
+  metadata: PropertyMetadataResponse;
+}) {
   const ranked = result.estimates
-    .map((record, index) => ({
+    .map((estimate, index) => ({
       label: `Property ${String.fromCharCode(65 + index)}`,
-      value: record.estimated_price,
+      value: estimate.estimated_price,
     }))
     .sort((a, b) => a.value - b.value);
   const lowest = ranked.at(0);
@@ -37,9 +43,9 @@ export function ComparisonResults({ result, metadata }: { result: EstimateBatch;
       ) : null}
       <EstimateChart
         unit={metadata.price_currency}
-        values={result.estimates.map((record, index) => ({
+        values={result.estimates.map((estimate, index) => ({
           label: `Property ${String.fromCharCode(65 + index)}`,
-          value: record.estimated_price,
+          value: estimate.estimated_price,
         }))}
       />
       <div className="data-table-wrap" style={{ marginTop: 24 }}>
@@ -58,18 +64,18 @@ export function ComparisonResults({ result, metadata }: { result: EstimateBatch;
           <tbody>
             <tr>
               <th scope="row">Estimated price</th>
-              {result.estimates.map((record, index) => (
-                <td className="mono" key={`${record.created_at}-${index}`}>
-                  {formatPrice(record.estimated_price, metadata.price_currency)}
+              {result.estimates.map((estimate, index) => (
+                <td className="mono" key={`${estimate.created_at}-${index}`}>
+                  {formatPrice(estimate.estimated_price, metadata.price_currency)}
                 </td>
               ))}
             </tr>
             {FEATURE_KEYS.map((key) => (
               <tr key={key}>
                 <th scope="row">{FIELD_DEFINITIONS[key].label}</th>
-                {result.estimates.map((record, index) => (
-                  <td className="mono" key={`${record.created_at}-${key}-${index}`}>
-                    {formatNumber(record.property[key])}
+                {result.estimates.map((estimate, index) => (
+                  <td className="mono" key={`${estimate.created_at}-${key}-${index}`}>
+                    {formatNumber(estimate.property_features[key])}
                     {metadata.features[key].unit ? ` ${metadata.features[key].unit}` : ""}
                   </td>
                 ))}

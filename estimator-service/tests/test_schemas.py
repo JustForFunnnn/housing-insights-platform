@@ -5,7 +5,7 @@ from pydantic import ValidationError
 
 from estimator_service.constants import MAX_ESTIMATE_PROPERTIES
 from estimator_service.property_metadata import PROPERTY_METADATA
-from estimator_service.schemas import EstimateRequest
+from estimator_service.schemas import EstimateBatchRequest
 from tests.conftest import VALID_PROPERTY
 
 
@@ -22,11 +22,11 @@ from tests.conftest import VALID_PROPERTY
 )
 def test_estimate_request_rejects_invalid_payloads(payload: object) -> None:
     with pytest.raises(ValidationError):
-        EstimateRequest.model_validate(payload)
+        EstimateBatchRequest.model_validate(payload)
 
 
 def test_configured_feature_bounds_are_enforced() -> None:
-    EstimateRequest.model_validate({"properties": [VALID_PROPERTY]})
+    EstimateBatchRequest.model_validate({"properties": [VALID_PROPERTY]})
     tested_bound = False
 
     for field_name in VALID_PROPERTY:
@@ -38,7 +38,7 @@ def test_configured_feature_bounds_are_enforced() -> None:
                 field_name: metadata.min - 1,
             }
             with pytest.raises(ValidationError):
-                EstimateRequest.model_validate({"properties": [invalid]})
+                EstimateBatchRequest.model_validate({"properties": [invalid]})
         if metadata.max is not None:
             tested_bound = True
             invalid = {
@@ -46,7 +46,7 @@ def test_configured_feature_bounds_are_enforced() -> None:
                 field_name: metadata.max + 1,
             }
             with pytest.raises(ValidationError):
-                EstimateRequest.model_validate({"properties": [invalid]})
+                EstimateBatchRequest.model_validate({"properties": [invalid]})
 
     if not tested_bound:
         pytest.skip("no property bounds are configured")

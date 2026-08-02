@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import type { MarketAnalysis } from "@/api/types";
+import type { MarketAnalysisResponse } from "@/api/types";
 import { marketChartSeries } from "@/lib/chart-data";
 
-const analysis: MarketAnalysis = {
+const analysis: MarketAnalysisResponse = {
   count: 2,
   price_summary: {
     minimum: 100000,
@@ -11,7 +11,7 @@ const analysis: MarketAnalysis = {
     average: 150000,
     median: 150000,
   },
-  visualisations: {
+  chart_data: {
     price_distribution: [
       {
         lower_bound: 100000,

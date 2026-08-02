@@ -10,11 +10,11 @@ import {
   type Dependency,
 } from "@/api/response";
 import {
-  estimatePageSchema,
-  marketAnalysisSchema,
-  marketMetadataSchema,
-  propertyMetadataSchema,
-  propertyPageSchema,
+  estimatePageResponseSchema,
+  marketAnalysisResponseSchema,
+  marketMetadataResponseSchema,
+  propertyMetadataResponseSchema,
+  propertyPageResponseSchema,
   type ErrorResponse,
 } from "@/api/types";
 
@@ -92,21 +92,21 @@ async function backendJson<T>(dependency: Dependency, path: string, schema: ZodT
 }
 
 export function getEstimatorMetadata() {
-  return backendJson("estimator", "/api/metadata", propertyMetadataSchema);
+  return backendJson("estimator", "/api/metadata", propertyMetadataResponseSchema);
 }
 
 export function getMarketMetadata() {
-  return backendJson("market", "/api/metadata", marketMetadataSchema);
+  return backendJson("market", "/api/metadata", marketMetadataResponseSchema);
 }
 
-export function getEstimates(query = "") {
-  return backendJson("estimator", `/api/estimates${query ? `?${query}` : ""}`, estimatePageSchema);
+export function listEstimates(query = "") {
+  return backendJson("estimator", `/api/estimates${query ? `?${query}` : ""}`, estimatePageResponseSchema);
 }
 
 export function getMarketAnalysis(query = "") {
-  return backendJson("market", `/api/analysis${query ? `?${query}` : ""}`, marketAnalysisSchema);
+  return backendJson("market", `/api/analysis${query ? `?${query}` : ""}`, marketAnalysisResponseSchema);
 }
 
-export function getMarketProperties(query = "") {
-  return backendJson("market", `/api/properties${query ? `?${query}` : ""}`, propertyPageSchema);
+export function listMarketProperties(query = "") {
+  return backendJson("market", `/api/properties${query ? `?${query}` : ""}`, propertyPageResponseSchema);
 }

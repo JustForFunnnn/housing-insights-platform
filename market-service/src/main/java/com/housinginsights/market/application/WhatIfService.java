@@ -2,7 +2,7 @@ package com.housinginsights.market.application;
 
 import com.housinginsights.market.domain.PropertyFeatures;
 import com.housinginsights.market.domain.WhatIfResult;
-import com.housinginsights.market.domain.WhatIfResult.ScenarioResult;
+import com.housinginsights.market.domain.WhatIfResult.ScenarioComparison;
 import com.housinginsights.market.error.PredictionServiceInvalidResponseException;
 import com.housinginsights.market.prediction.PredictionClient;
 import java.math.BigDecimal;
@@ -31,19 +31,17 @@ public class WhatIfService {
         }
 
         long baselinePrediction = predictions.getFirst();
-        List<ScenarioResult> results = predictions.subList(1, predictions.size()).stream()
+        List<ScenarioComparison> comparisons = predictions.subList(1, predictions.size()).stream()
                 .map(prediction -> scenarioResult(baselinePrediction, prediction))
                 .toList();
-        return new WhatIfResult(baselinePrediction, results);
+        return new WhatIfResult(baselinePrediction, comparisons);
     }
 
-    private static ScenarioResult scenarioResult(long baseline, long prediction) {
+    private static ScenarioComparison scenarioResult(long baseline, long prediction) {
         long difference = prediction - baseline;
-        BigDecimal percentage = baseline == 0
-                ? null
-                : BigDecimal.valueOf(difference)
-                        .multiply(BigDecimal.valueOf(100))
-                        .divide(BigDecimal.valueOf(baseline), 2, RoundingMode.HALF_UP);
-        return new ScenarioResult(prediction, difference, percentage);
+        BigDecimal percentage = BigDecimal.valueOf(difference)
+                .multiply(BigDecimal.valueOf(100))
+                .divide(BigDecimal.valueOf(baseline), 2, RoundingMode.HALF_UP);
+        return new ScenarioComparison(prediction, difference, percentage);
     }
 }

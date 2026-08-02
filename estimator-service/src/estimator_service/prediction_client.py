@@ -5,15 +5,21 @@ from typing import Protocol
 
 import httpx2
 from housing_common.observability import current_request_id
+from pydantic import BaseModel, ConfigDict
 
+from estimator_service import domain, schemas
 from estimator_service.constants import REQUEST_ID_HEADER
 from estimator_service.errors import (
     PredictionServiceInvalidResponseError,
     PredictionServiceUnavailableError,
 )
-from estimator_service.models import PropertyFeatures
-from estimator_service.schemas import PredictionResponse
 from estimator_service.settings import Settings
+
+
+class PredictionResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    predictions: list[schemas.PositiveInt64Price]
 
 
 class PredictionClient(Protocol):
@@ -21,7 +27,7 @@ class PredictionClient(Protocol):
 
     async def predict(
         self,
-        properties: Sequence[PropertyFeatures],
+        properties: Sequence[domain.PropertyFeatures],
     ) -> list[int]: ...
 
 
@@ -53,12 +59,12 @@ class HttpPredictionClient:
 
     async def predict(
         self,
-        properties: Sequence[PropertyFeatures],
+        properties: Sequence[domain.PropertyFeatures],
     ) -> list[int]:
         response = await self._request(
             method="POST",
             path="/api/predict",
-            json={"instances": [item.as_dict() for item in properties]},
+            json={"properties": [item.as_dict() for item in properties]},
         )
 
         try:

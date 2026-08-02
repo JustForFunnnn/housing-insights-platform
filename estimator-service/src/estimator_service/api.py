@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, Query, Request, status
 
+from estimator_service import schemas
 from estimator_service.constants import (
     DEFAULT_PAGE_LIMIT,
     DEFAULT_PAGE_OFFSET,
@@ -9,16 +10,8 @@ from estimator_service.constants import (
     REQUEST_ID_HEADER,
 )
 from estimator_service.data_access import Database
-from estimator_service.property_metadata import PROPERTY_METADATA
-from estimator_service.schemas import (
-    ErrorResponse,
-    EstimateBatchResponse,
-    EstimatePageResponse,
-    EstimateRequest,
-    HealthResponse,
-    PropertyMetadataResponse,
-)
 from estimator_service.estimator import EstimatorService
+from estimator_service.property_metadata import PROPERTY_METADATA
 
 RESPONSE_WITH_REQUEST_ID = {
     "headers": {
@@ -29,7 +22,7 @@ RESPONSE_WITH_REQUEST_ID = {
     }
 }
 ERROR_RESPONSE_WITH_REQUEST_ID = {
-    "model": ErrorResponse,
+    "model": schemas.ErrorResponse,
     **RESPONSE_WITH_REQUEST_ID,
 }
 
@@ -71,7 +64,7 @@ def get_database(request: Request) -> Database:
 
 @router.post(
     "/estimates",
-    response_model=EstimateBatchResponse,
+    response_model=schemas.EstimateBatchResponse,
     status_code=status.HTTP_201_CREATED,
     responses={
         201: RESPONSE_WITH_REQUEST_ID,
@@ -81,18 +74,18 @@ def get_database(request: Request) -> Database:
     },
 )
 async def create_estimates(
-    payload: EstimateRequest,
+    payload: schemas.EstimateBatchRequest,
     service: EstimatorService = Depends(get_estimator_service),
-) -> EstimateBatchResponse:
-    records = await service.create_estimates(
+) -> schemas.EstimateBatchResponse:
+    estimates = await service.create_estimates(
         [item.to_features() for item in payload.properties],
     )
-    return EstimateBatchResponse.from_records(records)
+    return schemas.EstimateBatchResponse.from_estimates(estimates)
 
 
 @router.get(
     "/estimates",
-    response_model=EstimatePageResponse,
+    response_model=schemas.EstimatePageResponse,
     responses={
         200: RESPONSE_WITH_REQUEST_ID,
         422: ERROR_RESPONSE_WITH_REQUEST_ID,
@@ -103,27 +96,27 @@ async def list_estimates(
     limit: Annotated[int, Query(ge=1, le=MAX_PAGE_LIMIT)] = DEFAULT_PAGE_LIMIT,
     offset: Annotated[int, Query(ge=0)] = DEFAULT_PAGE_OFFSET,
     service: EstimatorService = Depends(get_estimator_service),
-) -> EstimatePageResponse:
+) -> schemas.EstimatePageResponse:
     page = await service.list_estimates(limit=limit, offset=offset)
-    return EstimatePageResponse.from_page(page)
+    return schemas.EstimatePageResponse.from_page(page)
 
 
 @router.get(
     "/metadata",
-    response_model=PropertyMetadataResponse,
+    response_model=schemas.PropertyMetadataResponse,
     responses={
         200: RESPONSE_WITH_REQUEST_ID,
         422: ERROR_RESPONSE_WITH_REQUEST_ID,
         503: ERROR_RESPONSE_WITH_REQUEST_ID,
     },
 )
-async def estimate_metadata() -> PropertyMetadataResponse:
-    return PropertyMetadataResponse.from_metadata(PROPERTY_METADATA)
+async def estimate_metadata() -> schemas.PropertyMetadataResponse:
+    return schemas.PropertyMetadataResponse.from_metadata(PROPERTY_METADATA)
 
 
 @router.get(
     "/health",
-    response_model=HealthResponse,
+    response_model=schemas.HealthResponse,
     responses={
         200: RESPONSE_WITH_REQUEST_ID,
         422: ERROR_RESPONSE_WITH_REQUEST_ID,
@@ -132,6 +125,6 @@ async def estimate_metadata() -> PropertyMetadataResponse:
 )
 async def health(
     database: Database = Depends(get_database),
-) -> HealthResponse:
+) -> schemas.HealthResponse:
     await database.health()
-    return HealthResponse(status="ok")
+    return schemas.HealthResponse(status="ok")

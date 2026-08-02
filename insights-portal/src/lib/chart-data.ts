@@ -1,4 +1,4 @@
-import type { MarketAnalysis } from "@/api/types";
+import type { MarketAnalysisResponse } from "@/api/types";
 import { formatNumber } from "@/lib/format";
 
 export interface ChartDatum {
@@ -52,24 +52,24 @@ function formatDecade(startYear: number) {
   return `${startYear}s`;
 }
 
-export function marketChartSeries(analysis: MarketAnalysis) {
+export function marketChartSeries(analysis: MarketAnalysisResponse) {
   return {
-    priceDistribution: analysis.visualisations.price_distribution.map((item) => ({
+    priceDistribution: analysis.chart_data.price_distribution.map((item) => ({
       label: formatRange(item.lower_bound, item.upper_bound_exclusive),
       value: item.count,
       count: item.count,
     })),
-    bedrooms: analysis.visualisations.average_price_by_bedrooms.map((item) => ({
+    bedrooms: analysis.chart_data.average_price_by_bedrooms.map((item) => ({
       label: `${item.bedrooms} bed`,
       value: Number(item.average_price),
       count: item.count,
     })),
-    decades: analysis.visualisations.average_price_by_year_built_decade.map((item) => ({
+    decades: analysis.chart_data.average_price_by_year_built_decade.map((item) => ({
       label: formatDecade(item.start_year),
       value: Number(item.average_price),
       count: item.count,
     })),
-    squareFootage: analysis.visualisations.average_price_by_square_footage_band.map((item) => ({
+    squareFootage: analysis.chart_data.average_price_by_square_footage_band.map((item) => ({
       label: formatRange(item.lower_bound, item.upper_bound_exclusive),
       value: Number(item.average_price),
       count: item.count,

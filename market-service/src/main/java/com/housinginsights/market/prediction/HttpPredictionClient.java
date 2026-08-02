@@ -27,7 +27,7 @@ public class HttpPredictionClient implements PredictionClient {
                 HttpMethod.POST,
                 "/api/predict",
                 new PredictionRequest(
-                        properties.stream().map(PredictionInstance::from).toList()),
+                        properties.stream().map(PropertyFeaturesInput::from).toList()),
                 PredictionResponse.class);
 
         if (response.getStatusCode() != HttpStatus.OK) {
@@ -75,13 +75,13 @@ public class HttpPredictionClient implements PredictionClient {
         }
     }
 
-    private record PredictionRequest(List<PredictionInstance> instances) {
+    private record PredictionRequest(List<PropertyFeaturesInput> properties) {
         private PredictionRequest {
-            instances = List.copyOf(instances);
+            properties = List.copyOf(properties);
         }
     }
 
-    private record PredictionInstance(
+    private record PropertyFeaturesInput(
             double squareFootage,
             int bedrooms,
             double bathrooms,
@@ -89,8 +89,8 @@ public class HttpPredictionClient implements PredictionClient {
             double lotSize,
             double distanceToCityCenter,
             double schoolRating) {
-        private static PredictionInstance from(PropertyFeatures features) {
-            return new PredictionInstance(
+        private static PropertyFeaturesInput from(PropertyFeatures features) {
+            return new PropertyFeaturesInput(
                     features.squareFootage(),
                     features.bedrooms(),
                     features.bathrooms(),

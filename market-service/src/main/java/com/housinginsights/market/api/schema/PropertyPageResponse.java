@@ -1,18 +1,18 @@
 package com.housinginsights.market.api.schema;
 
+import com.housinginsights.market.domain.Property;
 import com.housinginsights.market.domain.PropertyPage;
-import com.housinginsights.market.domain.PropertyRecord;
 import java.util.List;
 
 public record PropertyPageResponse(
-        List<PropertyResponse> records, long total, int limit, int offset, String sortBy, String sortDirection) {
+        List<PropertyDto> properties, long total, int limit, int offset, String sortBy, String sortDirection) {
     public PropertyPageResponse {
-        records = List.copyOf(records);
+        properties = List.copyOf(properties);
     }
 
     public static PropertyPageResponse from(PropertyPage page) {
         return new PropertyPageResponse(
-                page.records().stream().map(PropertyResponse::from).toList(),
+                page.properties().stream().map(PropertyDto::from).toList(),
                 page.total(),
                 page.limit(),
                 page.offset(),
@@ -20,7 +20,7 @@ public record PropertyPageResponse(
                 page.sortDirection().value());
     }
 
-    public record PropertyResponse(
+    public record PropertyDto(
             long id,
             double squareFootage,
             int bedrooms,
@@ -30,8 +30,8 @@ public record PropertyPageResponse(
             double distanceToCityCenter,
             double schoolRating,
             long price) {
-        private static PropertyResponse from(PropertyRecord property) {
-            return new PropertyResponse(
+        private static PropertyDto from(Property property) {
+            return new PropertyDto(
                     property.id(),
                     property.squareFootage(),
                     property.bedrooms(),

@@ -8,19 +8,19 @@ import { useForm } from "react-hook-form";
 import { ErrorNotice } from "@/components/error-notice";
 import { EstimateChart } from "@/components/estimate-chart";
 import { PropertyFields } from "@/components/property-fields";
-import type { PropertyInput, PropertyMetadata } from "@/api/types";
+import type { PropertyFeaturesInput, PropertyMetadataResponse } from "@/api/types";
 import { createPropertySchema, exampleProperty, fieldErrorMessages } from "@/lib/fields";
 import { formatDate, formatPrice } from "@/lib/format";
 import { createEstimates, toApiError } from "@/api/browser";
 
-export function EstimatorForm({ initialMetadata }: { initialMetadata: PropertyMetadata }) {
+export function EstimatorForm({ initialMetadata }: { initialMetadata: PropertyMetadataResponse }) {
   const metadata = initialMetadata;
-  const form = useForm<PropertyInput>({
+  const form = useForm<PropertyFeaturesInput>({
     resolver: zodResolver(createPropertySchema(metadata)),
     defaultValues: exampleProperty(metadata),
   });
   const estimate = useMutation({
-    mutationFn: (property: PropertyInput) => createEstimates([property]),
+    mutationFn: (property: PropertyFeaturesInput) => createEstimates([property]),
   });
 
   const result = estimate.data?.estimates[0];

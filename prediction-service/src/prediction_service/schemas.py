@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from housing_common.property_metadata import PropertyFeatureMetadata
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field
+from housing_common import property_metadata
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
 
-from prediction_service.constants import MAX_PREDICTION_INSTANCES, MAX_SIGNED_INT64
+from prediction_service import domain
+from prediction_service.constants import MAX_PREDICTION_PROPERTIES, MAX_SIGNED_INT64
 from prediction_service.errors import ErrorCode
-from prediction_service.models import HousingFeatures
 from prediction_service.property_metadata import PROPERTY_METADATA
 
 
@@ -25,7 +25,7 @@ PositiveInt64Price = Annotated[
 
 
 def _feature_field(
-    metadata: PropertyFeatureMetadata,
+    metadata: property_metadata.FeatureMetadata,
     example: int | float,
 ):
     return Field(
@@ -36,7 +36,7 @@ def _feature_field(
     )
 
 
-class HousingFields(BaseModel):
+class PropertyFeatureFields(BaseModel):
     """Shared feature shape; concrete input models choose their own parsing policy."""
 
     square_footage: float = _feature_field(PROPERTY_METADATA.features.square_footage, 1850)
@@ -47,34 +47,34 @@ class HousingFields(BaseModel):
     distance_to_city_center: float = _feature_field(PROPERTY_METADATA.features.distance_to_city_center, 5.6)
     school_rating: float = _feature_field(PROPERTY_METADATA.features.school_rating, 8.2)
 
-    def to_features(self) -> HousingFeatures:
-        return HousingFeatures(**self.model_dump())
+    def to_features(self) -> domain.PropertyFeatures:
+        return domain.PropertyFeatures(**self.model_dump())
 
 
-class PredictionInstance(HousingFields):
+class PropertyFeaturesInput(PropertyFeatureFields):
     model_config = ConfigDict(extra="forbid", strict=True)
 
 
-class TrainingRow(HousingFields):
+class TrainingRow(PropertyFeatureFields):
     model_config = ConfigDict(extra="ignore")
 
     price: PositiveInt64Price
 
-    def to_features(self) -> HousingFeatures:
+    def to_features(self) -> domain.PropertyFeatures:
         values = self.model_dump(exclude={"price"})
-        return HousingFeatures(**values)
+        return domain.PropertyFeatures(**values)
 
 
 class PredictionRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    instances: list[PredictionInstance] = Field(
+    properties: list[PropertyFeaturesInput] = Field(
         min_length=1,
-        max_length=MAX_PREDICTION_INSTANCES,
+        max_length=MAX_PREDICTION_PROPERTIES,
     )
 
 
-class ResponseModel(BaseModel):
+class ApiOutputModel(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
         allow_inf_nan=False,
@@ -82,39 +82,41 @@ class ResponseModel(BaseModel):
     )
 
 
-class PredictionResponse(ResponseModel):
+class PredictionResponse(ApiOutputModel):
     predictions: list[PositiveInt64Price]
 
 
-class ErrorResponse(ResponseModel):
+class ErrorResponse(ApiOutputModel):
     error_code: ErrorCode
     message: str
 
 
-class MetricSummaryResponse(ResponseModel):
+class MetricSummary(ApiOutputModel):
     mean: float
     std: float = Field(ge=0)
 
 
-class ErrorMetricSummaryResponse(MetricSummaryResponse):
-    mean: float = Field(ge=0)
+class RegressionMetrics(ApiOutputModel):
+    r2: MetricSummary
+    rmse: MetricSummary
+    mae: MetricSummary
+
+    @model_validator(mode="after")
+    def validate_error_metric_means(self) -> RegressionMetrics:
+        if self.rmse.mean < 0 or self.mae.mean < 0:
+            raise ValueError("error metric means must be non-negative")
+        return self
 
 
-class RegressionMetricsResponse(ResponseModel):
-    r2: MetricSummaryResponse
-    rmse: ErrorMetricSummaryResponse
-    mae: ErrorMetricSummaryResponse
-
-
-class CrossValidationResponse(ResponseModel):
+class CrossValidationResult(ApiOutputModel):
     folds: int = Field(ge=2)
     shuffle: bool
     random_state: int
-    metrics: RegressionMetricsResponse
+    metrics: RegressionMetrics
 
 
-class ModelInfoResponse(ResponseModel):
-    training_timestamp: str
+class ModelInfoResponse(ApiOutputModel):
+    trained_at: str
     algorithm: str
     target_transform: Literal["log"] = Field(
         description=("The target is natural-log price; the intercept and coefficients operate in that space.")
@@ -122,8 +124,8 @@ class ModelInfoResponse(ResponseModel):
     features: list[str]
     intercept: float
     coefficients: dict[str, float]
-    cross_validation: CrossValidationResponse
+    cross_validation: CrossValidationResult
 
 
-class HealthResponse(ResponseModel):
+class HealthResponse(ApiOutputModel):
     status: Literal["ok"]

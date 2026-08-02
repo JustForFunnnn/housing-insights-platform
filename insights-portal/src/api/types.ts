@@ -14,7 +14,7 @@ export const FEATURE_KEYS = [
 export const featureKeySchema = z.enum(FEATURE_KEYS);
 export type FeatureKey = z.infer<typeof featureKeySchema>;
 
-export const propertyInputSchema = z.object({
+export const propertyFeaturesInputSchema = z.object({
   square_footage: z.number(),
   bedrooms: z.number(),
   bathrooms: z.number(),
@@ -23,20 +23,21 @@ export const propertyInputSchema = z.object({
   distance_to_city_center: z.number(),
   school_rating: z.number(),
 });
-export type PropertyInput = z.infer<typeof propertyInputSchema>;
+export type PropertyFeaturesInput = z.infer<typeof propertyFeaturesInputSchema>;
 
 export const featureMetadataSchema = z.object({
   min: z.number(),
   max: z.number(),
   unit: z.string().nullable(),
 });
-export type FeatureMetadata = z.infer<typeof featureMetadataSchema>;
 
-export const propertyMetadataSchema = z.object({
-  features: z.record(featureKeySchema, featureMetadataSchema),
+export const propertyFeaturesMetadataSchema = z.record(featureKeySchema, featureMetadataSchema);
+
+export const propertyMetadataResponseSchema = z.object({
+  features: propertyFeaturesMetadataSchema,
   price_currency: z.string(),
 });
-export type PropertyMetadata = z.infer<typeof propertyMetadataSchema>;
+export type PropertyMetadataResponse = z.infer<typeof propertyMetadataResponseSchema>;
 
 export const errorResponseSchema = z.object({
   error_code: z.string(),
@@ -44,32 +45,30 @@ export const errorResponseSchema = z.object({
 });
 export type ErrorResponse = z.infer<typeof errorResponseSchema>;
 
-export const estimateRecordSchema = z.object({
-  property: propertyInputSchema,
+export const estimateSchema = z.object({
+  property_features: propertyFeaturesInputSchema,
   estimated_price: z.number(),
   created_at: z.string(),
 });
-export type EstimateRecord = z.infer<typeof estimateRecordSchema>;
 
-export const estimateBatchSchema = z.object({
-  estimates: z.array(estimateRecordSchema),
+export const estimateBatchResponseSchema = z.object({
+  estimates: z.array(estimateSchema),
 });
-export type EstimateBatch = z.infer<typeof estimateBatchSchema>;
+export type EstimateBatchResponse = z.infer<typeof estimateBatchResponseSchema>;
 
-export const estimatePageSchema = estimateBatchSchema.extend({
+export const estimatePageResponseSchema = estimateBatchResponseSchema.extend({
   total: z.number(),
   limit: z.number(),
   offset: z.number(),
 });
-export type EstimatePage = z.infer<typeof estimatePageSchema>;
+export type EstimatePageResponse = z.infer<typeof estimatePageResponseSchema>;
 
 export const numberRangeSchema = z.object({
   minimum: z.number(),
   maximum: z.number(),
 });
-export type NumberRange = z.infer<typeof numberRangeSchema>;
 
-export const filterOptionsSchema = z.object({
+export const availableFiltersSchema = z.object({
   square_footage: numberRangeSchema,
   bedrooms: z.array(z.number()),
   bathrooms: z.array(z.number()),
@@ -79,12 +78,11 @@ export const filterOptionsSchema = z.object({
   school_rating: numberRangeSchema,
   price: numberRangeSchema,
 });
-export type FilterOptions = z.infer<typeof filterOptionsSchema>;
 
-export const marketMetadataSchema = propertyMetadataSchema.extend({
-  filter_options: filterOptionsSchema,
+export const marketMetadataResponseSchema = propertyMetadataResponseSchema.extend({
+  available_filters: availableFiltersSchema,
 });
-export type MarketMetadata = z.infer<typeof marketMetadataSchema>;
+export type MarketMetadataResponse = z.infer<typeof marketMetadataResponseSchema>;
 
 export const priceSummarySchema = z.object({
   minimum: z.number().nullable(),
@@ -92,57 +90,48 @@ export const priceSummarySchema = z.object({
   average: z.number().nullable(),
   median: z.number().nullable(),
 });
-export type PriceSummary = z.infer<typeof priceSummarySchema>;
 
 export const priceDistributionBucketSchema = z.object({
   lower_bound: z.number(),
   upper_bound_exclusive: z.number().nullable(),
   count: z.number(),
 });
-export type PriceDistributionBucket = z.infer<typeof priceDistributionBucketSchema>;
 
-export const averagePriceGroupSchema = z.object({
-  bedrooms: z.number().optional(),
-  start_year: z.number().optional(),
-  end_year: z.number().optional(),
-  lower_bound: z.number().optional(),
-  upper_bound_exclusive: z.number().optional(),
+const averagePriceGroupBaseSchema = z.object({
   average_price: z.number(),
   count: z.number(),
 });
-export type AveragePriceGroup = z.infer<typeof averagePriceGroupSchema>;
 
-const averagePriceByBedroomsSchema = averagePriceGroupSchema.extend({
+const bedroomPriceGroupSchema = averagePriceGroupBaseSchema.extend({
   bedrooms: z.number(),
 });
 
-const averagePriceByYearBuiltDecadeSchema = averagePriceGroupSchema.extend({
+const yearBuiltDecadePriceGroupSchema = averagePriceGroupBaseSchema.extend({
   start_year: z.number(),
   end_year: z.number(),
 });
 
-const averagePriceBySquareFootageBandSchema = averagePriceGroupSchema.extend({
+const squareFootagePriceGroupSchema = averagePriceGroupBaseSchema.extend({
   lower_bound: z.number(),
   upper_bound_exclusive: z.number(),
 });
 
-export const marketAnalysisSchema = z.object({
+export const marketAnalysisResponseSchema = z.object({
   count: z.number(),
   price_summary: priceSummarySchema,
-  visualisations: z.object({
+  chart_data: z.object({
     price_distribution: z.array(priceDistributionBucketSchema),
-    average_price_by_bedrooms: z.array(averagePriceByBedroomsSchema),
-    average_price_by_year_built_decade: z.array(averagePriceByYearBuiltDecadeSchema),
-    average_price_by_square_footage_band: z.array(averagePriceBySquareFootageBandSchema),
+    average_price_by_bedrooms: z.array(bedroomPriceGroupSchema),
+    average_price_by_year_built_decade: z.array(yearBuiltDecadePriceGroupSchema),
+    average_price_by_square_footage_band: z.array(squareFootagePriceGroupSchema),
   }),
 });
-export type MarketAnalysis = z.infer<typeof marketAnalysisSchema>;
+export type MarketAnalysisResponse = z.infer<typeof marketAnalysisResponseSchema>;
 
-export const propertyRecordSchema = propertyInputSchema.extend({
+export const propertySchema = propertyFeaturesInputSchema.extend({
   id: z.number(),
   price: z.number(),
 });
-export type PropertyRecord = z.infer<typeof propertyRecordSchema>;
 
 export const sortFieldSchema = z.enum(["id", ...FEATURE_KEYS, "price"]);
 export type SortField = z.infer<typeof sortFieldSchema>;
@@ -150,19 +139,19 @@ export type SortField = z.infer<typeof sortFieldSchema>;
 export const sortDirectionSchema = z.enum(["asc", "desc"]);
 export type SortDirection = z.infer<typeof sortDirectionSchema>;
 
-export const propertyPageSchema = z.object({
-  records: z.array(propertyRecordSchema),
+export const propertyPageResponseSchema = z.object({
+  properties: z.array(propertySchema),
   total: z.number(),
   limit: z.number(),
   offset: z.number(),
   sort_by: sortFieldSchema,
   sort_direction: sortDirectionSchema,
 });
-export type PropertyPage = z.infer<typeof propertyPageSchema>;
+export type PropertyPageResponse = z.infer<typeof propertyPageResponseSchema>;
 
 export const whatIfRequestSchema = z.object({
-  baseline: propertyInputSchema,
-  scenarios: z.array(propertyInputSchema.partial()),
+  baseline: propertyFeaturesInputSchema,
+  scenarios: z.array(propertyFeaturesInputSchema.partial()),
 });
 export type WhatIfRequest = z.infer<typeof whatIfRequestSchema>;
 

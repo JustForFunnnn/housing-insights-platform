@@ -3,18 +3,18 @@ from dataclasses import fields
 import pytest
 from pydantic import ValidationError
 
+from prediction_service import domain
 from prediction_service.constants import (
     FEATURE_NAMES,
-    MAX_PREDICTION_INSTANCES,
+    MAX_PREDICTION_PROPERTIES,
 )
-from prediction_service.models import HousingFeatures
 from prediction_service.property_metadata import PROPERTY_METADATA
 from prediction_service.schemas import (
     PredictionRequest,
     TrainingRow,
 )
 
-VALID_INSTANCE = {
+VALID_PROPERTY = {
     "square_footage": 1850,
     "bedrooms": 3,
     "bathrooms": 2,
@@ -26,11 +26,11 @@ VALID_INSTANCE = {
 
 
 def test_request_maps_to_semantic_domain_features() -> None:
-    request = PredictionRequest.model_validate({"instances": [VALID_INSTANCE]})
-    features = request.instances[0].to_features()
+    request = PredictionRequest.model_validate({"properties": [VALID_PROPERTY]})
+    features = request.properties[0].to_features()
 
-    assert FEATURE_NAMES == tuple(field.name for field in fields(HousingFeatures))
-    assert features == HousingFeatures(
+    assert FEATURE_NAMES == tuple(field.name for field in fields(domain.PropertyFeatures))
+    assert features == domain.PropertyFeatures(
         square_footage=1850,
         bedrooms=3,
         bathrooms=2,
@@ -46,19 +46,19 @@ def test_request_maps_to_semantic_domain_features() -> None:
     "payload",
     [
         {},
-        {"instances": []},
-        {"instances": [VALID_INSTANCE] * (MAX_PREDICTION_INSTANCES + 1)},
-        {"instances": VALID_INSTANCE},
-        {"instances": [{**VALID_INSTANCE, "unknown": "value"}]},
-        {"instances": [{**VALID_INSTANCE, "square_footage": "1850"}]},
-        {"instances": [{**VALID_INSTANCE, "square_footage": True}]},
+        {"properties": []},
+        {"properties": [VALID_PROPERTY] * (MAX_PREDICTION_PROPERTIES + 1)},
+        {"properties": VALID_PROPERTY},
+        {"properties": [{**VALID_PROPERTY, "unknown": "value"}]},
+        {"properties": [{**VALID_PROPERTY, "square_footage": "1850"}]},
+        {"properties": [{**VALID_PROPERTY, "square_footage": True}]},
     ],
     ids=[
-        "missing-instances",
-        "empty-instances",
-        "too-many-instances",
-        "non-list-instances",
-        "unknown-instance-field",
+        "missing-properties",
+        "empty-properties",
+        "too-many-properties",
+        "non-list-properties",
+        "unknown-property-field",
         "string-feature",
         "boolean-feature",
     ],
@@ -69,7 +69,7 @@ def test_invalid_requests_are_rejected(payload: dict[str, object]) -> None:
 
 
 def test_configured_feature_bounds_are_enforced() -> None:
-    PredictionRequest.model_validate({"instances": [VALID_INSTANCE]})
+    PredictionRequest.model_validate({"properties": [VALID_PROPERTY]})
     tested_bound = False
 
     for field_name in FEATURE_NAMES:
@@ -77,19 +77,19 @@ def test_configured_feature_bounds_are_enforced() -> None:
         if metadata.min is not None:
             tested_bound = True
             invalid = {
-                **VALID_INSTANCE,
+                **VALID_PROPERTY,
                 field_name: metadata.min - 1,
             }
             with pytest.raises(ValidationError):
-                PredictionRequest.model_validate({"instances": [invalid]})
+                PredictionRequest.model_validate({"properties": [invalid]})
         if metadata.max is not None:
             tested_bound = True
             invalid = {
-                **VALID_INSTANCE,
+                **VALID_PROPERTY,
                 field_name: metadata.max + 1,
             }
             with pytest.raises(ValidationError):
-                PredictionRequest.model_validate({"instances": [invalid]})
+                PredictionRequest.model_validate({"properties": [invalid]})
 
     if not tested_bound:
         pytest.skip("no feature bounds are configured")
@@ -98,7 +98,7 @@ def test_configured_feature_bounds_are_enforced() -> None:
 def test_training_schema_has_independent_coercion_and_extra_policy() -> None:
     row = TrainingRow.model_validate(
         {
-            **{name: str(value) for name, value in VALID_INSTANCE.items()},
+            **{name: str(value) for name, value in VALID_PROPERTY.items()},
             "price": "265000",
             "id": "csv-metadata",
             "unrelated": "ignored",
@@ -109,4 +109,4 @@ def test_training_schema_has_independent_coercion_and_extra_policy() -> None:
     assert row.price == 265000
 
     with pytest.raises(ValidationError):
-        TrainingRow.model_validate({**VALID_INSTANCE, "price": 265000.5})
+        TrainingRow.model_validate({**VALID_PROPERTY, "price": 265000.5})

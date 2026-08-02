@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from pathlib import Path
 
 import pytest
@@ -12,6 +13,16 @@ from prediction_service.constants import FEATURE_NAMES
 from prediction_service.errors import ArtifactError
 
 
+def raw_artifact(artifact) -> dict[str, object]:
+    return {
+        "model": artifact.model,
+        "trained_at": artifact.trained_at,
+        "algorithm": artifact.algorithm,
+        "features": list(artifact.features),
+        "cross_validation": asdict(artifact.cross_validation),
+    }
+
+
 def test_valid_artifact_round_trips(tmp_path: Path, artifact_factory) -> None:
     path = tmp_path / "nested" / "model.joblib"
 
@@ -19,7 +30,7 @@ def test_valid_artifact_round_trips(tmp_path: Path, artifact_factory) -> None:
     loaded = load_artifact(path)
 
     assert path.is_file()
-    assert loaded["features"] == list(FEATURE_NAMES)
+    assert loaded.features == FEATURE_NAMES
 
 
 @pytest.mark.parametrize(
@@ -38,7 +49,7 @@ def test_valid_artifact_round_trips(tmp_path: Path, artifact_factory) -> None:
     ],
 )
 def test_incompatible_artifact_is_rejected(artifact_factory, mutation) -> None:
-    artifact = artifact_factory()
+    artifact = raw_artifact(artifact_factory())
     mutation(artifact)
 
     with pytest.raises(ArtifactError):
@@ -48,7 +59,7 @@ def test_incompatible_artifact_is_rejected(artifact_factory, mutation) -> None:
 def test_unwrapped_linear_regression_artifact_is_rejected(
     artifact_factory,
 ) -> None:
-    artifact = artifact_factory()
+    artifact = raw_artifact(artifact_factory())
     artifact["model"] = LinearRegression()
 
     with pytest.raises(

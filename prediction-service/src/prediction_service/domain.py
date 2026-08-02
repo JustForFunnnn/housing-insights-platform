@@ -7,7 +7,7 @@ from prediction_service.constants import FEATURE_NAMES
 
 
 @dataclass(frozen=True, slots=True)
-class HousingFeatures:
+class PropertyFeatures:
     square_footage: float
     bedrooms: int
     bathrooms: float
@@ -44,7 +44,7 @@ class RegressionMetrics:
 
 
 @dataclass(frozen=True, slots=True)
-class CrossValidationInfo:
+class CrossValidationResult:
     folds: int
     shuffle: bool
     random_state: int
@@ -53,10 +53,10 @@ class CrossValidationInfo:
 
 @dataclass(frozen=True, slots=True)
 class ModelInfo:
-    training_timestamp: str
+    trained_at: str
     algorithm: str
     target_transform: str
     features: tuple[str, ...]
     intercept: float
     coefficients: dict[str, float]
-    cross_validation: CrossValidationInfo
+    cross_validation: CrossValidationResult

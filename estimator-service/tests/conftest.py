@@ -6,10 +6,10 @@ from unittest.mock import AsyncMock
 import pytest
 from housing_common.observability import current_request_id
 
+from estimator_service import domain
 from estimator_service.app import create_app
 from estimator_service.data_access import Database, EstimateStore
 from estimator_service.errors import StorageError
-from estimator_service.models import EstimateRecord, PropertyFeatures
 
 VALID_PROPERTY = {
     "square_footage": 1850,
@@ -25,11 +25,11 @@ VALID_PROPERTY = {
 class StubPredictionClient:
     def __init__(self, error: Exception | None = None) -> None:
         self.error = error
-        self.calls: list[tuple[list[PropertyFeatures], str]] = []
+        self.calls: list[tuple[list[domain.PropertyFeatures], str]] = []
 
     async def predict(
         self,
-        properties: Sequence[PropertyFeatures],
+        properties: Sequence[domain.PropertyFeatures],
     ) -> list[int]:
         captured = list(properties)
         self.calls.append((captured, current_request_id()))
@@ -45,27 +45,27 @@ class InMemoryEstimateStore:
         fail_on_square_footage: float | None = None,
     ) -> None:
         self.fail_on_square_footage = fail_on_square_footage
-        self.records: list[EstimateRecord] = []
+        self.estimates: list[domain.Estimate] = []
 
-    async def insert_many(self, records: Sequence[EstimateRecord]) -> None:
+    async def insert_many(self, estimates: Sequence[domain.Estimate]) -> None:
         if self.fail_on_square_footage is not None and any(
-            record.property.square_footage == self.fail_on_square_footage for record in records
+            estimate.property_features.square_footage == self.fail_on_square_footage for estimate in estimates
         ):
             raise StorageError("could not persist estimate batch")
-        self.records.extend(records)
+        self.estimates.extend(estimates)
 
     async def list_page(
         self,
         limit: int,
         offset: int,
-    ) -> tuple[tuple[EstimateRecord, ...], int]:
-        records = sorted(
-            enumerate(self.records, start=1),
+    ) -> tuple[tuple[domain.Estimate, ...], int]:
+        estimates = sorted(
+            enumerate(self.estimates, start=1),
             key=lambda item: (item[1].created_at, item[0]),
             reverse=True,
         )
-        page = tuple(record for _id, record in records[offset : offset + limit])
-        return page, len(records)
+        page = tuple(estimate for _id, estimate in estimates[offset : offset + limit])
+        return page, len(estimates)
 
 
 @pytest.fixture

@@ -7,9 +7,9 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public record WhatIfRequest(
-        @NotNull @Valid PropertyFeaturesRequest baseline,
+        @NotNull @Valid PropertyFeaturesInput baseline,
 
-        @NotEmpty @Size(max = WhatIfRequest.MAX_SCENARIOS) List<@NotNull @Valid ScenarioChangesRequest> scenarios) {
+        @NotEmpty @Size(max = WhatIfRequest.MAX_SCENARIOS) List<@NotNull @Valid ScenarioChanges> scenarios) {
     public static final int MAX_SCENARIOS = 19;
 
     public WhatIfRequest {

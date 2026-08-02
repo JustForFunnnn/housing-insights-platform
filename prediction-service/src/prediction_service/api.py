@@ -2,15 +2,9 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, Request
 
+from prediction_service import schemas
 from prediction_service.constants import REQUEST_ID_HEADER
 from prediction_service.prediction import PredictionService
-from prediction_service.schemas import (
-    ErrorResponse,
-    HealthResponse,
-    ModelInfoResponse,
-    PredictionRequest,
-    PredictionResponse,
-)
 
 RESPONSE_WITH_REQUEST_ID = {
     "headers": {
@@ -21,7 +15,7 @@ RESPONSE_WITH_REQUEST_ID = {
     }
 }
 ERROR_RESPONSE_WITH_REQUEST_ID = {
-    "model": ErrorResponse,
+    "model": schemas.ErrorResponse,
     **RESPONSE_WITH_REQUEST_ID,
 }
 
@@ -59,23 +53,23 @@ def get_prediction_service(request: Request) -> PredictionService:
 
 @router.post(
     "/predict",
-    response_model=PredictionResponse,
+    response_model=schemas.PredictionResponse,
     responses={
         200: RESPONSE_WITH_REQUEST_ID,
         422: ERROR_RESPONSE_WITH_REQUEST_ID,
     },
 )
 def predict_prices(
-    payload: PredictionRequest,
+    payload: schemas.PredictionRequest,
     service: PredictionService = Depends(get_prediction_service),
-) -> PredictionResponse:
-    predictions = service.predict([instance.to_features() for instance in payload.instances])
-    return PredictionResponse(predictions=predictions)
+) -> schemas.PredictionResponse:
+    predictions = service.predict([property_input.to_features() for property_input in payload.properties])
+    return schemas.PredictionResponse(predictions=predictions)
 
 
 @router.get(
     "/model-info",
-    response_model=ModelInfoResponse,
+    response_model=schemas.ModelInfoResponse,
     responses={
         200: RESPONSE_WITH_REQUEST_ID,
         422: ERROR_RESPONSE_WITH_REQUEST_ID,
@@ -83,17 +77,17 @@ def predict_prices(
 )
 def model_information(
     service: PredictionService = Depends(get_prediction_service),
-) -> ModelInfoResponse:
-    return ModelInfoResponse.model_validate(service.model_info())
+) -> schemas.ModelInfoResponse:
+    return schemas.ModelInfoResponse.model_validate(service.model_info())
 
 
 @router.get(
     "/health",
-    response_model=HealthResponse,
+    response_model=schemas.HealthResponse,
     responses={
         200: RESPONSE_WITH_REQUEST_ID,
         422: ERROR_RESPONSE_WITH_REQUEST_ID,
     },
 )
-def health() -> HealthResponse:
-    return HealthResponse(status="ok")
+def health() -> schemas.HealthResponse:
+    return schemas.HealthResponse(status="ok")

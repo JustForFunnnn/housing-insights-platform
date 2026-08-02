@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import type { UseFormRegisterReturn } from "react-hook-form";
 
 import { FIELD_DEFINITIONS, fieldStep, fieldUnit } from "@/lib/fields";
-import { FEATURE_KEYS, type FeatureKey, type PropertyMetadata } from "@/api/types";
+import { FEATURE_KEYS, type FeatureKey, type PropertyMetadataResponse } from "@/api/types";
 
 export function FeatureNumberInput({
   feature,
@@ -16,7 +16,7 @@ export function FeatureNumberInput({
   labelClassName,
 }: {
   feature: FeatureKey;
-  metadata: PropertyMetadata;
+  metadata: PropertyMetadataResponse;
   registration: UseFormRegisterReturn;
   error?: string;
   label?: ReactNode;
@@ -67,7 +67,7 @@ export function PropertyFields({
   registerField,
   errors = {},
 }: {
-  metadata: PropertyMetadata;
+  metadata: PropertyMetadataResponse;
   registerField: (key: FeatureKey) => UseFormRegisterReturn;
   errors?: Partial<Record<FeatureKey, string>>;
 }) {

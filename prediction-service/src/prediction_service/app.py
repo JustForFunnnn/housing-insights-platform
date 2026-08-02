@@ -16,12 +16,12 @@ from housing_common.observability import (
 )
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from prediction_service import schemas
 from prediction_service.api import router
 from prediction_service.artifact import load_artifact
 from prediction_service.constants import REQUEST_ID_HEADER
 from prediction_service.errors import ArtifactError, ErrorCode
 from prediction_service.prediction import PredictionService, SklearnPredictionService
-from prediction_service.schemas import ErrorResponse
 from prediction_service.settings import Settings
 
 logger = logging.getLogger(__name__)
@@ -83,7 +83,7 @@ def _error_response(
     headers: Mapping[str, str] | None = None,
 ) -> JSONResponse:
     response_headers = dict(headers or {})
-    body = ErrorResponse(error_code=error_code, message=message)
+    body = schemas.ErrorResponse(error_code=error_code, message=message)
     return JSONResponse(
         status_code=status_code,
         content=body.model_dump(),

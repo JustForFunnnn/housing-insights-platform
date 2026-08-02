@@ -8,12 +8,12 @@ import pytest
 from sqlalchemy import delete
 from sqlalchemy.engine import make_url
 
+from estimator_service import domain
 from estimator_service.data_access import (
     PostgresDatabase,
     PostgresEstimateStore,
 )
 from estimator_service.errors import StorageError
-from estimator_service.models import EstimateRecord, PropertyFeatures
 from estimator_service.tables import EstimateRow
 
 TEST_DATABASE_ENV = "ESTIMATOR_TEST_DATABASE_URL"
@@ -23,9 +23,9 @@ def estimate(
     square_footage: float,
     estimated_price: int,
     created_at: datetime,
-) -> EstimateRecord:
-    return EstimateRecord(
-        property=PropertyFeatures(
+) -> domain.Estimate:
+    return domain.Estimate(
+        property_features=domain.PropertyFeatures(
             square_footage=square_footage,
             bedrooms=3,
             bathrooms=2,

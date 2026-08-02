@@ -1,8 +1,12 @@
-import type { MarketAnalysis, MarketMetadata } from "@/api/types";
+import type { MarketAnalysisResponse, MarketMetadataResponse } from "@/api/types";
 import { marketChartSeries } from "@/lib/chart-data";
 import { formatPrice } from "@/lib/format";
 
-export function buildMarketReportData(analysis: MarketAnalysis, metadata: MarketMetadata, filterSummary: string) {
+export function buildMarketReportData(
+  analysis: MarketAnalysisResponse,
+  metadata: MarketMetadataResponse,
+  filterSummary: string,
+) {
   const charts = marketChartSeries(analysis);
   return {
     segment: filterSummary || "Complete dataset",

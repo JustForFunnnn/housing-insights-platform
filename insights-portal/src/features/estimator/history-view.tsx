@@ -5,30 +5,36 @@ import { useState } from "react";
 
 import { ErrorNotice } from "@/components/error-notice";
 import { Pagination } from "@/components/pagination";
-import type { FeatureKey, EstimatePage, PropertyMetadata } from "@/api/types";
+import type { EstimatePageResponse, FeatureKey, PropertyMetadataResponse } from "@/api/types";
 import { formatDate, formatNumber, formatPrice } from "@/lib/format";
 import { fieldUnit, PROPERTY_TABLE_COLUMNS } from "@/lib/fields";
-import { getEstimateHistory, toApiError } from "@/api/browser";
+import { listEstimates, toApiError } from "@/api/browser";
 
 const PAGE_SIZE = 20;
 
 function propertyValue(
-  property: EstimatePage["estimates"][number]["property"],
+  propertyFeatures: EstimatePageResponse["estimates"][number]["property_features"],
   key: FeatureKey,
-  metadata: PropertyMetadata,
+  metadata: PropertyMetadataResponse,
 ) {
   if (key === "year_built") {
-    return String(property[key]);
+    return String(propertyFeatures[key]);
   }
   const unit = fieldUnit(metadata, key);
-  return `${formatNumber(property[key])}${unit ? ` ${unit}` : ""}`;
+  return `${formatNumber(propertyFeatures[key])}${unit ? ` ${unit}` : ""}`;
 }
 
-export function HistoryView({ metadata, initialPage }: { metadata: PropertyMetadata; initialPage: EstimatePage }) {
+export function HistoryView({
+  metadata,
+  initialPage,
+}: {
+  metadata: PropertyMetadataResponse;
+  initialPage: EstimatePageResponse;
+}) {
   const [offset, setOffset] = useState(initialPage.offset);
   const history = useQuery({
     queryKey: ["estimate-history", PAGE_SIZE, offset],
-    queryFn: ({ signal }) => getEstimateHistory(PAGE_SIZE, offset, signal),
+    queryFn: ({ signal }) => listEstimates(PAGE_SIZE, offset, signal),
     initialData: offset === initialPage.offset ? initialPage : undefined,
   });
 
@@ -62,15 +68,15 @@ export function HistoryView({ metadata, initialPage }: { metadata: PropertyMetad
               </tr>
             </thead>
             <tbody>
-              {page.estimates.map((record) => (
-                <tr key={`${record.created_at}-${record.estimated_price}`}>
-                  <td>{formatDate(record.created_at)}</td>
+              {page.estimates.map((estimate) => (
+                <tr key={`${estimate.created_at}-${estimate.estimated_price}`}>
+                  <td>{formatDate(estimate.created_at)}</td>
                   {PROPERTY_TABLE_COLUMNS.map((column) => (
                     <td key={column.key} className="mono">
-                      {propertyValue(record.property, column.key, metadata)}
+                      {propertyValue(estimate.property_features, column.key, metadata)}
                     </td>
                   ))}
-                  <td className="mono">{formatPrice(record.estimated_price, metadata.price_currency)}</td>
+                  <td className="mono">{formatPrice(estimate.estimated_price, metadata.price_currency)}</td>
                 </tr>
               ))}
             </tbody>

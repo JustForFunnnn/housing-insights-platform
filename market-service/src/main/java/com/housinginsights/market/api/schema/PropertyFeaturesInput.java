@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 
-public record PropertyFeaturesRequest(
+public record PropertyFeaturesInput(
         @NotNull @Schema(example = "1850") Double squareFootage,
         @NotNull @Schema(example = "3") Integer bedrooms,
         @NotNull @Schema(example = "2.5") Double bathrooms,

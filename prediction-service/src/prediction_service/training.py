@@ -14,11 +14,8 @@ from sklearn.compose import TransformedTargetRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, cross_validate
 
-from prediction_service.artifact import (
-    CrossValidationData,
-    ModelArtifact,
-    save_artifact,
-)
+from prediction_service import domain, schemas
+from prediction_service.artifact import ModelArtifact, save_artifact
 from prediction_service.constants import (
     ALGORITHM_NAME,
     CV_FOLDS,
@@ -28,12 +25,6 @@ from prediction_service.constants import (
     REQUIRED_COLUMNS,
 )
 from prediction_service.errors import ArtifactError, TrainingError
-from prediction_service.models import (
-    CrossValidationInfo,
-    MetricSummary,
-    RegressionMetrics,
-)
-from prediction_service.schemas import TrainingRow
 from prediction_service.settings import Settings
 
 logger = logging.getLogger(__name__)
@@ -70,7 +61,7 @@ def load_training_data(
                 if None in raw_row:
                     raise TrainingError(f"CSV row {reader.line_num} has more values than columns")
                 try:
-                    row = TrainingRow.model_validate(raw_row)
+                    row = schemas.TrainingRow.model_validate(raw_row)
                 except ValidationError as exc:
                     error = exc.errors()[0]
                     column = error["loc"][0]
@@ -92,7 +83,7 @@ def evaluate_model(
     features: np.ndarray,
     prices: np.ndarray,
     model: TransformedTargetRegressor | None = None,
-) -> CrossValidationInfo:
+) -> domain.CrossValidationResult:
     if model is None:
         model = _build_model()
     splitter = KFold(
@@ -114,7 +105,7 @@ def evaluate_model(
             scoring=scoring,
             error_score="raise",
         )
-        metrics = RegressionMetrics(
+        metrics = domain.RegressionMetrics(
             r2=_summarize_metric_scores(scores["test_r2"]),
             rmse=_summarize_metric_scores(-scores["test_rmse"]),
             mae=_summarize_metric_scores(-scores["test_mae"]),
@@ -122,7 +113,7 @@ def evaluate_model(
     except Exception as exc:
         raise TrainingError(f"model evaluation failed: {exc}") from exc
 
-    return CrossValidationInfo(
+    return domain.CrossValidationResult(
         folds=CV_FOLDS,
         shuffle=True,
         random_state=CV_RANDOM_STATE,
@@ -130,31 +121,9 @@ def evaluate_model(
     )
 
 
-def _summarize_metric_scores(values: np.ndarray) -> MetricSummary:
+def _summarize_metric_scores(values: np.ndarray) -> domain.MetricSummary:
     numbers = [float(value) for value in values]
-    return MetricSummary(mean=float(fmean(numbers)), std=float(pstdev(numbers)))
-
-
-def _cross_validation_data(info: CrossValidationInfo) -> CrossValidationData:
-    return {
-        "folds": info.folds,
-        "shuffle": info.shuffle,
-        "random_state": info.random_state,
-        "metrics": {
-            "r2": {
-                "mean": info.metrics.r2.mean,
-                "std": info.metrics.r2.std,
-            },
-            "rmse": {
-                "mean": info.metrics.rmse.mean,
-                "std": info.metrics.rmse.std,
-            },
-            "mae": {
-                "mean": info.metrics.mae.mean,
-                "std": info.metrics.mae.std,
-            },
-        },
-    }
+    return domain.MetricSummary(mean=float(fmean(numbers)), std=float(pstdev(numbers)))
 
 
 def train(
@@ -172,13 +141,13 @@ def train(
     except Exception as exc:
         raise TrainingError(f"final model fit failed: {exc}") from exc
 
-    artifact: ModelArtifact = {
-        "model": model,
-        "trained_at": datetime.now(UTC).isoformat(),
-        "algorithm": ALGORITHM_NAME,
-        "features": list(FEATURE_NAMES),
-        "cross_validation": _cross_validation_data(cross_validation),
-    }
+    artifact = ModelArtifact(
+        model=model,
+        trained_at=datetime.now(UTC).isoformat(),
+        algorithm=ALGORITHM_NAME,
+        features=FEATURE_NAMES,
+        cross_validation=cross_validation,
+    )
     try:
         save_artifact(artifact, artifact_path)
     except ArtifactError as exc:

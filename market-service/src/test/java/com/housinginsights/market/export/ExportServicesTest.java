@@ -1,6 +1,6 @@
 package com.housinginsights.market.export;
 
-import static com.housinginsights.market.TestProperties.RECORDS;
+import static com.housinginsights.market.TestProperties.PROPERTIES;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.StringReader;
@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 class ExportServicesTest {
     @Test
     void csvContainsAllProvidedRecordsInOrder() throws Exception {
-        byte[] bytes = new CsvExportService().export(List.of(RECORDS.get(3), RECORDS.get(1)));
+        byte[] bytes = new CsvExportService().export(List.of(PROPERTIES.get(3), PROPERTIES.get(1)));
 
         try (var parser = CSVFormat.DEFAULT
                 .builder()

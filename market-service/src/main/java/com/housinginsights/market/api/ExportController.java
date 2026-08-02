@@ -1,7 +1,7 @@
 package com.housinginsights.market.api;
 
-import com.housinginsights.market.api.schema.MarketFilterRequest;
-import com.housinginsights.market.api.schema.MarketSortRequest;
+import com.housinginsights.market.api.schema.MarketFilterQuery;
+import com.housinginsights.market.api.schema.MarketSortQuery;
 import com.housinginsights.market.application.PropertyQueryService;
 import com.housinginsights.market.export.CsvExportService;
 import com.housinginsights.market.metadata.PropertyMetadata;
@@ -34,8 +34,8 @@ public class ExportController {
 
     @GetMapping(value = "/properties/export/csv", produces = "text/csv;charset=UTF-8")
     public ResponseEntity<byte[]> csv(
-            @Valid @ParameterObject @ModelAttribute MarketFilterRequest filters,
-            @ParameterObject @ModelAttribute MarketSortRequest sort) {
+            @Valid @ParameterObject @ModelAttribute MarketFilterQuery filters,
+            @ParameterObject @ModelAttribute MarketSortQuery sort) {
         byte[] body = csvExportService.export(propertyQueryService.findAll(
                 filters.toFilter(propertyMetadata), sort.toSortField(), sort.toSortDirection()));
         return download(body, CSV_MEDIA_TYPE, "market-properties.csv");

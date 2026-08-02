@@ -3,15 +3,15 @@ package com.housinginsights.market.domain;
 import java.math.BigDecimal;
 import java.util.List;
 
-public record MarketAnalysis(long count, PriceSummary priceSummary, Visualisations visualisations) {
+public record MarketAnalysis(long count, PriceSummary priceSummary, ChartData chartData) {
     public record PriceSummary(Long minimum, Long maximum, BigDecimal average, BigDecimal median) {}
 
-    public record Visualisations(
+    public record ChartData(
             List<PriceDistributionBucket> priceDistribution,
             List<BedroomPriceGroup> averagePriceByBedrooms,
-            List<YearDecadePriceGroup> averagePriceByYearBuiltDecade,
+            List<YearBuiltDecadePriceGroup> averagePriceByYearBuiltDecade,
             List<SquareFootagePriceGroup> averagePriceBySquareFootageBand) {
-        public Visualisations {
+        public ChartData {
             priceDistribution = List.copyOf(priceDistribution);
             averagePriceByBedrooms = List.copyOf(averagePriceByBedrooms);
             averagePriceByYearBuiltDecade = List.copyOf(averagePriceByYearBuiltDecade);
@@ -23,12 +23,12 @@ public record MarketAnalysis(long count, PriceSummary priceSummary, Visualisatio
 
     public record BedroomPriceGroup(int bedrooms, BigDecimal averagePrice, long count) {}
 
-    public record YearDecadePriceGroup(int startYear, int endYear, BigDecimal averagePrice, long count) {}
+    public record YearBuiltDecadePriceGroup(int startYear, int endYear, BigDecimal averagePrice, long count) {}
 
     public record SquareFootagePriceGroup(
             long lowerBound, long upperBoundExclusive, BigDecimal averagePrice, long count) {}
 
-    public record FilterOptions(
+    public record AvailableFilters(
             DoubleRange squareFootage,
             List<Integer> bedrooms,
             List<Double> bathrooms,
@@ -37,7 +37,7 @@ public record MarketAnalysis(long count, PriceSummary priceSummary, Visualisatio
             DoubleRange distanceToCityCenter,
             DoubleRange schoolRating,
             LongRange price) {
-        public FilterOptions {
+        public AvailableFilters {
             bedrooms = List.copyOf(bedrooms);
             bathrooms = List.copyOf(bathrooms);
         }

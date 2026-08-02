@@ -2,18 +2,18 @@ import math
 
 import pytest
 
+from prediction_service import domain
 from prediction_service.constants import (
     ALGORITHM_NAME,
     FEATURE_NAMES,
     TARGET_TRANSFORM,
 )
 from prediction_service.errors import PredictionError
-from prediction_service.models import HousingFeatures
 from prediction_service.prediction import SklearnPredictionService
 
 
-def features(square_footage: float, bedrooms: int) -> HousingFeatures:
-    return HousingFeatures(
+def features(square_footage: float, bedrooms: int) -> domain.PropertyFeatures:
+    return domain.PropertyFeatures(
         square_footage=square_footage,
         bedrooms=bedrooms,
         bathrooms=2,
@@ -33,7 +33,7 @@ def test_batch_prediction_preserves_count_and_order(
     def controlled_predict(rows: list[list[float]]) -> list[float]:
         return [row[0] * 10 + row[1] for row in rows]
 
-    monkeypatch.setattr(artifact["model"], "predict", controlled_predict)
+    monkeypatch.setattr(artifact.model, "predict", controlled_predict)
     service = SklearnPredictionService(artifact)
 
     predictions = service.predict([features(2000, 4), features(900, 2), features(1500, 3)])
@@ -53,7 +53,7 @@ def test_predictions_are_rounded_to_positive_integers(
 ) -> None:
     artifact = artifact_factory()
     monkeypatch.setattr(
-        artifact["model"],
+        artifact.model,
         "predict",
         lambda rows: [0.1, 1000.4, 2000.6],
     )
@@ -81,7 +81,7 @@ def test_invalid_prediction_output_is_rejected(
     message: str,
 ) -> None:
     artifact = artifact_factory()
-    monkeypatch.setattr(artifact["model"], "predict", lambda rows: output)
+    monkeypatch.setattr(artifact.model, "predict", lambda rows: output)
 
     with pytest.raises(PredictionError, match=message):
         SklearnPredictionService(artifact).predict([features(1000, 2)])
@@ -92,7 +92,7 @@ def test_model_information_uses_artifact_metadata(artifact_factory) -> None:
 
     info = SklearnPredictionService(artifact).model_info()
 
-    assert info.training_timestamp == artifact["trained_at"]
+    assert info.trained_at == artifact.trained_at
     assert info.algorithm == ALGORITHM_NAME
     assert info.target_transform == TARGET_TRANSFORM
     assert info.features == FEATURE_NAMES

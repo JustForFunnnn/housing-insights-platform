@@ -20,7 +20,7 @@ src/prediction_service/
 ├── artifact.py           # Model artifact persistence and validation
 ├── constants.py          # Training, feature, and API constants
 ├── errors.py             # Public error codes and service exceptions
-├── models.py             # Framework-independent domain models
+├── domain.py             # Framework-independent domain models
 ├── prediction.py         # Prediction service implementation
 ├── property_metadata.py  # Shared property metadata loading
 ├── schemas.py            # HTTP and training-row validation models

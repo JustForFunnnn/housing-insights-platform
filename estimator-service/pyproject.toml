@@ -36,3 +36,6 @@ addopts = "-ra"
 markers = [
     "integration: requires an explicit external test dependency",
 ]
+
+[tool.ruff]
+line-length = 120

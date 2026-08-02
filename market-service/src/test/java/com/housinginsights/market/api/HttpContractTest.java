@@ -123,7 +123,7 @@ class HttpContractTest {
                         .param("limit", "1")
                         .param("offset", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.records[0].id").value(2))
+                .andExpect(jsonPath("$.properties[0].id").value(2))
                 .andExpect(jsonPath("$.count").doesNotExist())
                 .andExpect(jsonPath("$.total").value(4))
                 .andExpect(jsonPath("$.limit").value(1))
@@ -139,22 +139,26 @@ class HttpContractTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.count").value(4))
                 .andExpect(jsonPath("$.price_summary.average").isNumber())
-                .andExpect(jsonPath("$.visualisations.price_distribution").isArray())
-                .andExpect(jsonPath("$.visualisations.price_distribution[0].upper_bound_exclusive").isNumber())
-                .andExpect(jsonPath("$.visualisations.price_distribution[0].upper_bound").doesNotExist())
-                .andExpect(jsonPath("$.visualisations.price_distribution[0].label").doesNotExist())
-                .andExpect(jsonPath("$.visualisations.average_price_by_year_built_decade[0].label").doesNotExist())
-                .andExpect(jsonPath("$.visualisations.average_price_by_square_footage_band[0].label").doesNotExist())
-                .andExpect(jsonPath("$.filter_options").doesNotExist());
+                .andExpect(jsonPath("$.chart_data.price_distribution").isArray())
+                .andExpect(jsonPath("$.chart_data.price_distribution[0].upper_bound_exclusive")
+                        .isNumber())
+                .andExpect(jsonPath("$.chart_data.price_distribution[0].upper_bound")
+                        .doesNotExist())
+                .andExpect(jsonPath("$.chart_data.price_distribution[0].label").doesNotExist())
+                .andExpect(jsonPath("$.chart_data.average_price_by_year_built_decade[0].label")
+                        .doesNotExist())
+                .andExpect(jsonPath("$.chart_data.average_price_by_square_footage_band[0].label")
+                        .doesNotExist())
+                .andExpect(jsonPath("$.available_filters").doesNotExist());
     }
 
     @Test
-    void metadataReturnsSharedFeaturesAndFullDatasetFilterOptions() throws Exception {
+    void metadataReturnsSharedFeaturesAndFullDatasetAvailableFilters() throws Exception {
         String response = mockMvc.perform(get("/api/metadata"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.filter_options.bedrooms.length()").value(3))
-                .andExpect(jsonPath("$.filter_options.price.minimum").value(150000))
-                .andExpect(jsonPath("$.filter_options.price.maximum").value(450000))
+                .andExpect(jsonPath("$.available_filters.bedrooms.length()").value(3))
+                .andExpect(jsonPath("$.available_filters.price.minimum").value(150000))
+                .andExpect(jsonPath("$.available_filters.price.maximum").value(450000))
                 .andExpect(jsonPath("$.price_currency").value("USD"))
                 .andReturn()
                 .getResponse()
@@ -171,7 +175,7 @@ class HttpContractTest {
     void propertiesAnalysisAndCsvShareTheSameCompleteFilterResult() throws Exception {
         mockMvc.perform(get("/api/properties").param("bedrooms", "3").param("limit", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.records.length()").value(1))
+                .andExpect(jsonPath("$.properties.length()").value(1))
                 .andExpect(jsonPath("$.total").value(2));
 
         mockMvc.perform(get("/api/analysis").param("bedrooms", "3"))
@@ -207,7 +211,7 @@ class HttpContractTest {
 
     @Test
     void openApiUsesPublicContractNames() throws Exception {
-        String featureProperties = "$.components.schemas.PropertyFeaturesRequest.properties";
+        String featureProperties = "$.components.schemas.PropertyFeaturesInput.properties";
 
         String openApi = mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
@@ -235,7 +239,7 @@ class HttpContractTest {
                 .getContentAsString();
 
         JsonNode metadataFeatures =
-                objectMapper.readTree(openApi).at("/components/schemas/PropertyMetadataFeaturesResponse/properties");
+                objectMapper.readTree(openApi).at("/components/schemas/PropertyFeaturesMetadata/properties");
         assertThat(metadataFeatures.size()).isEqualTo(PropertyFieldNames.FEATURE_COLUMNS.size());
         for (String fieldName : PropertyFieldNames.FEATURE_COLUMNS) {
             assertThat(metadataFeatures.has(fieldName)).isTrue();

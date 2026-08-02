@@ -1,4 +1,4 @@
-import { FEATURE_KEYS, type PropertyInput, type SortDirection, type SortField } from "@/api/types";
+import { FEATURE_KEYS, type PropertyFeaturesInput, type SortDirection, type SortField } from "@/api/types";
 
 export const FILTER_KEYS = [
   "min_square_footage",
@@ -19,7 +19,7 @@ export const FILTER_KEYS = [
 
 export type MarketFilterKey = (typeof FILTER_KEYS)[number];
 
-export function whatIfHref(property: PropertyInput) {
+export function whatIfHref(property: PropertyFeaturesInput) {
   const query = new URLSearchParams();
   for (const key of FEATURE_KEYS) {
     query.set(key, String(property[key]));

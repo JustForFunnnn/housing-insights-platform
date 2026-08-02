@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import type { MarketAnalysis, MarketMetadata } from "@/api/types";
+import type { MarketAnalysisResponse, MarketMetadataResponse } from "@/api/types";
 import { buildMarketReportData } from "@/lib/market-report-data";
 
-const analysis: MarketAnalysis = {
+const analysis: MarketAnalysisResponse = {
   count: 1,
   price_summary: {
     minimum: 200000,
@@ -11,7 +11,7 @@ const analysis: MarketAnalysis = {
     average: 200000,
     median: 200000,
   },
-  visualisations: {
+  chart_data: {
     price_distribution: [
       {
         lower_bound: 200000,
@@ -42,7 +42,7 @@ const analysis: MarketAnalysis = {
 const metadata = {
   features: {},
   price_currency: "USD",
-  filter_options: {
+  available_filters: {
     square_footage: { minimum: 1500, maximum: 1999 },
     bedrooms: [3],
     bathrooms: [2],
@@ -52,7 +52,7 @@ const metadata = {
     school_rating: { minimum: 8, maximum: 8 },
     price: { minimum: 200000, maximum: 200000 },
   },
-} as unknown as MarketMetadata;
+} as unknown as MarketMetadataResponse;
 
 describe("PDF report data", () => {
   it("contains the active filters, currency statistics, and all chart series", () => {
@@ -81,7 +81,7 @@ describe("PDF report data", () => {
           average: null,
           median: null,
         },
-        visualisations: {
+        chart_data: {
           price_distribution: [],
           average_price_by_bedrooms: [],
           average_price_by_year_built_decade: [],

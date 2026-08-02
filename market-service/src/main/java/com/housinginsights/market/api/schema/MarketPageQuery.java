@@ -4,8 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
-public record MarketPageRequest(
-        @Min(1) @Max(MarketPageRequest.MAX_LIMIT) @Schema(defaultValue = "20")
+public record MarketPageQuery(
+        @Min(1) @Max(MarketPageQuery.MAX_LIMIT) @Schema(defaultValue = "20")
         Integer limit,
 
         @Min(0) @Schema(defaultValue = "0") Integer offset) {
@@ -13,7 +13,7 @@ public record MarketPageRequest(
     public static final int DEFAULT_LIMIT = 20;
     public static final int DEFAULT_OFFSET = 0;
 
-    public MarketPageRequest {
+    public MarketPageQuery {
         limit = limit == null ? DEFAULT_LIMIT : limit;
         offset = offset == null ? DEFAULT_OFFSET : offset;
     }

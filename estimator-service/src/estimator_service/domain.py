@@ -27,15 +27,15 @@ class PropertyFeatures:
 
 
 @dataclass(frozen=True, slots=True)
-class EstimateRecord:
-    property: PropertyFeatures
+class Estimate:
+    property_features: PropertyFeatures
     estimated_price: int
     created_at: datetime
 
 
 @dataclass(frozen=True, slots=True)
 class EstimatePage:
-    estimates: tuple[EstimateRecord, ...]
+    estimates: tuple[Estimate, ...]
     total: int
     limit: int
     offset: int

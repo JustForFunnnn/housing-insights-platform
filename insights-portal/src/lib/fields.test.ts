@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { PropertyMetadata } from "@/api/types";
+import type { PropertyMetadataResponse } from "@/api/types";
 import {
   createComparisonSchema,
   createPropertySchema,
@@ -11,7 +11,7 @@ import {
   propertyFromSearchParams,
 } from "@/lib/fields";
 
-const metadata: PropertyMetadata = {
+const metadata: PropertyMetadataResponse = {
   features: {
     square_footage: { min: 1, max: 100000, unit: "sq_ft" },
     bedrooms: { min: 0, max: 100, unit: null },
@@ -34,7 +34,7 @@ describe("metadata-driven property validation", () => {
   });
 
   it("clamps every example field to its metadata range", () => {
-    const constrained: PropertyMetadata = {
+    const constrained: PropertyMetadataResponse = {
       ...metadata,
       features: {
         ...metadata.features,

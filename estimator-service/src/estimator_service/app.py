@@ -16,6 +16,7 @@ from housing_common.observability import (
 )
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from estimator_service import schemas
 from estimator_service.api import router
 from estimator_service.constants import REQUEST_ID_HEADER
 from estimator_service.data_access import (
@@ -24,7 +25,6 @@ from estimator_service.data_access import (
     PostgresDatabase,
     PostgresEstimateStore,
 )
-from estimator_service.estimator import EstimatorService
 from estimator_service.errors import (
     ErrorCode,
     PredictionServiceInvalidResponseError,
@@ -32,11 +32,11 @@ from estimator_service.errors import (
     StorageError,
     StorageUnavailableError,
 )
+from estimator_service.estimator import EstimatorService
 from estimator_service.prediction_client import (
     HttpPredictionClient,
     PredictionClient,
 )
-from estimator_service.schemas import ErrorResponse
 from estimator_service.settings import Settings
 
 logger = logging.getLogger(__name__)
@@ -121,7 +121,7 @@ def _error_response(
     headers: Mapping[str, str] | None = None,
 ) -> JSONResponse:
     response_headers = dict(headers or {})
-    body = ErrorResponse(error_code=error_code, message=message)
+    body = schemas.ErrorResponse(error_code=error_code, message=message)
     return JSONResponse(
         status_code=status_code,
         content=body.model_dump(),

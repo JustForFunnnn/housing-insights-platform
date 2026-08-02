@@ -14,7 +14,7 @@ import {
   renderToBuffer,
 } from "@react-pdf/renderer";
 
-import type { MarketAnalysis, MarketMetadata } from "@/api/types";
+import type { MarketAnalysisResponse, MarketMetadataResponse } from "@/api/types";
 import { MARKET_CHART_DEFINITIONS, type ChartDatum } from "@/lib/chart-data";
 import { buildMarketReportData } from "@/lib/market-report-data";
 
@@ -294,8 +294,8 @@ function MarketReport({
   metadata,
   filterSummary,
 }: {
-  analysis: MarketAnalysis;
-  metadata: MarketMetadata;
+  analysis: MarketAnalysisResponse;
+  metadata: MarketMetadataResponse;
   filterSummary: string;
 }) {
   const report = buildMarketReportData(analysis, metadata, filterSummary);
@@ -337,6 +337,10 @@ function MarketReport({
   );
 }
 
-export function renderMarketReport(analysis: MarketAnalysis, metadata: MarketMetadata, filterSummary: string) {
+export function renderMarketReport(
+  analysis: MarketAnalysisResponse,
+  metadata: MarketMetadataResponse,
+  filterSummary: string,
+) {
   return renderToBuffer(<MarketReport analysis={analysis} metadata={metadata} filterSummary={filterSummary} />);
 }

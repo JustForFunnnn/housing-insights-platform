@@ -55,11 +55,11 @@ def test_create_single_and_batch_estimates_and_propagate_request_id(
 
     assert single.status_code == 201
     assert single.headers["X-Request-ID"] == HYPHENATED_REQUEST_ID
-    record = single.json()["estimates"][0]
-    assert "id" not in record
-    assert record["property"] == VALID_PROPERTY
-    assert record["estimated_price"] == 185000
-    assert datetime.fromisoformat(record["created_at"])
+    estimate = single.json()["estimates"][0]
+    assert "id" not in estimate
+    assert estimate["property_features"] == VALID_PROPERTY
+    assert estimate["estimated_price"] == 185000
+    assert datetime.fromisoformat(estimate["created_at"])
     assert batch.status_code == 201
     assert [item["estimated_price"] for item in batch.json()["estimates"]] == [
         90000,
@@ -99,7 +99,7 @@ def test_history_pagination_and_out_of_range_offset(app_factory) -> None:
             "/api/estimates",
             json={"properties": [{**VALID_PROPERTY, "square_footage": 1000}]},
         )
-        second = client.post(
+        client.post(
             "/api/estimates",
             json={
                 "properties": [
@@ -107,7 +107,7 @@ def test_history_pagination_and_out_of_range_offset(app_factory) -> None:
                     {**VALID_PROPERTY, "square_footage": 3000},
                 ]
             },
-        ).json()["estimates"]
+        )
 
         page = client.get("/api/estimates", params={"limit": 2, "offset": 0})
         past_total = client.get("/api/estimates", params={"offset": 50})
@@ -174,7 +174,7 @@ def test_openapi_exposes_shared_metadata_constraints(app_factory) -> None:
     with TestClient(app) as client:
         schemas = client.get("/openapi.json").json()["components"]["schemas"]
 
-    property_input = schemas["PropertyInput"]["properties"]
+    property_input = schemas["PropertyFeaturesInput"]["properties"]
     square_footage = PROPERTY_METADATA.features.square_footage
     if square_footage.min is None:
         assert "minimum" not in property_input["square_footage"]
@@ -187,7 +187,7 @@ def test_openapi_exposes_shared_metadata_constraints(app_factory) -> None:
     assert "multipleOf" not in property_input["bathrooms"]
     assert "multipleOf" not in property_input["school_rating"]
 
-    metadata_features = schemas["PropertyMetadataFeaturesResponse"]
+    metadata_features = schemas["PropertyFeaturesMetadata"]
     expected_metadata_features = set(VALID_PROPERTY)
     assert set(metadata_features["properties"]) == expected_metadata_features
     assert set(metadata_features["required"]) == expected_metadata_features
@@ -326,7 +326,7 @@ def test_store_failure_returns_500_without_partial_history(
         "error_code": "internal_error",
         "message": "An unexpected server error occurred.",
     }
-    assert store.records == []
+    assert store.estimates == []
     record = next(record for record in caplog.records if "database_operation_failed" in record.message)
     assert record.exc_info is not None
     assert str(record.exc_info[1]) == "could not persist estimate batch"

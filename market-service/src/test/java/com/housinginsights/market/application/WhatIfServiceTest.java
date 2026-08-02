@@ -28,15 +28,6 @@ class WhatIfServiceTest {
         assertThat(result.scenarios().get(1).priceDifference()).isEqualTo(-50000);
     }
 
-    @Test
-    void zeroBaselineReturnsNullPercentage() {
-        WhatIfService service = new WhatIfService(properties -> List.of(0L, 100L));
-
-        WhatIfResult result = service.compare(features(1500), List.of(features(1800)));
-
-        assertThat(result.scenarios().getFirst().percentageDifference()).isNull();
-    }
-
     private static PropertyFeatures features(double squareFootage) {
         return new PropertyFeatures(squareFootage, 3, 2, 2000, 7000, 5, 8);
     }

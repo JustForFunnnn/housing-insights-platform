@@ -1,7 +1,7 @@
 package com.housinginsights.market.data;
 
+import com.housinginsights.market.domain.Property;
 import com.housinginsights.market.domain.PropertyFieldNames;
-import com.housinginsights.market.domain.PropertyRecord;
 import com.housinginsights.market.error.DatasetLoadingException;
 import com.housinginsights.market.metadata.PropertyMetadata;
 import java.io.IOException;
@@ -53,10 +53,10 @@ public class CsvPropertyDataLoader {
                         BOMInputStream.builder().setPath(path).get(), StandardCharsets.UTF_8);
                 CSVParser parser = CSV_FORMAT.parse(reader)) {
             validateHeaders(parser);
-            var properties = parseRecords(parser);
+            var properties = parseProperties(parser);
             var dataset = new PropertyDataset(properties);
             logger.info(
-                    "dataset_loaded records={} path={}", dataset.properties().size(), path);
+                    "dataset_loaded properties={} path={}", dataset.properties().size(), path);
             return dataset;
         } catch (DatasetLoadingException exception) {
             throw exception;
@@ -76,8 +76,8 @@ public class CsvPropertyDataLoader {
         }
     }
 
-    private List<PropertyRecord> parseRecords(CSVParser parser) throws IOException {
-        List<PropertyRecord> properties = new ArrayList<>();
+    private List<Property> parseProperties(CSVParser parser) throws IOException {
+        List<Property> properties = new ArrayList<>();
         Set<Long> identifiers = new HashSet<>();
 
         for (CSVRecord row : parser) {
@@ -85,7 +85,7 @@ public class CsvPropertyDataLoader {
             if (!row.isConsistent()) {
                 throw new DatasetLoadingException("CSV row " + lineNumber + " has an unexpected number of columns");
             }
-            PropertyRecord property = parseRecord(row, lineNumber);
+            Property property = parseProperty(row, lineNumber);
             if (!identifiers.add(property.id())) {
                 throw rowError(lineNumber, PropertyFieldNames.ID, "must be unique");
             }
@@ -94,7 +94,7 @@ public class CsvPropertyDataLoader {
         return properties;
     }
 
-    private PropertyRecord parseRecord(CSVRecord row, long lineNumber) {
+    private Property parseProperty(CSVRecord row, long lineNumber) {
         long id = parseLong(row, lineNumber, PropertyFieldNames.ID);
         double squareFootage = parseDouble(row, lineNumber, PropertyFieldNames.SQUARE_FOOTAGE);
         int bedrooms = parseInteger(row, lineNumber, PropertyFieldNames.BEDROOMS);
@@ -108,8 +108,8 @@ public class CsvPropertyDataLoader {
         require(id > 0, lineNumber, PropertyFieldNames.ID, "must be positive");
         require(price > 0, lineNumber, PropertyFieldNames.PRICE, "must be positive");
 
-        var property = new PropertyRecord(
-                id, squareFootage, bedrooms, bathrooms, yearBuilt, lotSize, distance, schoolRating, price);
+        var property =
+                new Property(id, squareFootage, bedrooms, bathrooms, yearBuilt, lotSize, distance, schoolRating, price);
         try {
             propertyMetadata.validate(property.features());
         } catch (RuntimeException exception) {

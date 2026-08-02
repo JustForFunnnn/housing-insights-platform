@@ -26,7 +26,7 @@ describe("server backend client", () => {
     vi.stubGlobal("fetch", fetchMock);
     const backend = await import("@/api/server");
 
-    await expect(backend.getEstimates()).rejects.toMatchObject({
+    await expect(backend.listEstimates()).rejects.toMatchObject({
       status: 422,
       body: {
         error_code: "invalid_request",

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { FEATURE_KEYS, type FeatureKey, type PropertyInput, type PropertyMetadata } from "@/api/types";
+import { FEATURE_KEYS, type FeatureKey, type PropertyFeaturesInput, type PropertyMetadataResponse } from "@/api/types";
 
 export const MAX_WHAT_IF_SCENARIOS = 7;
 
@@ -43,7 +43,7 @@ export function fieldErrorMessages(errors: Partial<Record<FeatureKey, { message?
   >;
 }
 
-function propertyNumber(metadata: PropertyMetadata, key: FeatureKey) {
+function propertyNumber(metadata: PropertyMetadataResponse, key: FeatureKey) {
   const field = metadata.features[key];
   const definition = FIELD_DEFINITIONS[key];
   let schema = z
@@ -66,7 +66,7 @@ export function fieldStep(key: FeatureKey) {
   return PROPERTY_NUMBER_KINDS[key] === "integer" ? 1 : "any";
 }
 
-export function createPropertySchema(metadata: PropertyMetadata) {
+export function createPropertySchema(metadata: PropertyMetadataResponse) {
   return z.object(
     Object.fromEntries(FEATURE_KEYS.map((key) => [key, propertyNumber(metadata, key)])) as Record<
       FeatureKey,
@@ -77,7 +77,7 @@ export function createPropertySchema(metadata: PropertyMetadata) {
 
 export function propertyFromSearchParams(
   searchParams: Record<string, string | string[] | undefined>,
-  metadata: PropertyMetadata,
+  metadata: PropertyMetadataResponse,
 ) {
   const candidate = Object.fromEntries(
     FEATURE_KEYS.map((key) => {
@@ -89,7 +89,7 @@ export function propertyFromSearchParams(
   return result.success ? result.data : undefined;
 }
 
-export function createComparisonSchema(metadata: PropertyMetadata) {
+export function createComparisonSchema(metadata: PropertyMetadataResponse) {
   return z.object({
     properties: z
       .array(createPropertySchema(metadata))
@@ -98,7 +98,7 @@ export function createComparisonSchema(metadata: PropertyMetadata) {
   });
 }
 
-export function createWhatIfSchema(metadata: PropertyMetadata) {
+export function createWhatIfSchema(metadata: PropertyMetadataResponse) {
   const scenario = z
     .object(
       Object.fromEntries(FEATURE_KEYS.map((key) => [key, propertyNumber(metadata, key).optional()])) as Record<
@@ -118,8 +118,8 @@ export function createWhatIfSchema(metadata: PropertyMetadata) {
   });
 }
 
-export function exampleProperty(metadata: PropertyMetadata): PropertyInput {
-  const examples: PropertyInput = {
+export function exampleProperty(metadata: PropertyMetadataResponse): PropertyFeaturesInput {
+  const examples: PropertyFeaturesInput = {
     square_footage: 1850,
     bedrooms: 3,
     bathrooms: 2,
@@ -145,7 +145,7 @@ export function exampleProperty(metadata: PropertyMetadata): PropertyInput {
   };
 }
 
-export function fieldUnit(metadata: PropertyMetadata, key: FeatureKey) {
+export function fieldUnit(metadata: PropertyMetadataResponse, key: FeatureKey) {
   const unit = metadata.features[key].unit;
   if (!unit) return "";
   if (unit === "sq_ft") return "sq ft";

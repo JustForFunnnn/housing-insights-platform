@@ -23,7 +23,7 @@ src/estimator_service/
 ├── data_access.py        # PostgreSQL connection and estimate persistence
 ├── errors.py             # Service-specific exceptions and public error codes
 ├── estimator.py          # Prediction and persistence workflow
-├── models.py             # Framework-independent domain models
+├── domain.py             # Framework-independent domain models
 ├── prediction_client.py  # Prediction Service HTTP client
 ├── property_metadata.py  # Shared property metadata loading
 ├── schemas.py            # HTTP validation and response models
