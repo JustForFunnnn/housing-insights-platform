@@ -39,7 +39,7 @@ public class MarketAnalysisCalculator {
     }
 
     public MarketAnalysis calculate(MarketFilter filter) {
-        List<PropertyRecord> properties = propertyQueryService.filter(filter);
+        List<PropertyRecord> properties = propertyQueryService.findAll(filter);
         if (properties.isEmpty()) {
             return new MarketAnalysis(
                     0,

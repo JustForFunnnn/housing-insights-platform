@@ -17,12 +17,12 @@ public class PropertyQueryService {
         this.cachedPropertyFilter = cachedPropertyFilter;
     }
 
-    public List<PropertyRecord> filter(MarketFilter filter) {
+    public List<PropertyRecord> findAll(MarketFilter filter) {
         return cachedPropertyFilter.filter(filter);
     }
 
     public List<PropertyRecord> findAll(MarketFilter filter, SortField sortField, SortDirection direction) {
-        return filter(filter).stream().sorted(comparator(sortField, direction)).toList();
+        return findAll(filter).stream().sorted(comparator(sortField, direction)).toList();
     }
 
     public PropertyPage findPage(
