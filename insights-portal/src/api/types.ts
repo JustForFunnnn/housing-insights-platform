@@ -95,15 +95,13 @@ export const priceSummarySchema = z.object({
 export type PriceSummary = z.infer<typeof priceSummarySchema>;
 
 export const priceDistributionBucketSchema = z.object({
-  label: z.string(),
   lower_bound: z.number(),
-  upper_bound: z.number(),
+  upper_bound_exclusive: z.number().nullable(),
   count: z.number(),
 });
 export type PriceDistributionBucket = z.infer<typeof priceDistributionBucketSchema>;
 
 export const averagePriceGroupSchema = z.object({
-  label: z.string().optional(),
   bedrooms: z.number().optional(),
   start_year: z.number().optional(),
   end_year: z.number().optional(),
@@ -119,13 +117,11 @@ const averagePriceByBedroomsSchema = averagePriceGroupSchema.extend({
 });
 
 const averagePriceByYearBuiltDecadeSchema = averagePriceGroupSchema.extend({
-  label: z.string(),
   start_year: z.number(),
   end_year: z.number(),
 });
 
 const averagePriceBySquareFootageBandSchema = averagePriceGroupSchema.extend({
-  label: z.string(),
   lower_bound: z.number(),
   upper_bound_exclusive: z.number(),
 });
@@ -139,7 +135,6 @@ export const marketAnalysisSchema = z.object({
     average_price_by_year_built_decade: z.array(averagePriceByYearBuiltDecadeSchema),
     average_price_by_square_footage_band: z.array(averagePriceBySquareFootageBandSchema),
   }),
-  filter_options: filterOptionsSchema,
 });
 export type MarketAnalysis = z.infer<typeof marketAnalysisSchema>;
 

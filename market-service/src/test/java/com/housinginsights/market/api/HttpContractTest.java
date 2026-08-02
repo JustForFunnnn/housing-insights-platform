@@ -140,7 +140,12 @@ class HttpContractTest {
                 .andExpect(jsonPath("$.count").value(4))
                 .andExpect(jsonPath("$.price_summary.average").isNumber())
                 .andExpect(jsonPath("$.visualisations.price_distribution").isArray())
-                .andExpect(jsonPath("$.filter_options.square_footage.minimum").isNumber());
+                .andExpect(jsonPath("$.visualisations.price_distribution[0].upper_bound_exclusive").isNumber())
+                .andExpect(jsonPath("$.visualisations.price_distribution[0].upper_bound").doesNotExist())
+                .andExpect(jsonPath("$.visualisations.price_distribution[0].label").doesNotExist())
+                .andExpect(jsonPath("$.visualisations.average_price_by_year_built_decade[0].label").doesNotExist())
+                .andExpect(jsonPath("$.visualisations.average_price_by_square_footage_band[0].label").doesNotExist())
+                .andExpect(jsonPath("$.filter_options").doesNotExist());
     }
 
     @Test

@@ -1,4 +1,5 @@
 import type { MarketAnalysis } from "@/api/types";
+import { formatNumber } from "@/lib/format";
 
 export interface ChartDatum {
   label: string;
@@ -41,10 +42,20 @@ export const MARKET_CHART_DEFINITIONS = [
   },
 ] as const;
 
+function formatRange(lower: number, upperExclusive: number | null) {
+  const formattedLower = formatNumber(lower, 0);
+  const formattedUpper = upperExclusive === null ? "∞" : formatNumber(upperExclusive, 0);
+  return `[${formattedLower}, ${formattedUpper})`;
+}
+
+function formatDecade(startYear: number) {
+  return `${startYear}s`;
+}
+
 export function marketChartSeries(analysis: MarketAnalysis) {
   return {
     priceDistribution: analysis.visualisations.price_distribution.map((item) => ({
-      label: item.label,
+      label: formatRange(item.lower_bound, item.upper_bound_exclusive),
       value: item.count,
       count: item.count,
     })),
@@ -54,12 +65,12 @@ export function marketChartSeries(analysis: MarketAnalysis) {
       count: item.count,
     })),
     decades: analysis.visualisations.average_price_by_year_built_decade.map((item) => ({
-      label: item.label,
+      label: formatDecade(item.start_year),
       value: Number(item.average_price),
       count: item.count,
     })),
     squareFootage: analysis.visualisations.average_price_by_square_footage_band.map((item) => ({
-      label: item.label,
+      label: formatRange(item.lower_bound, item.upper_bound_exclusive),
       value: Number(item.average_price),
       count: item.count,
     })),

@@ -44,8 +44,7 @@ public class MarketAnalysisCalculator {
             return new MarketAnalysis(
                     0,
                     new PriceSummary(null, null, null, null),
-                    new Visualisations(List.of(), List.of(), List.of(), List.of()),
-                    filterOptions);
+                    new Visualisations(List.of(), List.of(), List.of(), List.of()));
         }
 
         return new MarketAnalysis(
@@ -55,8 +54,7 @@ public class MarketAnalysisCalculator {
                         priceDistribution(properties),
                         averagePriceByBedrooms(properties),
                         averagePriceByYearBuiltDecade(properties),
-                        averagePriceBySquareFootageBand(properties)),
-                filterOptions);
+                        averagePriceBySquareFootageBand(properties)));
     }
 
     public FilterOptions filterOptions() {
@@ -85,10 +83,9 @@ public class MarketAnalysisCalculator {
         return counts.entrySet().stream()
                 .map(entry -> {
                     long lower = entry.getKey();
-                    long upper = lower > Long.MAX_VALUE - PRICE_BUCKET_WIDTH
-                            ? Long.MAX_VALUE
-                            : lower + PRICE_BUCKET_WIDTH - 1;
-                    return new PriceDistributionBucket(lower + "-" + upper, lower, upper, entry.getValue());
+                    Long upperExclusive =
+                            lower > Long.MAX_VALUE - PRICE_BUCKET_WIDTH ? null : lower + PRICE_BUCKET_WIDTH;
+                    return new PriceDistributionBucket(lower, upperExclusive, entry.getValue());
                 })
                 .toList();
     }
@@ -107,11 +104,7 @@ public class MarketAnalysisCalculator {
                 .map(entry -> {
                     int start = entry.getKey();
                     return new YearDecadePriceGroup(
-                            start + "s",
-                            start,
-                            start + 9,
-                            averagePrice(entry.getValue()),
-                            entry.getValue().size());
+                            start, start + 9, averagePrice(entry.getValue()), entry.getValue().size());
                 })
                 .toList();
     }
@@ -127,11 +120,7 @@ public class MarketAnalysisCalculator {
                     long lower = entry.getKey();
                     long upperExclusive = lower + SQUARE_FOOTAGE_BUCKET_WIDTH;
                     return new SquareFootagePriceGroup(
-                            lower + "-" + (upperExclusive - 1),
-                            lower,
-                            upperExclusive,
-                            averagePrice(entry.getValue()),
-                            entry.getValue().size());
+                            lower, upperExclusive, averagePrice(entry.getValue()), entry.getValue().size());
                 })
                 .toList();
     }
