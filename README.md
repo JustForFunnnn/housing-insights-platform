@@ -66,7 +66,7 @@ Build and start the complete platform from the repository root:
 docker compose up --build
 ```
 
-Open the Portal at <http://localhost:9100>. Backend Swagger documentation is
+Open the Portal at <http://localhost:9010>. Backend Swagger documentation is
 available at:
 
 - Prediction Service: <http://localhost:9000/docs>

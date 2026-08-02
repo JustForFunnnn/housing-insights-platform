@@ -200,7 +200,7 @@ def test_cors_exposes_request_id(app_factory) -> None:
     with TestClient(app) as client:
         response = client.post(
             "/api/estimates",
-            headers={"Origin": "http://localhost:9100"},
+            headers={"Origin": "http://localhost:9010"},
             json={"properties": []},
         )
 

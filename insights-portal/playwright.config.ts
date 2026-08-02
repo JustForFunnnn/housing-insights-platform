@@ -6,7 +6,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
-    baseURL: process.env.PORTAL_URL ?? "http://localhost:9100",
+    baseURL: process.env.PORTAL_URL ?? "http://localhost:9010",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },

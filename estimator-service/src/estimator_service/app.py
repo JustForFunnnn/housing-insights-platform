@@ -96,8 +96,8 @@ def create_app(
     application.add_middleware(
         CORSMiddleware,
         allow_origins=[
-            "http://localhost:9100",
-            "http://host.docker.internal:9100",
+            "http://localhost:9010",
+            "http://host.docker.internal:9010",
         ],
         allow_methods=["*"],
         allow_headers=["*"],

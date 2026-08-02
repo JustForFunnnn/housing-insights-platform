@@ -85,7 +85,7 @@ docker compose up --build insights-portal
 ```
 
 Docker Compose starts the required backend services. Open
-<http://localhost:9100> after the Portal health check passes.
+<http://localhost:9010> after the Portal health check passes.
 
 ## Testing
 
@@ -102,7 +102,7 @@ npm run build
 ```
 
 End-to-end tests require the full application stack to be running in another
-terminal at <http://localhost:9100>:
+terminal at <http://localhost:9010>:
 
 ```bash
 npx playwright install chromium

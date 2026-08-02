@@ -115,11 +115,11 @@ services:
           ${NEXT_PUBLIC_MARKET_SERVICE_URL:-http://localhost:9002}
     image: housing-insights/insights-portal:local
     ports:
-      - "9100:9100"
+      - "9010:9010"
     environment:
       ESTIMATOR_SERVICE_URL: http://estimator-service:9001
       MARKET_SERVICE_URL: http://market-service:9002
-      PORT: "9100"
+      PORT: "9010"
     depends_on:
       estimator-service:
         condition: service_healthy
@@ -131,7 +131,7 @@ services:
         - node
         - -e
         - >-
-          fetch('http://localhost:9100/api/health').then(response => {
+          fetch('http://localhost:9010/api/health').then(response => {
             if (!response.ok) process.exit(1)
           }).catch(() => process.exit(1))
       interval: 10s

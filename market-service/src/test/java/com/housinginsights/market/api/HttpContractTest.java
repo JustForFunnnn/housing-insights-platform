@@ -108,7 +108,7 @@ class HttpContractTest {
     @Test
     void corsExposesRequestIdToThePortal() throws Exception {
         mockMvc.perform(get("/api/properties")
-                        .header("Origin", "http://localhost:9100")
+                        .header("Origin", "http://localhost:9010")
                         .param("limit", "0"))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(header().exists(RequestCorrelation.HEADER_NAME))
