@@ -7,7 +7,7 @@ public record MarketAnalysis(long count, PriceSummary priceSummary, ChartData ch
     public record PriceSummary(Long minimum, Long maximum, BigDecimal average, BigDecimal median) {}
 
     public record ChartData(
-            List<PriceDistributionBucket> priceDistribution,
+            List<PriceDistributionGroup> priceDistribution,
             List<BedroomPriceGroup> averagePriceByBedrooms,
             List<YearBuiltDecadePriceGroup> averagePriceByYearBuiltDecade,
             List<SquareFootagePriceGroup> averagePriceBySquareFootageBand) {
@@ -19,7 +19,7 @@ public record MarketAnalysis(long count, PriceSummary priceSummary, ChartData ch
         }
     }
 
-    public record PriceDistributionBucket(long lowerBound, Long upperBoundExclusive, long count) {}
+    public record PriceDistributionGroup(long lowerBound, Long upperBoundExclusive, long count) {}
 
     public record BedroomPriceGroup(int bedrooms, BigDecimal averagePrice, long count) {}
 

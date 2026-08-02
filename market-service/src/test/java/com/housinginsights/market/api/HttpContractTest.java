@@ -221,6 +221,8 @@ class HttpContractTest {
                 .andExpect(jsonPath(featureProperties + ".squareFootage").doesNotExist())
                 .andExpect(
                         jsonPath("$.components.schemas.MarketAnalysisResponse").exists())
+                .andExpect(jsonPath("$.components.schemas.PriceDistributionGroup").exists())
+                .andExpect(jsonPath("$.components.schemas.PriceDistributionBucket").doesNotExist())
                 .andExpect(jsonPath("$.components.schemas.PropertyPageResponse").exists())
                 .andExpect(jsonPath("$.components.schemas.WhatIfResponse").exists())
                 .andExpect(jsonPath("$.paths['/api/metadata'].get").exists())

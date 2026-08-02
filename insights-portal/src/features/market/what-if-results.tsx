@@ -132,6 +132,7 @@ export function WhatIfResults({ result, priceCurrency }: { result: WhatIfRespons
                 dataKey="predictedPrice"
                 name="Predicted price"
                 maxBarSize={72}
+                minPointSize={3}
                 radius={[3, 3, 0, 0]}
                 activeBar={{ stroke: "#13233A", strokeWidth: 3 }}
               >
@@ -158,12 +159,14 @@ export function WhatIfResults({ result, priceCurrency }: { result: WhatIfRespons
             </tr>
           </thead>
           <tbody>
-            {result.scenarios.map((scenario, index) => (
-              <tr key={index}>
-                <th scope="row">Scenario {index + 1}</th>
-                <td className="mono">{formatPrice(scenario.predicted_price, priceCurrency)}</td>
-                <td className="mono">{signedPrice(scenario.price_difference, priceCurrency)}</td>
-                <td className="mono">{signedPercentage(scenario.percentage_difference)}</td>
+            {chartData.map((point) => (
+              <tr key={point.label}>
+                <th scope="row">{point.label}</th>
+                <td className="mono">{formatPrice(point.predictedPrice, priceCurrency)}</td>
+                <td className="mono">{point.isBaseline ? "-" : signedPrice(point.priceDifference, priceCurrency)}</td>
+                <td className="mono">
+                  {point.isBaseline ? "-" : signedPercentage(point.percentageDifference)}
+                </td>
               </tr>
             ))}
           </tbody>

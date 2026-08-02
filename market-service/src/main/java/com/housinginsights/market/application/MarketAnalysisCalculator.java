@@ -8,7 +8,7 @@ import com.housinginsights.market.domain.MarketAnalysis.ChartData;
 import com.housinginsights.market.domain.MarketAnalysis.DoubleRange;
 import com.housinginsights.market.domain.MarketAnalysis.IntegerRange;
 import com.housinginsights.market.domain.MarketAnalysis.LongRange;
-import com.housinginsights.market.domain.MarketAnalysis.PriceDistributionBucket;
+import com.housinginsights.market.domain.MarketAnalysis.PriceDistributionGroup;
 import com.housinginsights.market.domain.MarketAnalysis.PriceSummary;
 import com.housinginsights.market.domain.MarketAnalysis.SquareFootagePriceGroup;
 import com.housinginsights.market.domain.MarketAnalysis.YearBuiltDecadePriceGroup;
@@ -72,7 +72,7 @@ public class MarketAnalysisCalculator {
                 decimal(Median.withDefaults().evaluate(prices)));
     }
 
-    private static List<PriceDistributionBucket> priceDistribution(List<Property> properties) {
+    private static List<PriceDistributionGroup> priceDistribution(List<Property> properties) {
         Map<Long, Long> counts = properties.stream()
                 .collect(Collectors.groupingBy(
                         property -> Math.floorDiv(property.price(), PRICE_BUCKET_WIDTH) * PRICE_BUCKET_WIDTH,
@@ -83,7 +83,7 @@ public class MarketAnalysisCalculator {
                     long lower = entry.getKey();
                     Long upperExclusive =
                             lower > Long.MAX_VALUE - PRICE_BUCKET_WIDTH ? null : lower + PRICE_BUCKET_WIDTH;
-                    return new PriceDistributionBucket(lower, upperExclusive, entry.getValue());
+                    return new PriceDistributionGroup(lower, upperExclusive, entry.getValue());
                 })
                 .toList();
     }

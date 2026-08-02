@@ -222,7 +222,11 @@ function PdfChart({
               <Text style={styles.yLabel}>0</Text>
             </View>
             <View style={styles.plotColumn}>
-              <Svg style={styles.svg} viewBox={`0 0 ${PLOT_WIDTH} ${PLOT_HEIGHT + PLOT_TOP + 2}`}>
+              <Svg
+                style={styles.svg}
+                viewBox={`0 0 ${PLOT_WIDTH} ${PLOT_HEIGHT + PLOT_TOP + 2}`}
+                preserveAspectRatio="none"
+              >
                 {[PLOT_TOP, PLOT_TOP + PLOT_HEIGHT / 2, PLOT_TOP + PLOT_HEIGHT].map((y) => (
                   <Line
                     key={y}

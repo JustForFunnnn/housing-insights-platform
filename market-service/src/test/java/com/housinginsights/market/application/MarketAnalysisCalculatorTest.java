@@ -44,9 +44,9 @@ class MarketAnalysisCalculatorTest {
         assertThat(analysis.priceSummary().median()).isEqualByComparingTo(new BigDecimal("300000.00"));
         assertThat(analysis.chartData().priceDistribution())
                 .extracting(
-                        MarketAnalysis.PriceDistributionBucket::lowerBound,
-                        MarketAnalysis.PriceDistributionBucket::upperBoundExclusive,
-                        MarketAnalysis.PriceDistributionBucket::count)
+                        MarketAnalysis.PriceDistributionGroup::lowerBound,
+                        MarketAnalysis.PriceDistributionGroup::upperBoundExclusive,
+                        MarketAnalysis.PriceDistributionGroup::count)
                 .containsExactly(tuple(250000L, 300000L, 1L), tuple(350000L, 400000L, 1L));
         assertThat(analysis.chartData().averagePriceByBedrooms())
                 .singleElement()

@@ -17,7 +17,7 @@ public record MarketAnalysisResponse(long count, PriceSummary priceSummary, Char
     }
 
     public record ChartData(
-            List<PriceDistributionBucket> priceDistribution,
+            List<PriceDistributionGroup> priceDistribution,
             List<BedroomPriceGroup> averagePriceByBedrooms,
             List<YearBuiltDecadePriceGroup> averagePriceByYearBuiltDecade,
             List<SquareFootagePriceGroup> averagePriceBySquareFootageBand) {
@@ -31,7 +31,7 @@ public record MarketAnalysisResponse(long count, PriceSummary priceSummary, Char
         private static ChartData from(MarketAnalysis.ChartData chartData) {
             return new ChartData(
                     chartData.priceDistribution().stream()
-                            .map(PriceDistributionBucket::from)
+                            .map(PriceDistributionGroup::from)
                             .toList(),
                     chartData.averagePriceByBedrooms().stream()
                             .map(BedroomPriceGroup::from)
@@ -45,9 +45,9 @@ public record MarketAnalysisResponse(long count, PriceSummary priceSummary, Char
         }
     }
 
-    public record PriceDistributionBucket(long lowerBound, Long upperBoundExclusive, long count) {
-        private static PriceDistributionBucket from(MarketAnalysis.PriceDistributionBucket bucket) {
-            return new PriceDistributionBucket(bucket.lowerBound(), bucket.upperBoundExclusive(), bucket.count());
+    public record PriceDistributionGroup(long lowerBound, Long upperBoundExclusive, long count) {
+        private static PriceDistributionGroup from(MarketAnalysis.PriceDistributionGroup group) {
+            return new PriceDistributionGroup(group.lowerBound(), group.upperBoundExclusive(), group.count());
         }
     }
 

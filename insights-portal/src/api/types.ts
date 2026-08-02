@@ -91,7 +91,7 @@ export const priceSummarySchema = z.object({
   median: z.number().nullable(),
 });
 
-export const priceDistributionBucketSchema = z.object({
+export const priceDistributionGroupSchema = z.object({
   lower_bound: z.number(),
   upper_bound_exclusive: z.number().nullable(),
   count: z.number(),
@@ -120,7 +120,7 @@ export const marketAnalysisResponseSchema = z.object({
   count: z.number(),
   price_summary: priceSummarySchema,
   chart_data: z.object({
-    price_distribution: z.array(priceDistributionBucketSchema),
+    price_distribution: z.array(priceDistributionGroupSchema),
     average_price_by_bedrooms: z.array(bedroomPriceGroupSchema),
     average_price_by_year_built_decade: z.array(yearBuiltDecadePriceGroupSchema),
     average_price_by_square_footage_band: z.array(squareFootagePriceGroupSchema),
